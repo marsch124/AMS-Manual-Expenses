@@ -33,7 +33,7 @@ targets:
         NSLocationWhenInUseUsageDescription: Your location is used to pick the local currency (for example SEK in Sweden, EUR in Austria).
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.schabbauer.amsexpenses
+        PRODUCT_BUNDLE_IDENTIFIER: com.schabbauer.amsmanualexpenses
         TARGETED_DEVICE_FAMILY: "1"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor

@@ -34,4 +34,4 @@ Repository secrets (GitHub → Settings → Secrets and variables → Actions):
 | `ASC_ISSUER_ID` | Issuer ID shown above the key list in App Store Connect |
 | `ASC_KEY_P8` | Full text of the downloaded `AuthKey_XXXX.p8` file |
 
-The app record in App Store Connect must exist with bundle ID `com.schabbauer.amsexpenses`.
+The app record in App Store Connect must exist with bundle ID `com.schabbauer.amsmanualexpenses`.
