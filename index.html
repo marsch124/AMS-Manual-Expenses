@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Expenses</title>
+  <meta name="theme-color" content="#0f766e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Expenses">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div>
+      <div id="clock" class="clock"></div>
+      <div id="date" class="muted"></div>
+    </div>
+    <button id="currencyBtn" class="chip" aria-label="Default currency"></button>
+  </header>
+  <p id="currencyHint" class="muted small"></p>
+
+  <main>
+    <section class="dictate">
+      <button id="micBtn" class="mic" aria-label="Dictate expense">
+        <svg viewBox="0 0 24 24" width="44" height="44" aria-hidden="true"><path fill="currentColor" d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2Z"/></svg>
+      </button>
+      <p id="micStatus" class="muted small">Tap and say e.g. “Coffee 45 kronor” or “Taxi 12 euros 50”</p>
+      <form id="textForm" class="row">
+        <input id="textInput" type="text" placeholder="…or type / use keyboard dictation" autocomplete="off">
+        <button type="submit">Go</button>
+      </form>
+    </section>
+
+    <section id="preview" class="card" hidden>
+      <p class="muted small">Heard: <span id="heard"></span></p>
+      <label>Description <input id="pDesc" type="text"></label>
+      <div class="row">
+        <label class="grow">Amount <input id="pAmount" type="text" inputmode="decimal"></label>
+        <label>Currency
+          <select id="pCur"><option>SEK</option><option>EUR</option></select>
+        </label>
+      </div>
+      <label>Time <input id="pTime" type="datetime-local"></label>
+      <div class="row">
+        <button id="saveBtn" class="primary grow">Save</button>
+        <button id="cancelBtn">Cancel</button>
+        <button id="deleteBtn" class="danger" hidden>Delete</button>
+      </div>
+    </section>
+
+    <section>
+      <div class="row between">
+        <h2>Today</h2>
+        <div id="totals" class="totals"></div>
+      </div>
+      <ul id="list" class="list"></ul>
+      <p id="empty" class="muted small">No expenses yet today.</p>
+    </section>
+
+    <section class="row">
+      <button id="exportBtn">Export all (CSV)</button>
+      <select id="langSel" aria-label="Dictation language">
+        <option value="en-US">Dictate in English</option>
+        <option value="sv-SE">Diktera på svenska</option>
+        <option value="de-AT">Auf Deutsch diktieren</option>
+      </select>
+    </section>
+  </main>
+
+  <script src="parser.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

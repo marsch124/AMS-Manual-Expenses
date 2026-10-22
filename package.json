@@ -1,0 +1,5 @@
+{
+  "name": "ams-manual-expenses",
+  "private": true,
+  "scripts": { "test": "node --test tests/" }
+}
