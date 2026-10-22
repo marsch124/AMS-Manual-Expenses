@@ -1,0 +1,226 @@
+# Sends AMS Manual Expenses to TestFlight — the same workflow as AMS Packing's, for the
+# iPhone only. Started by hand (Actions → TestFlight → Run workflow) or by Claude once
+# the Tests run is green; "notes" becomes the build's "What to Test".
+#
+# Secrets (Settings › Secrets and variables › Actions): ASC_KEY_ID, ASC_ISSUER_ID,
+# ASC_KEY_P8 (an ADMIN App Store Connect key — App Manager cannot cloud-sign), ASC_TEAM_ID,
+# TESTER_GROUP (the TestFlight group's name). Nothing private is written in this repository.
+name: TestFlight
+
+on:
+  workflow_dispatch:
+    inputs:
+      notes:
+        description: What is new in this build — testers see it as "What to Test"
+        required: false
+        default: ""
+      always_test:
+        description: Run the whole suite even when the same code is already green (a second check)
+        required: false
+        default: "false"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  tested:
+    name: Already tested?
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.look.outputs.skip }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: look
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          here=$(gh api "repos/${{ github.repository }}/actions/workflows/tests.yml/runs?head_sha=$(git rev-parse HEAD)&status=success&per_page=1" --jq '.total_count')
+          echo "this commit · green runs: $here"
+          skip=false
+          if [ "${here:-0}" -gt 0 ]; then skip=true; fi
+          echo "skip=$skip" >> "$GITHUB_OUTPUT"
+          echo "### Suite: $([ $skip = true ] && echo "already green on this commit — not run again" || echo "runs now")" >> $GITHUB_STEP_SUMMARY
+
+  tests:
+    name: The suite has to pass first
+    needs: tested
+    if: needs.tested.outputs.skip != 'true' || inputs.always_test == 'true'
+    uses: ./.github/workflows/tests.yml
+
+  upload:
+    name: Build and send to TestFlight
+    needs: [tested, tests]
+    if: always() && needs.tested.result == 'success' && (needs.tests.result == 'success' || needs.tests.result == 'skipped')
+    runs-on: macos-26
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      # Apple refuses an upload built with an older SDK.
+      - name: Use the newest Xcode on the runner
+        run: |
+          newest=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
+          echo "Using $newest"
+          sudo xcode-select -s "$newest"
+          xcodebuild -version
+
+      - name: Check the secrets are there
+        env:
+          KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ISSUER: ${{ secrets.ASC_ISSUER_ID }}
+          KEY: ${{ secrets.ASC_KEY_P8 }}
+          TEAM_ID: ${{ secrets.ASC_TEAM_ID }}
+          TESTER_GROUP: ${{ secrets.TESTER_GROUP }}
+        run: |
+          missing=""
+          [ -z "$KEY_ID" ] && missing="$missing ASC_KEY_ID"
+          [ -z "$ISSUER" ] && missing="$missing ASC_ISSUER_ID"
+          [ -z "$KEY" ] && missing="$missing ASC_KEY_P8"
+          [ -z "$TEAM_ID" ] && missing="$missing ASC_TEAM_ID"
+          [ -z "$TESTER_GROUP" ] && missing="$missing TESTER_GROUP"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secrets:$missing — add them under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate the project
+        run: xcodegen generate
+
+      # A .p8 is six lines and its last one has no newline: never count lines, check the ends.
+      - name: Write the App Store Connect key
+        env:
+          KEY: ${{ secrets.ASC_KEY_P8 }}
+          KEY_ID: ${{ secrets.ASC_KEY_ID }}
+        run: |
+          mkdir -p "$HOME/private_keys"
+          F="$HOME/private_keys/AuthKey_$KEY_ID.p8"
+          printf '%s\n' "$KEY" | tr -d '\r' | awk 'NF' > "$F"
+          chmod 600 "$F"
+          head -1 "$F" | grep -q "BEGIN PRIVATE KEY" || { echo "::error::ASC_KEY_P8 does not start with -----BEGIN PRIVATE KEY-----"; exit 1; }
+          tail -1 "$F" | grep -q "END PRIVATE KEY" || { echo "::error::ASC_KEY_P8 does not end with -----END PRIVATE KEY-----"; exit 1; }
+          openssl pkey -in "$F" -noout || { echo "::error::ASC_KEY_P8 is not a valid private key"; exit 1; }
+
+      # One above the highest build App Store Connect has — Apple refuses a number twice.
+      - name: Number this build
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          APP_VERSION=$(sed -n 's/^ *MARKETING_VERSION: *"\([^"]*\)".*/\1/p' project.yml | head -1)
+          [ -n "$APP_VERSION" ] || { echo "::error::no MARKETING_VERSION in project.yml"; exit 1; }
+          BUILD=$(ASC_KEY_PATH="$HOME/private_keys/AuthKey_$ASC_KEY_ID.p8" APP_BUNDLE_ID=com.schabbauer.amsmanualexpenses \
+                  MIN_BUILD="${{ github.run_number }}" python3 tools/release-to-testers.py --next-build) || BUILD=""
+          if [ -z "$BUILD" ]; then
+            BUILD="${{ github.run_number }}"
+            echo "::warning::App Store Connect could not be asked for its highest build number — using the run number $BUILD"
+          fi
+          echo "App version: $APP_VERSION, build $BUILD"
+          echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
+          echo "BUILD=$BUILD" >> $GITHUB_ENV
+
+      - name: Archive for the iPhone
+        env:
+          KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ISSUER: ${{ secrets.ASC_ISSUER_ID }}
+          TEAM_ID: ${{ secrets.ASC_TEAM_ID }}
+        run: |
+          set -o pipefail
+          mkdir -p build
+          xcodebuild archive \
+            -project AMSExpenses.xcodeproj \
+            -scheme AMSExpenses \
+            -destination "generic/platform=iOS" \
+            -archivePath "$PWD/build/AMSExpenses.xcarchive" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$HOME/private_keys/AuthKey_$KEY_ID.p8" \
+            -authenticationKeyID "$KEY_ID" \
+            -authenticationKeyIssuerID "$ISSUER" \
+            DEVELOPMENT_TEAM="$TEAM_ID" \
+            CODE_SIGN_STYLE=Automatic \
+            MARKETING_VERSION="$APP_VERSION" \
+            CURRENT_PROJECT_VERSION="$BUILD" \
+            2>&1 | tee build/archive.log | grep -E "error:|\*\* ARCHIVE" || true
+          grep -q "\*\* ARCHIVE SUCCEEDED \*\*" build/archive.log
+
+      # What Apple checks at upload, read off the BUILT app rather than the settings.
+      - name: The archive is what Apple accepts
+        run: |
+          PL="build/AMSExpenses.xcarchive/Products/Applications/AMSExpenses.app/Info.plist"
+          /usr/libexec/PlistBuddy -c 'Print :UIDeviceFamily' "$PL"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIconName' "$PL"
+          /usr/libexec/PlistBuddy -c 'Print :ITSAppUsesNonExemptEncryption' "$PL"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$PL"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$PL"
+
+      - name: Send it to TestFlight
+        env:
+          KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ISSUER: ${{ secrets.ASC_ISSUER_ID }}
+          TEAM_ID: ${{ secrets.ASC_TEAM_ID }}
+        run: |
+          set -o pipefail
+          cat > build/ExportOptions.plist <<'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict>
+          </plist>
+          PLIST
+          /usr/libexec/PlistBuddy -c "Add :teamID string $TEAM_ID" build/ExportOptions.plist
+          xcodebuild -exportArchive \
+            -archivePath "$PWD/build/AMSExpenses.xcarchive" \
+            -exportPath "$PWD/build/export" \
+            -exportOptionsPlist build/ExportOptions.plist \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$HOME/private_keys/AuthKey_$KEY_ID.p8" \
+            -authenticationKeyID "$KEY_ID" \
+            -authenticationKeyIssuerID "$ISSUER" \
+            2>&1 | tee build/export.log | grep -E "error:|Upload|EXPORT" || true
+          grep -q "\*\* EXPORT SUCCEEDED \*\*" build/export.log
+
+      # A green upload does NOT put the build on his phone: each build must be released
+      # to the tester group, or it sits in App Store Connect and nobody gets it.
+      - name: Release it to the tester group
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          TESTER_GROUP: ${{ secrets.TESTER_GROUP }}
+          WHAT_TO_TEST: ${{ github.event.inputs.notes }}
+        run: |
+          ASC_KEY_PATH="$HOME/private_keys/AuthKey_$ASC_KEY_ID.p8" \
+          BUILD_VERSION="$BUILD" \
+          BUILDS_PER_VERSION=1 \
+          APP_BUNDLE_ID=com.schabbauer.amsmanualexpenses \
+          python3 tools/release-to-testers.py
+
+      - name: Say what happened
+        if: success()
+        env:
+          NOTES: ${{ github.event.inputs.notes }}
+        run: |
+          echo "### Sent to TestFlight" >> $GITHUB_STEP_SUMMARY
+          echo "AMS Manual Expenses $APP_VERSION, build $BUILD." >> $GITHUB_STEP_SUMMARY
+          echo "Apple processes it for a few minutes, then it appears in TestFlight on the iPhone." >> $GITHUB_STEP_SUMMARY
+          if [ -n "$NOTES" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            printf 'What is new: %s\n' "$NOTES" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Keep the logs when something fails
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: testflight-logs
+          path: build/*.log
+          if-no-files-found: ignore

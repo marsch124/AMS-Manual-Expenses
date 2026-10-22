@@ -1,37 +1,53 @@
-# AMS Manual Expenses
+# AMS Manual Expenses — say what you paid
 
-iPhone app for logging expenses during the day by voice. Distributed via TestFlight.
+An iPhone app for logging expenses during the day by voice: "Coffee 45 kronor",
+"Taxi 12 euros 50", "Lunch 129 kr at 1 pm". Every entry is checked before it is
+saved. Data stays on the iPhone. Distributed to Martin through TestFlight.
 
-## What it does
+Organised and run like AMS Packing and AMS Paragon: XcodeGen project, the logic in
+a Swift package of its own (`Core/`), UI tests by identifier in CI on every push,
+What's new and How it works inside the app, and a TestFlight workflow that releases
+every build to his tester group.
 
-- **Dictate**: tap the microphone and say, for example, "Coffee 45 kronor", "Taxi 12 euros 50",
-  "Lunch 129 kr at 1 pm" or "Yesterday parking 40". Recording stops by itself after a short pause.
-  Dictation language (English, Svenska, Deutsch) is chosen with the globe button.
-- **Time**: the current time is used unless you say one ("at 7 pm", "klockan 9.15", "um 13 Uhr").
-- **Currency**: a spoken currency (kronor, kr, crowns, SEK, euro, €) is used. Otherwise the default is the
-  currency of the country you are in (from location), falling back to the phone's time zone.
-  Tap the currency button to fix it manually or set it back to automatic.
-- **Check before saving**: every entry opens for correction before it is saved.
-- Today's list with totals per currency; tap to edit, swipe to delete; export everything as CSV.
+## Layout
 
-Data is stored only on the iPhone.
+- `App/Sources` — the SwiftUI app (iOS 17+, SwiftData, iPhone only, portrait)
+- `App/Resources` — asset catalogue (icon, accent colour), privacy manifest
+- `App/Config/Info.plist` — generated from `project.yml`; committed
+- `Core/` — Swift package `ExpenseCore`: the sentence parser and the time-zone currency
+  fallback, with its own tests
+- `UITests/` — XCUITest, every control found by `accessibilityIdentifier`
+- `project.yml` — XcodeGen spec; `AMSExpenses.xcodeproj` is generated from it and committed
+- `docs/spec.md` — what the app does, rule by rule, written from the code
+- `tools/` — `build.sh`, `test-core.sh`, `release-to-testers.py`
+- `.github/workflows/` — `tests.yml` (every push), `testflight.yml` (a release),
+  `crash-reports.yml` (TestFlight crash reports, read only)
 
-## Project layout
+## Where it stands
 
-- `App/` – SwiftUI app (iOS 17+, SwiftData)
-- `ExpenseCore/` – Swift package with the sentence parser and its tests (`swift test --package-path ExpenseCore`)
-- `project.yml` – XcodeGen project definition. Run `xcodegen generate` to create `AMSExpenses.xcodeproj`.
-- `.github/workflows/ios.yml` – builds and tests on every push; uploads to TestFlight when the secrets below are set.
+- ✅ The app: dictation (English, Svenska, Deutsch), the parser, the check before
+  saving, today's list with totals per currency, CSV export, Settings with What's new,
+  How it works and the version.
+- ✅ Tests: 6 parser tests and 2 UI tests (the version has its What's new; a typed
+  expense is checked and saved). Both UI tests were seen to fail with a planted fault.
+- ✅ CI on every push; TestFlight workflow; all five secrets set.
+- ⏳ App Store Connect app record and the tester group (once, in the browser).
+- ⏳ Not yet tried on a real iPhone: the microphone, speech, location.
 
-## TestFlight setup (one time)
+## Building
 
-Repository secrets (GitHub → Settings → Secrets and variables → Actions):
+`tools/build.sh [build|test]` (its own simulator, "Expenses iPhone 18 Pro") and
+`tools/test-core.sh` (the parser's tests alone, a few seconds). Anything under
+`~/Documents` collects extended attributes that `codesign` refuses ("detritus not
+allowed"); the scripts clear them (never inside `.git`) and keep every build folder
+outside `~/Documents`.
 
-| Secret | Value |
-| --- | --- |
-| `APPLE_TEAM_ID` | 10-character Team ID from developer.apple.com → Membership |
-| `ASC_KEY_ID` | Key ID of an App Store Connect API key with the **Admin** role |
-| `ASC_ISSUER_ID` | Issuer ID shown above the key list in App Store Connect |
-| `ASC_KEY_P8` | Full text of the downloaded `AuthKey_XXXX.p8` file |
+## Tests
 
-The app record in App Store Connect must exist with bundle ID `com.schabbauer.amsmanualexpenses`.
+Martin's standing rule: UI tests in CI on every push, every control found by its
+`accessibilityIdentifier` and never by its words, starting with two and growing one
+at a time. A red run blocks a release. Every test is SEEN TO FAIL before it is
+trusted: plant the fault it guards against, watch it go red, remove the fault.
+
+UI tests start the app with `-uiTesting` (an empty store in memory, no location
+question) and fix the language, number format and currency with launch arguments.

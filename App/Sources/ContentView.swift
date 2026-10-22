@@ -14,6 +14,7 @@ struct ContentView: View {
     @AppStorage("dictationLanguage") private var language = "en-US"
     @State private var typed = ""
     @State private var draft: Draft?
+    @State private var showSettings = false
 
     private var autoCurrency: String {
         location.currency ?? CurrencyDefaults.currency(forTimeZone: TimeZone.current.identifier) ?? "SEK"
@@ -32,10 +33,12 @@ struct ContentView: View {
                 Section {
                     if todays.isEmpty {
                         Text("No expenses yet today.").foregroundStyle(.secondary)
+                            .accessibilityIdentifier("today-empty")
                     }
-                    ForEach(todays) { expense in
+                    ForEach(Array(todays.enumerated()), id: \.element.id) { index, expense in
                         Button { draft = Draft(editing: expense) } label: { ExpenseRow(expense: expense) }
                             .tint(.primary)
+                            .accessibilityIdentifier("expense-row-\(index)")
                     }
                     .onDelete { offsets in
                         let items = offsets.map { todays[$0] }
@@ -46,6 +49,7 @@ struct ContentView: View {
                         Text("Today")
                         Spacer()
                         Text(totals).multilineTextAlignment(.trailing)
+                            .accessibilityIdentifier("today-total")
                     }
                 }
             }
@@ -62,12 +66,18 @@ struct ContentView: View {
                     } label: {
                         Image(systemName: "globe")
                     }
+                    .accessibilityIdentifier("home-language")
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    ShareLink(item: CSVExport(csv: csv), preview: SharePreview("Expenses.csv")) {
-                        Image(systemName: "square.and.arrow.up")
+                    Button { showSettings = true } label: {
+                        Image(systemName: "gearshape")
                     }
+                    .accessibilityLabel("Settings")
+                    .accessibilityIdentifier("home-settings")
                 }
+            }
+            .sheet(isPresented: $showSettings) {
+                SettingsScreen(csv: csv)
             }
             .sheet(item: $draft) { d in
                 EntryEditor(
@@ -80,10 +90,10 @@ struct ContentView: View {
         }
         .onAppear {
             speech.onFinish = { handle($0) }
-            location.refresh()
+            if !ExpensesApp.uiTesting { location.refresh() }
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active { location.refresh() }
+            if phase == .active && !ExpensesApp.uiTesting { location.refresh() }
         }
     }
 
@@ -115,6 +125,7 @@ struct ContentView: View {
                         .padding(.vertical, 6)
                         .background(Capsule().fill(Color.accentColor.opacity(0.15)))
                 }
+                .accessibilityIdentifier("home-currency")
             }
             .font(.subheadline)
         }
@@ -131,20 +142,24 @@ struct ContentView: View {
             }
             .buttonStyle(.borderless)
             .accessibilityLabel(speech.isRecording ? "Stop" : "Dictate expense")
+            .accessibilityIdentifier("home-dictate")
 
             Text(statusText)
                 .font(.footnote)
                 .foregroundStyle(speech.errorMessage == nil ? Color.secondary : Color.red)
                 .multilineTextAlignment(.center)
+                .accessibilityIdentifier("home-status")
 
             HStack {
                 TextField("…or type an expense", text: $typed)
                     .textFieldStyle(.roundedBorder)
                     .submitLabel(.done)
                     .onSubmit { handle(typed) }
+                    .accessibilityIdentifier("home-type-field")
                 Button("Go") { handle(typed) }
                     .buttonStyle(.borderless)
                     .disabled(typed.trimmingCharacters(in: .whitespaces).isEmpty)
+                    .accessibilityIdentifier("home-type-go")
             }
         }
         .frame(maxWidth: .infinity)
@@ -246,20 +261,27 @@ struct EntryEditor: View {
         NavigationStack {
             Form {
                 if !draft.heard.isEmpty {
-                    Section("Heard") { Text(draft.heard).foregroundStyle(.secondary) }
+                    Section("Heard") {
+                        Text(draft.heard).foregroundStyle(.secondary)
+                            .accessibilityIdentifier("entry-heard")
+                    }
                 }
                 Section {
                     TextField("Description", text: $draft.title)
+                        .accessibilityIdentifier("entry-title")
                     HStack {
                         TextField("Amount", text: $draft.amountText)
                             .keyboardType(.decimalPad)
+                            .accessibilityIdentifier("entry-amount")
                         Picker("Currency", selection: $draft.currency) {
                             ForEach(options, id: \.self) { Text($0).tag($0) }
                         }
                         .labelsHidden()
                         .fixedSize()
+                        .accessibilityIdentifier("entry-currency")
                     }
                     DatePicker("Time", selection: $draft.date)
+                        .accessibilityIdentifier("entry-time")
                 }
                 if let onDelete {
                     Section {
@@ -267,6 +289,7 @@ struct EntryEditor: View {
                             onDelete()
                             dismiss()
                         }
+                        .accessibilityIdentifier("entry-delete")
                     }
                 }
             }
@@ -275,6 +298,7 @@ struct EntryEditor: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                        .accessibilityIdentifier("entry-cancel")
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
@@ -282,6 +306,7 @@ struct EntryEditor: View {
                         dismiss()
                     }
                     .disabled(draft.amount == nil)
+                    .accessibilityIdentifier("entry-save")
                 }
             }
         }
