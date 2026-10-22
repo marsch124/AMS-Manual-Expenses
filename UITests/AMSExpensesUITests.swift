@@ -88,6 +88,35 @@ final class AMSExpensesUITests: XCTestCase {
         XCTAssertTrue(app.textFields["home-type-field"].waitForExistence(timeout: 10))
     }
 
+    /// 1.3: a category chosen on the check sheet is what Statistics › By category counts.
+    func testACategoryChosenAtEntryIsCountedByCategory() {
+        let app = launch()
+        let field = app.textFields["home-type-field"]
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        field.tap()
+        field.typeText("Coffee 45 kronor")
+        app.buttons["home-type-go"].tap()
+
+        let category = app.buttons["entry-category"]
+        XCTAssertTrue(category.waitForExistence(timeout: 10), "the check sheet has no category")
+        category.tap()
+        let first = app.buttons["category-choice-0"]
+        XCTAssertTrue(first.waitForExistence(timeout: 10), "the category list did not open")
+        let chosen = first.label
+        first.tap()
+        let value = app.staticTexts["entry-category-value"]
+        XCTAssertTrue(value.waitForExistence(timeout: 10))
+        XCTAssertEqual(value.label, chosen, "the check sheet does not show the chosen category")
+        app.buttons["entry-save"].tap()
+
+        XCTAssertTrue(app.buttons["home-statistics"].waitForExistence(timeout: 10))
+        app.buttons["home-statistics"].tap()
+        let row = app.buttons["stats-category-0"]
+        XCTAssertTrue(row.waitForExistence(timeout: 10), "By category is empty")
+        XCTAssertTrue(row.label.contains(chosen), "the first category reads '\(row.label)', not \(chosen)")
+        XCTAssertTrue(row.label.contains("45"), "the category's total reads '\(row.label)'")
+    }
+
     /// 1.2: Statistics counts this week in kronor, euros at the day's rate (10 in UI tests).
     func testStatisticsCountTheWeekInKronor() {
         let app = launch()

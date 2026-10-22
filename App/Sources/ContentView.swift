@@ -192,12 +192,12 @@ struct ContentView: View {
         let timeFormat = DateFormatter()
         timeFormat.dateFormat = "HH:mm"
         func quote(_ s: String) -> String { "\"" + s.replacingOccurrences(of: "\"", with: "\"\"") + "\"" }
-        var lines = ["Date,Time,Description,Amount,Currency,Place,Time zone"]
+        var lines = ["Date,Time,Description,Category,Amount,Currency,Place,Time zone"]
         for e in expenses.reversed() {
             let tz = TimeZone(identifier: e.timeZoneID) ?? .current
             dateFormat.timeZone = tz
             timeFormat.timeZone = tz
-            lines.append([dateFormat.string(from: e.date), timeFormat.string(from: e.date), e.title,
+            lines.append([dateFormat.string(from: e.date), timeFormat.string(from: e.date), e.title, e.category,
                           String(format: "%.2f", e.amount), e.currency, e.place, e.timeZoneID].map(quote).joined(separator: ","))
         }
         return lines.joined(separator: "\n")
@@ -208,7 +208,8 @@ struct ContentView: View {
         guard !sentence.isEmpty else { return }
         let parsed = ExpenseParser.parse(sentence, defaultCurrency: defaultCurrency)
         draft = Draft(title: parsed.title, amountText: parsed.amount.map(Draft.format) ?? "",
-                      currency: parsed.currency, date: parsed.date, heard: sentence)
+                      currency: parsed.currency, date: parsed.date, heard: sentence,
+                      category: Categories.suggestion(for: parsed.title, history: expenses.map(\.spend)) ?? "")
         typed = ""
     }
 
@@ -219,19 +220,26 @@ struct ContentView: View {
             e.apply(d)
         } else {
             context.insert(Expense(title: title, amount: amount, currency: d.currency, date: d.date,
-                                   place: location.placeName ?? "", heard: d.heard))
+                                   place: location.placeName ?? "", heard: d.heard, category: d.category))
         }
     }
 }
 
 struct ExpenseRow: View {
     let expense: Expense
+    var showsDate = false
+
+    private var when: String {
+        showsDate
+            ? expense.date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated).hour().minute())
+            : expense.date.formatted(.dateTime.hour().minute())
+    }
 
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text(expense.title)
-                Text(expense.date, format: .dateTime.hour().minute())
+                Text(expense.category.isEmpty ? when : when + " · " + expense.category)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -273,6 +281,16 @@ struct EntryEditor: View {
                 Section {
                     TextField("Description", text: $draft.title)
                         .accessibilityIdentifier("entry-title")
+                    NavigationLink { CategoryChooser(selection: $draft.category) } label: {
+                        HStack {
+                            Text("Category")
+                            Spacer()
+                            Text(draft.category.isEmpty ? "None" : draft.category)
+                                .foregroundStyle(.secondary)
+                                .accessibilityIdentifier("entry-category-value")
+                        }
+                    }
+                    .accessibilityIdentifier("entry-category")
                     HStack {
                         TextField("Amount", text: $draft.amountText)
                             .keyboardType(.decimalPad)

@@ -9,6 +9,13 @@ struct Release {
 
 enum Releases {
     static let all: [Release] = [
+        Release(version: "1.3", date: "22 October 2026", lines: [
+            "Categories: choose one on the check sheet (Category), or later by tapping the expense. “New category…” adds one right there.",
+            "The app remembers: the next time you say the same description, its category is filled in by itself.",
+            "Statistics › By category: totals in kronor for this week, this month, last month or all time. Tap a category to see its expenses.",
+            "Settings › Categories: add, rename (every expense follows), delete and reorder.",
+            "The CSV export has a Category column.",
+        ]),
         Release(version: "1.2", date: "22 October 2026", lines: [
             "Statistics — the chart button at the top: this week, this month and last month with the average per day; a bar for each of the last 30 days; what you spend most on; and every earlier day.",
             "Earlier days: open a day to see its expenses, tap one to change it, swipe to delete it.",
@@ -62,10 +69,17 @@ enum Guide {
             "The list shows today’s expenses and their total in kronor.",
             "Tap an expense to change it. Swipe it to the left to delete it.",
         ]),
+        Section(title: "Categories", lines: [
+            "The check sheet has a Category row: tap it and choose one, or “New category…” to add one.",
+            "The next time you say the same description (“Coffee”), its last category is filled in by itself.",
+            "To change it later, tap the expense — today, or in Statistics under a day or a category.",
+            "Settings › Categories: tap one to rename it (every expense moves with it), swipe to delete it (its expenses keep no category), Edit to change the order, Add category at the bottom.",
+        ]),
         Section(title: "Statistics", lines: [
             "The chart button at the top opens Statistics.",
             "Totals: this week (from Monday), this month and last month, each with the average per day.",
             "Last 30 days: one bar per day.",
+            "By category: each category with how many and its total, for the week, the month, last month or all time. Tap one to see its expenses.",
             "What you spend most on: the descriptions you use most often, how many times, and their total.",
             "Earlier days: tap a day to see its expenses; tap one to change it, swipe to delete it.",
         ]),
@@ -76,7 +90,7 @@ enum Guide {
         ]),
         Section(title: "Your data", lines: [
             "Your expenses stay on this iPhone.",
-            "Settings › Export all as CSV gives every expense as a file for Numbers or Excel.",
+            "Settings › Export all as CSV gives every expense, with its category, as a file for Numbers or Excel.",
         ]),
     ]
 }

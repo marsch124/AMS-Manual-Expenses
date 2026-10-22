@@ -10,13 +10,42 @@ public struct Spend: Equatable, Sendable {
     public var amount: Double
     public var currency: String
     public var date: Date
+    /// "" = no category.
+    public var category: String
 
-    public init(title: String, amount: Double, currency: String, date: Date) {
+    public init(title: String, amount: Double, currency: String, date: Date, category: String = "") {
         self.title = title
         self.amount = amount
         self.currency = currency
         self.date = date
+        self.category = category
     }
+}
+
+/// Categories (1.3, Martin 22 Oct 2026: "coffee and café were in different statistics").
+public enum Categories {
+    /// The list a new install starts with; he changes it in Settings › Categories.
+    public static let defaults = ["Café", "Groceries", "Restaurant", "Transport", "Shopping",
+                                  "Home", "Health", "Leisure", "Travel", "Other"]
+
+    /// The category last given to an expense with the same description ("coffee" = "Coffee "),
+    /// so it is chosen once and then filled in by itself.
+    public static func suggestion(for title: String, history: [Spend]) -> String? {
+        let key = title.trimmingCharacters(in: .whitespaces).lowercased()
+        guard !key.isEmpty else { return nil }
+        return history
+            .filter { !$0.category.isEmpty && $0.title.trimmingCharacters(in: .whitespaces).lowercased() == key }
+            .max { $0.date < $1.date }?
+            .category
+    }
+}
+
+/// One category's sum in kronor ("" = no category).
+public struct CategoryTotal: Identifiable, Equatable, Sendable {
+    public var name: String
+    public var count: Int
+    public var kronor: Double
+    public var id: String { name }
 }
 
 /// Kronor per unit of a currency, by day ("2026-10-21" → ["EUR": 11.10]).
@@ -123,6 +152,25 @@ public enum Statistics {
             let days = calendar.range(of: .day, in: .month, for: last.start)?.count ?? 30
             return (last, days)
         }
+    }
+
+    /// The expenses inside a period; nil = all of them.
+    public static func inside(_ items: [Spend], _ period: Period?, now: Date, calendar: Calendar) -> [Spend] {
+        guard let period else { return items }
+        let interval = range(period, now: now, calendar: calendar).interval
+        return items.filter { $0.date >= interval.start && $0.date < interval.end }
+    }
+
+    /// Each category with its count and kronor, the dearest first.
+    public static func byCategory(_ items: [Spend], rates: RateTable, calendar: Calendar) -> [CategoryTotal] {
+        var groups: [String: CategoryTotal] = [:]
+        for s in items {
+            var c = groups[s.category] ?? CategoryTotal(name: s.category, count: 0, kronor: 0)
+            c.count += 1
+            c.kronor += rates.kronor(s, calendar: calendar) ?? 0
+            groups[s.category] = c
+        }
+        return groups.values.sorted { ($0.kronor, $1.name) > ($1.kronor, $0.name) }
     }
 
     public static func total(_ items: [Spend], in period: Period, now: Date, rates: RateTable,

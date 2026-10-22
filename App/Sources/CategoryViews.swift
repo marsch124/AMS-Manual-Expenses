@@ -1,0 +1,208 @@
+import ExpenseCore
+import SwiftData
+import SwiftUI
+
+/// His categories, in his order, kept in UserDefaults one per line (1.3).
+enum CategoryList {
+    static let key = "categories"
+    static let initial = encode(Categories.defaults)
+
+    static func decode(_ text: String) -> [String] {
+        text.split(separator: "\n").map(String.init)
+    }
+
+    static func encode(_ names: [String]) -> String {
+        names.joined(separator: "\n")
+    }
+
+    /// A name worth adding: trimmed, not empty, not already there (any spelling).
+    static func cleaned(_ name: String, in names: [String]) -> String? {
+        let n = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !n.isEmpty, !names.contains(where: { $0.lowercased() == n.lowercased() }) else { return nil }
+        return n
+    }
+}
+
+/// Choosing an expense's category on the check sheet: tap one and it is chosen;
+/// "New category…" adds one to the list and chooses it.
+struct CategoryChooser: View {
+    @Binding var selection: String
+    @Environment(\.dismiss) private var dismiss
+    @AppStorage(CategoryList.key) private var categoriesText = CategoryList.initial
+    @State private var adding = false
+    @State private var newName = ""
+
+    private var names: [String] { CategoryList.decode(categoriesText) }
+
+    var body: some View {
+        List {
+            Section {
+                choice("None", value: "", id: "category-choice-none")
+                ForEach(Array(names.enumerated()), id: \.element) { index, name in
+                    choice(name, value: name, id: "category-choice-\(index)")
+                }
+            }
+            Section {
+                Button("New category…") {
+                    newName = ""
+                    adding = true
+                }
+                .accessibilityIdentifier("category-new")
+            }
+        }
+        .navigationTitle("Category")
+        .navigationBarTitleDisplayMode(.inline)
+        .alert("New category", isPresented: $adding) {
+            TextField("Name", text: $newName)
+                .accessibilityIdentifier("category-new-name")
+            Button("Cancel", role: .cancel) {}
+                .accessibilityIdentifier("category-new-cancel")
+            Button("Add") {
+                if let name = CategoryList.cleaned(newName, in: names) {
+                    categoriesText = CategoryList.encode(names + [name])
+                    selection = name
+                    dismiss()
+                } else if let existing = names.first(where: { $0.lowercased() == newName.trimmingCharacters(in: .whitespaces).lowercased() }) {
+                    selection = existing
+                    dismiss()
+                }
+            }
+            .accessibilityIdentifier("category-new-add")
+        }
+    }
+
+    private func choice(_ label: String, value: String, id: String) -> some View {
+        Button {
+            selection = value
+            dismiss()
+        } label: {
+            HStack {
+                Text(label)
+                Spacer()
+                if selection == value {
+                    Image(systemName: "checkmark").foregroundStyle(Color.accentColor)
+                }
+            }
+        }
+        .tint(.primary)
+        .accessibilityIdentifier(id)
+        .accessibilityAddTraits(selection == value ? .isSelected : [])
+    }
+}
+
+/// Settings › Categories: add (at the bottom), rename (tap; every expense follows), delete
+/// (swipe; its expenses keep no category, after asking when some use it), reorder (Edit).
+struct CategoriesScreen: View {
+    @Environment(\.modelContext) private var context
+    @AppStorage(CategoryList.key) private var categoriesText = CategoryList.initial
+    @Query private var expenses: [Expense]
+    @State private var renaming: String?
+    @State private var adding = false
+    @State private var editedName = ""
+    @State private var deleting: String?
+
+    private var names: [String] { CategoryList.decode(categoriesText) }
+
+    var body: some View {
+        List {
+            Section {
+                ForEach(Array(names.enumerated()), id: \.element) { index, name in
+                    Button {
+                        editedName = name
+                        renaming = name
+                    } label: {
+                        HStack {
+                            Text(name)
+                            Spacer()
+                            Text("\(used(name))")
+                                .monospacedDigit()
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .tint(.primary)
+                    .accessibilityIdentifier("categories-row-\(index)")
+                }
+                .onDelete { offsets in
+                    guard let index = offsets.first else { return }
+                    let name = names[index]
+                    if used(name) > 0 { deleting = name } else { remove(name) }
+                }
+                .onMove { from, to in
+                    var list = names
+                    list.move(fromOffsets: from, toOffset: to)
+                    categoriesText = CategoryList.encode(list)
+                }
+            } footer: {
+                Text("The number is how many expenses have the category. Tap a category to rename it.")
+            }
+            Section {
+                Button("Add category") {
+                    editedName = ""
+                    adding = true
+                }
+                .accessibilityIdentifier("categories-add")
+            }
+        }
+        .navigationTitle("Categories")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            EditButton().accessibilityIdentifier("categories-edit")
+        }
+        .alert("Rename category", isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
+            TextField("Name", text: $editedName)
+                .accessibilityIdentifier("categories-rename-name")
+            Button("Cancel", role: .cancel) { renaming = nil }
+            Button("Save") {
+                if let old = renaming { rename(old, to: editedName) }
+                renaming = nil
+            }
+            .accessibilityIdentifier("categories-rename-save")
+        } message: {
+            Text("Every expense in this category moves with it.")
+        }
+        .alert("New category", isPresented: $adding) {
+            TextField("Name", text: $editedName)
+                .accessibilityIdentifier("categories-new-name")
+            Button("Cancel", role: .cancel) {}
+            Button("Add") {
+                if let name = CategoryList.cleaned(editedName, in: names) {
+                    categoriesText = CategoryList.encode(names + [name])
+                }
+            }
+            .accessibilityIdentifier("categories-new-add")
+        }
+        .confirmationDialog("Delete this category?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
+                            titleVisibility: .visible) {
+            Button("Delete category", role: .destructive) {
+                if let name = deleting { remove(name) }
+                deleting = nil
+            }
+            .accessibilityIdentifier("categories-delete-confirm")
+            Button("Keep it", role: .cancel) { deleting = nil }
+        } message: {
+            Text("\(used(deleting ?? "")) expenses will have no category. The expenses themselves stay.")
+        }
+    }
+
+    private func used(_ name: String) -> Int {
+        expenses.filter { $0.category == name }.count
+    }
+
+    private func rename(_ old: String, to new: String) {
+        let name = new.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty, name != old else { return }
+        if name.lowercased() != old.lowercased(), names.contains(where: { $0.lowercased() == name.lowercased() }) {
+            // Renaming onto another category joins the two: its expenses move there.
+            for e in expenses where e.category == old { e.category = names.first { $0.lowercased() == name.lowercased() }! }
+            categoriesText = CategoryList.encode(names.filter { $0 != old })
+            return
+        }
+        for e in expenses where e.category == old { e.category = name }
+        categoriesText = CategoryList.encode(names.map { $0 == old ? name : $0 })
+    }
+
+    private func remove(_ name: String) {
+        for e in expenses where e.category == name { e.category = "" }
+        categoriesText = CategoryList.encode(names.filter { $0 != name })
+    }
+}

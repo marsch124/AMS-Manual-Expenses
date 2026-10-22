@@ -10,6 +10,8 @@ struct SettingsScreen: View {
         NavigationStack {
             Form {
                 Section("Your expenses") {
+                    NavigationLink { CategoriesScreen() } label: { Text("Categories") }
+                        .accessibilityIdentifier("settings-categories")
                     ShareLink(item: CSVExport(csv: csv), preview: SharePreview("Expenses.csv")) {
                         Label("Export all as CSV", systemImage: "square.and.arrow.up")
                     }

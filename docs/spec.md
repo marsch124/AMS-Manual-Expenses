@@ -1,6 +1,6 @@
 # AMS Manual Expenses — specification
 
-What the app does, rule by rule, written from the code (version 1.2, 22 Oct 2026).
+What the app does, rule by rule, written from the code (version 1.3, 22 Oct 2026).
 Change this file in the same commit as the behaviour it describes.
 
 ## 1. The main screen (`ContentView.swift`)
@@ -16,7 +16,7 @@ One list, three parts:
    so far, or an error in red), and a text field (`home-type-field`) with **Go**
    (`home-type-go`, disabled while the field is empty) for typing the same sentence.
 3. **Today** — today's expenses, newest first (`expense-row-0`, `-1`, …), each with
-   description, time and amount in its own currency. The section header holds "Today"
+   description, time (and category, since 1.3) and amount in its own currency. The section header holds "Today"
    and the total in kronor (`today-total`, §9; before 1.2 one total per currency). Empty: "No expenses yet today."
    (`today-empty`). Tap a row to change it; swipe left to delete it (no question).
 
@@ -73,7 +73,9 @@ The currency menu offers Automatic, SEK, EUR and the local currency if it is ano
 ## 5. Checking an entry (`EntryEditor`)
 
 Opens for every new expense and when a row is tapped. Shows what was heard
-(`entry-heard`), Description (`entry-title`), Amount (`entry-amount`, decimal pad,
+(`entry-heard`), Description (`entry-title`), Category (`entry-category`, showing
+`entry-category-value`; opens the chooser, §11 — filled in by itself from the last expense
+with the same description), Amount (`entry-amount`, decimal pad,
 comma or point), Currency (`entry-currency`), Time (`entry-time`, date and time).
 **Save** (`entry-save`) is off until the amount is a number above 0. **Cancel**
 (`entry-cancel`) keeps nothing. An existing expense also has **Delete expense**
@@ -81,8 +83,9 @@ comma or point), Currency (`entry-currency`), Time (`entry-time`, date and time)
 
 ## 6. Settings (`SettingsScreen.swift`)
 
+- **Categories** (`settings-categories`): §11.
 - **Export all as CSV** (`settings-export`): every expense, oldest first, columns
-  Date, Time, Description, Amount, Currency, Place, Time zone; date and time in the
+  Date, Time, Description, Category (1.3), Amount, Currency, Place, Time zone; date and time in the
   time zone where it was logged; every field quoted.
 - **What's new** (`settings-whatsnew`): `Releases.all`, newest first; the top version
   is `whatsnew-0-version`.
@@ -93,12 +96,14 @@ comma or point), Currency (`entry-currency`), Time (`entry-time`, date and time)
 ## 7. Data (`Expense.swift`)
 
 SwiftData, on the iPhone only. An expense: title, amount, currency, date, time-zone id
-and place at the moment it was logged, the sentence heard, created-at.
+and place at the moment it was logged, the sentence heard, created-at, category (1.3, a
+name; "" = none). The category list is UserDefaults `categories`, one name per line.
 
 ## 8. Test hooks
 
 `-uiTesting`: the store is in memory and starts empty; location is never asked; no
-exchange rate is fetched — one euro is always 10 kronor.
+exchange rate is fetched — one euro is always 10 kronor; the category list starts as a
+new install's.
 UI tests also pass `-manualCurrency SEK -dictationLanguage en-US -AppleLanguages (en)
 -AppleLocale en_US`.
 
@@ -121,11 +126,35 @@ Totals are whole kronor.
   weekday — Monday in Sweden), This month (`stats-month-total`), Last month
   (`stats-lastmonth-total`); each with "… a day" (`…-perday`): the total divided by the
   days so far (today included) for this week and this month, by all its days for last month.
+- **By category** (1.3): a segmented choice (`stats-category-span`) Week / Month (the
+  default) / Last month / All; each category in that span with count and kronor, the
+  dearest first, "No category" as one more row (`stats-category-0` …). A row opens its
+  expenses (with dates) in the same list screen as a day.
 - **Last 30 days** (`stats-chart`): one bar per day, today the last; 0 for a day with nothing.
 - **What you spend most on** (`stats-top-0` …): the 5 descriptions used most often
   ("coffee" and "Coffee " are one), then the dearest: "Coffee · 14× · 630 kr".
 - **Earlier days** (`stats-day-0` …): every day with an expense except today, newest
-  first, with its total. A day opens `DayScreen`: its expenses (`day-row-0` …), the total
-  (`day-total`); tap one to change it (the same check sheet as §5), swipe to delete it.
+  first, with its total. A day opens `ExpenseListScreen`: its expenses (`list-row-0` …),
+  the total (`list-total`); tap one to change it (the same check sheet as §5), swipe to
+  delete it.
 - Footer (`stats-rates-note`): that totals are in kronor at the bank's rate, or that some
   rates are still missing.
+
+## 11. Categories (1.3, `CategoryViews.swift`)
+
+Asked for on 22 Oct 2026: "coffee and café were in different statistics".
+
+- A new install's list: Café, Groceries, Restaurant, Transport, Shopping, Home, Health,
+  Leisure, Travel, Other (`Categories.defaults`).
+- **Chooser** (from the check sheet): None (`category-choice-none`), each category
+  (`category-choice-0` …, a check mark on the chosen one); a tap chooses and goes back.
+  **New category…** (`category-new`) asks for a name (`category-new-name`; Cancel / Add):
+  added at the end of the list and chosen. A name already there (any spelling) is chosen
+  instead of added twice.
+- **Remembered**: a new expense gets the category of the latest expense with the same
+  description (trimmed, any capitals); none → no category. He can change it before Save.
+- **Settings › Categories** (`categories-row-0` …, each with how many expenses use it):
+  tap = rename (Cancel / Save; every expense with it moves along; renaming onto another
+  category's name joins the two); swipe = delete (when used, asks first — "Delete
+  category" / "Keep it"; its expenses keep no category, the expenses stay); Edit
+  (`categories-edit`) = reorder; **Add category** (`categories-add`) at the bottom.

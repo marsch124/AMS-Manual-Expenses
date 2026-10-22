@@ -15,8 +15,12 @@ final class Expense {
     /// The sentence as it was dictated or typed.
     var heard: String = ""
     var createdAt: Date = Date()
+    /// Since 1.3; "" = no category. A name from Settings › Categories.
+    var category: String = ""
 
-    init(title: String, amount: Double, currency: String, date: Date, place: String, heard: String) {
+    init(title: String, amount: Double, currency: String, date: Date, place: String, heard: String,
+         category: String = "") {
+        self.category = category
         self.title = title
         self.amount = amount
         self.currency = currency
@@ -30,7 +34,7 @@ final class Expense {
 
 extension Expense {
     /// What the statistics count.
-    var spend: Spend { Spend(title: title, amount: amount, currency: currency, date: date) }
+    var spend: Spend { Spend(title: title, amount: amount, currency: currency, date: date, category: category) }
 
     /// A checked draft's answers written onto this expense (editing an existing one).
     func apply(_ d: Draft) {
@@ -39,6 +43,7 @@ extension Expense {
         self.amount = amount
         currency = d.currency
         date = d.date
+        category = d.category
     }
 }
 
@@ -51,6 +56,7 @@ struct Draft: Identifiable {
     var currency: String
     var date: Date
     var heard: String
+    var category: String = ""
 
     var amount: Double? {
         let value = Double(amountText.replacingOccurrences(of: ",", with: ".").trimmingCharacters(in: .whitespaces))
@@ -66,6 +72,6 @@ struct Draft: Identifiable {
 extension Draft {
     init(editing e: Expense) {
         self.init(expense: e, title: e.title, amountText: Draft.format(e.amount),
-                  currency: e.currency, date: e.date, heard: e.heard)
+                  currency: e.currency, date: e.date, heard: e.heard, category: e.category)
     }
 }

@@ -9,8 +9,27 @@ import SwiftUI
 struct StatisticsScreen: View {
     @EnvironmentObject private var rates: ExchangeRates
     @Query(sort: \Expense.date, order: .reverse) private var expenses: [Expense]
+    @State private var categorySpan: CategorySpan = .thisMonth
+
+    /// The span the category totals cover (1.3).
+    enum CategorySpan: String, CaseIterable, Identifiable {
+        case thisWeek = "Week", thisMonth = "Month", lastMonth = "Last month", all = "All"
+        var id: String { rawValue }
+        var period: Statistics.Period? {
+            switch self {
+            case .thisWeek: .thisWeek
+            case .thisMonth: .thisMonth
+            case .lastMonth: .lastMonth
+            case .all: nil
+            }
+        }
+    }
 
     private var spends: [Spend] { expenses.map(\.spend) }
+    private var categories: [CategoryTotal] {
+        Statistics.byCategory(Statistics.inside(spends, categorySpan.period, now: Date(), calendar: calendar),
+                              rates: rates.table, calendar: calendar)
+    }
     private var calendar: Calendar { .current }
     private var daily: [DayKronor] {
         Statistics.daily(spends, days: 30, now: Date(), rates: rates.table, calendar: calendar)
@@ -32,6 +51,33 @@ struct StatisticsScreen: View {
                 periodRow("This week", .thisWeek, id: "stats-week")
                 periodRow("This month", .thisMonth, id: "stats-month")
                 periodRow("Last month", .lastMonth, id: "stats-lastmonth")
+            }
+            Section("By category") {
+                Picker("Span", selection: $categorySpan) {
+                    ForEach(CategorySpan.allCases) { Text($0.rawValue).tag($0) }
+                }
+                .pickerStyle(.segmented)
+                .accessibilityIdentifier("stats-category-span")
+                if categories.isEmpty {
+                    Text("Nothing in this span.").foregroundStyle(.secondary)
+                }
+                ForEach(Array(categories.enumerated()), id: \.element.id) { index, c in
+                    NavigationLink {
+                        ExpenseListScreen(title: c.name.isEmpty ? "No category" : c.name, showsDate: true) { e in
+                            e.category == c.name && Statistics.inside([e.spend], categorySpan.period, now: Date(),
+                                                                      calendar: calendar).count == 1
+                        }
+                    } label: {
+                        HStack {
+                            Text(c.name.isEmpty ? "No category" : c.name)
+                            Spacer()
+                            Text("\(c.count)× · \(Money.kronor(c.kronor))")
+                                .monospacedDigit()
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .accessibilityIdentifier("stats-category-\(index)")
+                }
             }
             Section("Last 30 days") {
                 Chart(daily) { d in
@@ -69,7 +115,11 @@ struct StatisticsScreen: View {
                     Text("No earlier days yet.").foregroundStyle(.secondary)
                 }
                 ForEach(Array(earlierDays.enumerated()), id: \.element.id) { index, d in
-                    NavigationLink { DayScreen(day: d.day) } label: {
+                    NavigationLink {
+                        ExpenseListScreen(title: d.day.formatted(.dateTime.weekday(.wide).day().month(.wide))) { e in
+                            calendar.isDate(e.date, inSameDayAs: d.day)
+                        }
+                    } label: {
                         HStack {
                             Text(d.day, format: .dateTime.weekday(.abbreviated).day().month(.wide))
                             Spacer()
@@ -115,26 +165,30 @@ struct StatisticsScreen: View {
     }
 }
 
-/// One earlier day: its expenses, to look at, change (tap) or delete (swipe).
-struct DayScreen: View {
-    let day: Date
+/// A list of expenses — one earlier day, or one category — to look at, change (tap) or
+/// delete (swipe).
+struct ExpenseListScreen: View {
+    let title: String
+    /// A category's list spans many days, so its rows show the date too.
+    var showsDate = false
+    let include: (Expense) -> Bool
     @Environment(\.modelContext) private var context
     @EnvironmentObject private var rates: ExchangeRates
     @Query(sort: \Expense.date, order: .reverse) private var expenses: [Expense]
     @State private var draft: Draft?
 
-    private var items: [Expense] { expenses.filter { Calendar.current.isDate($0.date, inSameDayAs: day) } }
+    private var items: [Expense] { expenses.filter(include) }
 
     var body: some View {
         List {
             Section {
                 if items.isEmpty {
-                    Text("Nothing left on this day.").foregroundStyle(.secondary)
+                    Text("Nothing left here.").foregroundStyle(.secondary)
                 }
                 ForEach(Array(items.enumerated()), id: \.element.id) { index, expense in
-                    Button { draft = Draft(editing: expense) } label: { ExpenseRow(expense: expense) }
+                    Button { draft = Draft(editing: expense) } label: { ExpenseRow(expense: expense, showsDate: showsDate) }
                         .tint(.primary)
-                        .accessibilityIdentifier("day-row-\(index)")
+                        .accessibilityIdentifier("list-row-\(index)")
                 }
                 .onDelete { offsets in
                     let gone = offsets.map { items[$0] }
@@ -145,11 +199,11 @@ struct DayScreen: View {
                     Text("Total")
                     Spacer()
                     Text(Money.text(Statistics.total(items.map(\.spend), rates: rates.table, calendar: .current)))
-                        .accessibilityIdentifier("day-total")
+                        .accessibilityIdentifier("list-total")
                 }
             }
         }
-        .navigationTitle(day.formatted(.dateTime.weekday(.wide).day().month(.wide)))
+        .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $draft) { d in
             EntryEditor(

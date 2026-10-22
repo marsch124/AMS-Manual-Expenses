@@ -91,6 +91,35 @@ final class StatisticsTests: XCTestCase {
         XCTAssertEqual(top[1].title, "Hotel", "one each: the dearest first")
     }
 
+    func testTotalsByCategory() {
+        let items = [
+            Spend(title: "Coffee", amount: 45, currency: "SEK", date: day(10, 22), category: "Café"),
+            Spend(title: "Café", amount: 5, currency: "EUR", date: day(10, 20), category: "Café"),
+            Spend(title: "Taxi", amount: 300, currency: "SEK", date: day(10, 21), category: "Transport"),
+            Spend(title: "Bun", amount: 35, currency: "SEK", date: day(10, 21)),
+            Spend(title: "Coffee", amount: 40, currency: "SEK", date: day(9, 30), category: "Café"),
+        ]
+        let month = Statistics.byCategory(Statistics.inside(items, .thisMonth, now: now, calendar: calendar),
+                                          rates: rates, calendar: calendar)
+        XCTAssertEqual(month.map(\.name), ["Transport", "Café", ""], "the dearest first; no category is one group")
+        XCTAssertEqual(month[1].count, 2, "Coffee and Café in one category")
+        XCTAssertEqual(month[1].kronor, 45 + 56, accuracy: 0.001)
+        let all = Statistics.byCategory(Statistics.inside(items, nil, now: now, calendar: calendar),
+                                        rates: rates, calendar: calendar)
+        XCTAssertEqual(all.first { $0.name == "Café" }?.count, 3, "all time includes September")
+    }
+
+    func testACategoryIsRememberedByDescription() {
+        let history = [
+            Spend(title: "Coffee", amount: 45, currency: "SEK", date: day(10, 1), category: "Leisure"),
+            Spend(title: "coffee ", amount: 45, currency: "SEK", date: day(10, 20), category: "Café"),
+            Spend(title: "Coffee", amount: 45, currency: "SEK", date: day(10, 21)),
+        ]
+        XCTAssertEqual(Categories.suggestion(for: "Coffee", history: history), "Café", "the latest one given, any spelling")
+        XCTAssertNil(Categories.suggestion(for: "Taxi", history: history))
+        XCTAssertNil(Categories.suggestion(for: " ", history: history))
+    }
+
     func testEarlierDaysNewestFirst() {
         let days = Statistics.days(spends, rates: rates, calendar: calendar)
         XCTAssertEqual(days.map(\.day), [day(10, 22), day(10, 20), day(10, 5), day(9, 30)].map(calendar.startOfDay(for:)))
