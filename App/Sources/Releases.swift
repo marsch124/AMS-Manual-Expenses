@@ -9,6 +9,10 @@ struct Release {
 
 enum Releases {
     static let all: [Release] = [
+        Release(version: "1.1", date: "22 October 2026", lines: [
+            "Say how long ago you paid: “3 hours ago”, “for 3 hours ago”, “half an hour ago”, “20 minutes ago”, “2 days ago”.",
+            "The same in Swedish and German: “för 3 timmar sedan”, “för en halvtimme sen”, “vor 3 Stunden”, “vor einer halben Stunde”.",
+        ]),
         Release(version: "1.0", date: "22 October 2026", lines: [
             "Say an expense — “Coffee 45 kronor”, “Taxi 12 euros 50”, “Lunch 129 kr at 1 pm” — and check it before it is saved.",
             "English, Svenska and Deutsch, chosen with the globe.",
@@ -38,6 +42,7 @@ enum Guide {
         ]),
         Section(title: "Time", lines: [
             "The time is now, unless you say one: “at 7 pm”, “klockan 9.15”, “um 13 Uhr”.",
+            "Or say how long ago: “3 hours ago”, “half an hour ago”, “för 3 timmar sedan”, “vor einer halben Stunde”, “2 days ago”.",
             "“Yesterday”, “igår” or “gestern” moves it to yesterday.",
         ]),
         Section(title: "Currency", lines: [

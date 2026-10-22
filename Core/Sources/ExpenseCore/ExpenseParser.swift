@@ -38,6 +38,28 @@ public enum ExpenseParser {
     static let currencyRe = regex(#"(^|[^\p{L}])("# + currencyAlt + #")(?=$|[^\p{L}])"#)
     static let dayRe = regex(#"(^|[^\p{L}])(yesterday|igår|i går|gestern)(?=$|[^\p{L}])"#)
     static let timeRe = regex(#"(?:\b(?:at|around|klockan|kl\.?|um|gegen)\s+(\d{1,2})(?:[:.](\d{2}))?\s*(a\.?m\.?|p\.?m\.?|uhr)?)|(?:\b(\d{1,2})(?:[:.](\d{2}))?\s*(a\.?m\.?|p\.?m\.?|uhr)(?!\p{L}))"#)
+    /// How long ago, said out loud: "3 hours ago", "for 3 hours ago", "half an hour ago",
+    /// "för 3 timmar sedan", "för en halvtimme sen", "vor einer halben Stunde", "2 days ago".
+    /// Asked for by Martin on 22 Oct 2026 ("for 3 hours ago" was not understood in 1.0).
+    static let agoRes: [NSRegularExpression] = {
+        let n = #"\d{1,3}(?:[.,]\d)?"#
+        let en = "half an?|an?|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve"
+        let sv = "en halv|en|ett|två|tre|fyra|fem|sex|sju|åtta|nio|tio|elva|tolv"
+        let de = "einer halben|einem|einer|eine|ein|zwei|drei|vier|fünf|sechs|sieben|acht|neun|zehn|elf|zwölf"
+        return [
+            regex(#"(?:\bfor\s+)?\b("# + n + "|" + en + #")\s*(hours?|hrs?|h|minutes?|mins?|days?)\s+ago\b"#),
+            regex(#"\bför\s+("# + n + "|" + sv + #")\s*(halvtimme|timmar|timme|tim|minuter|minut|min|dagar|dag)\s+(?:sedan|sen)\b"#),
+            regex(#"\bvor\s+("# + n + "|" + de + #")\s*(stunden|stunde|std|minuten|minute|min|tagen|tag)\b"#),
+        ]
+    }()
+    static let quantityWords: [String: Double] = [
+        "a": 1, "an": 1, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7,
+        "eight": 8, "nine": 9, "ten": 10, "eleven": 11, "twelve": 12, "half a": 0.5, "half an": 0.5,
+        "en": 1, "ett": 1, "två": 2, "tre": 3, "fyra": 4, "fem": 5, "sex": 6, "sju": 7, "åtta": 8,
+        "nio": 9, "tio": 10, "elva": 11, "tolv": 12, "en halv": 0.5,
+        "ein": 1, "eine": 1, "einer": 1, "einem": 1, "zwei": 2, "drei": 3, "vier": 4, "fünf": 5,
+        "sechs": 6, "sieben": 7, "acht": 8, "neun": 9, "zehn": 10, "elf": 11, "zwölf": 12, "einer halben": 0.5,
+    ]
     static let numberRe = regex(#"\d{1,3}(?:[ .,]\d{3})+(?:[.,]\d{1,2})?|\d+(?:[.,]\d{1,2})?"#)
     // "12 euros 50", "12 euro and 50 cents", "45 kronor och 50 öre"
     static let centsTailRe = regex(#"^\s*(?:"# + currencyAlt + #")\s*(?:(?:and|och|und)\s*)?(?:(\d{2})(?!\d)|(\d{1,2})\s*(?:cents?|öre))(?=$|[^\p{L}\d])"#)
@@ -132,6 +154,14 @@ public enum ExpenseParser {
         var found = false
         var rest = text
 
+        for re in agoRes {
+            if let m = re.firstMatch(in: rest, range: fullRange(rest)),
+               let back = minutesAgo(group(m, 1, in: rest), unit: group(m, 2, in: rest)) {
+                date = calendar.date(byAdding: .minute, value: -back, to: now) ?? now
+                rest = (rest as NSString).replacingCharacters(in: m.range, with: " ")
+                return (date, true, rest)
+            }
+        }
         if dayRe.firstMatch(in: rest, range: fullRange(rest)) != nil {
             date = calendar.date(byAdding: .day, value: -1, to: date) ?? date
             found = true
@@ -151,6 +181,21 @@ public enum ExpenseParser {
             }
         }
         return (date, found, rest)
+    }
+
+    /// "3" + "hours" -> 180, "en halv" + "timme" -> 30, "en" + "halvtimme" -> 30.
+    static func minutesAgo(_ quantity: String?, unit: String?) -> Int? {
+        guard let quantity, let unit else { return nil }
+        let q = quantity.lowercased().replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+        guard let amount = quantityWords[q] ?? Double(q.replacingOccurrences(of: ",", with: ".")) else { return nil }
+        let u = unit.lowercased()
+        let perUnit: Double
+        if u.hasPrefix("halv") { perUnit = 30 }
+        else if u.hasPrefix("h") || u.hasPrefix("tim") || u.hasPrefix("st") { perUnit = 60 }
+        else if u.hasPrefix("min") { perUnit = 1 }
+        else { perUnit = 24 * 60 }   // days, dagar, Tagen
+        let minutes = Int((amount * perUnit).rounded())
+        return minutes > 0 ? minutes : nil
     }
 
     /// "1,234" -> 1234, "12,50" -> 12.5, "1,234.50" -> 1234.5

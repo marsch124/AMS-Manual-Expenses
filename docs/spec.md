@@ -1,6 +1,6 @@
 # AMS Manual Expenses — specification
 
-What the app does, rule by rule, written from the code (version 1.0, 22 Oct 2026).
+What the app does, rule by rule, written from the code (version 1.1, 22 Oct 2026).
 Change this file in the same commit as the behaviour it describes.
 
 ## 1. The main screen (`ContentView.swift`)
@@ -47,6 +47,12 @@ time, and whether currency and time were spoken.
   Rounded to cents.
 - **Currency**: the one next to the amount; else the first currency word; else the
   default.
+- **Time ago** (1.1) wins over everything below: [for] N hours / minutes / days ago;
+  för N timmar / minuter / dagar sedan (or "sen"), för en halvtimme sedan; vor N Stunden /
+  Minuten / Tagen. N is a number (1.5 allowed) or a word: a, an, one … twelve, half an;
+  en, ett, två … tolv, en halv; ein, eine, einer, einem, zwei … zwölf, einer halben. The
+  time is now minus that. "for 3 hours" without "ago" is not a time (it stays in the
+  description).
 - **Time**: "at / around / klockan / kl / um / gegen" + hour[:minutes] [am/pm/Uhr], or
   hour[:minutes] + am/pm/Uhr. "yesterday / igår / i går / gestern" moves it to
   yesterday. No time said: now.

@@ -58,6 +58,37 @@ final class ExpenseParserTests: XCTestCase {
         XCTAssertEqual(r.title, "Taxi")
     }
 
+    /// "for 3 hours ago" was not understood in 1.0 (Martin, 22 Oct 2026).
+    func testTimeAgo() {
+        func minutesBack(_ s: String) -> Int { Int(now.timeIntervalSince(parse(s).date) / 60) }
+        XCTAssertEqual(minutesBack("Coffee 45 kronor for 3 hours ago"), 180)
+        XCTAssertEqual(minutesBack("Taxi 12 euros 50 2 hours ago"), 120)
+        XCTAssertEqual(minutesBack("Lunch 129 kr half an hour ago"), 30)
+        XCTAssertEqual(minutesBack("Parking 40 an hour ago"), 60)
+        XCTAssertEqual(minutesBack("Bun 35 kr 20 minutes ago"), 20)
+        XCTAssertEqual(minutesBack("Hotel 120 euros 2 days ago"), 2 * 24 * 60)
+        XCTAssertEqual(minutesBack("Kaffe 45 kronor för 3 timmar sedan"), 180)
+        XCTAssertEqual(minutesBack("Kaffe 45 kronor för en halvtimme sen"), 30)
+        XCTAssertEqual(minutesBack("Glass 30 kr för två timmar sedan"), 120)
+        XCTAssertEqual(minutesBack("Kaffee 4 Euro vor 3 Stunden"), 180)
+        XCTAssertEqual(minutesBack("Kaffee 4 Euro vor einer halben Stunde"), 30)
+
+        // The time's own number is never taken as the amount or left in the description.
+        let r = parse("Coffee 45 kronor for 3 hours ago")
+        XCTAssertEqual(r.title, "Coffee")
+        XCTAssertEqual(r.amount, 45)
+        XCTAssertTrue(r.timeGiven)
+        let first = parse("3 hours ago parking 40")
+        XCTAssertEqual(first.title, "Parking")
+        XCTAssertEqual(first.amount, 40)
+
+        // "for 3 hours" without "ago" is how long, not when: the time stays now.
+        let p = parse("Parking for 3 hours 40 kronor")
+        XCTAssertFalse(p.timeGiven)
+        XCTAssertEqual(p.amount, 40)
+        XCTAssertEqual(p.title, "Parking for 3 hours")
+    }
+
     func testNoAmountUsesDefaultCurrency() {
         let r = parse("Coffee", "EUR")
         XCTAssertNil(r.amount)
