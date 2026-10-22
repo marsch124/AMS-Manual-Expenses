@@ -7,9 +7,12 @@ struct ExpensesApp: App {
     /// location question (its system alert would sit on top of every test).
     static let uiTesting = ProcessInfo.processInfo.arguments.contains("-uiTesting")
 
+    @StateObject private var rates = ExchangeRates()
+
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(rates)
         }
         .modelContainer(for: Expense.self, inMemory: Self.uiTesting)
     }

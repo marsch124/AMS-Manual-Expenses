@@ -9,6 +9,11 @@ struct Release {
 
 enum Releases {
     static let all: [Release] = [
+        Release(version: "1.2", date: "22 October 2026", lines: [
+            "Statistics — the chart button at the top: this week, this month and last month with the average per day; a bar for each of the last 30 days; what you spend most on; and every earlier day.",
+            "Earlier days: open a day to see its expenses, tap one to change it, swipe to delete it.",
+            "Every total is in kronor. Euros are counted at the European Central Bank's rate of their day — Today's total too.",
+        ]),
         Release(version: "1.1", date: "22 October 2026", lines: [
             "Say how long ago you paid: “3 hours ago”, “for 3 hours ago”, “half an hour ago”, “20 minutes ago”, “2 days ago”.",
             "The same in Swedish and German: “för 3 timmar sedan”, “för en halvtimme sen”, “vor 3 Stunden”, “vor einer halben Stunde”.",
@@ -54,11 +59,23 @@ enum Guide {
             "The globe chooses the language you dictate in: English, Svenska or Deutsch.",
         ]),
         Section(title: "Today", lines: [
-            "The list shows today’s expenses with a total for each currency.",
+            "The list shows today’s expenses and their total in kronor.",
             "Tap an expense to change it. Swipe it to the left to delete it.",
         ]),
+        Section(title: "Statistics", lines: [
+            "The chart button at the top opens Statistics.",
+            "Totals: this week (from Monday), this month and last month, each with the average per day.",
+            "Last 30 days: one bar per day.",
+            "What you spend most on: the descriptions you use most often, how many times, and their total.",
+            "Earlier days: tap a day to see its expenses; tap one to change it, swipe to delete it.",
+        ]),
+        Section(title: "Kronor", lines: [
+            "Every total is in kronor. An amount in euros is counted at the European Central Bank’s rate of its day; on a weekend or a holiday, the last rate before it.",
+            "The rates are fetched over the internet and kept on the iPhone. Only dates and currency names are sent, never an expense.",
+            "Without a rate yet (offline), that amount is shown apart, for example “+ €12.50”, until the iPhone is online.",
+        ]),
         Section(title: "Your data", lines: [
-            "Everything stays on this iPhone.",
+            "Your expenses stay on this iPhone.",
             "Settings › Export all as CSV gives every expense as a file for Numbers or Excel.",
         ]),
     ]

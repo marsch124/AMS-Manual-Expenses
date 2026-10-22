@@ -1,6 +1,6 @@
 # AMS Manual Expenses — specification
 
-What the app does, rule by rule, written from the code (version 1.1, 22 Oct 2026).
+What the app does, rule by rule, written from the code (version 1.2, 22 Oct 2026).
 Change this file in the same commit as the behaviour it describes.
 
 ## 1. The main screen (`ContentView.swift`)
@@ -16,13 +16,13 @@ One list, three parts:
    so far, or an error in red), and a text field (`home-type-field`) with **Go**
    (`home-type-go`, disabled while the field is empty) for typing the same sentence.
 3. **Today** — today's expenses, newest first (`expense-row-0`, `-1`, …), each with
-   description, time and amount. The section header holds "Today" and one total per
-   currency, sorted by code (`today-total`). Empty: "No expenses yet today."
+   description, time and amount in its own currency. The section header holds "Today"
+   and the total in kronor (`today-total`, §9; before 1.2 one total per currency). Empty: "No expenses yet today."
    (`today-empty`). Tap a row to change it; swipe left to delete it (no question).
 
 Toolbar: the globe (`home-language`) picks the dictation language — English (en-US),
-Svenska (sv-SE), Deutsch (de-DE); stored as `dictationLanguage`. The gear
-(`home-settings`) opens Settings.
+Svenska (sv-SE), Deutsch (de-DE); stored as `dictationLanguage`. The chart
+(`home-statistics`) opens Statistics (§10). The gear (`home-settings`) opens Settings.
 
 ## 2. Dictation (`SpeechRecognizer.swift`)
 
@@ -97,6 +97,35 @@ and place at the moment it was logged, the sentence heard, created-at.
 
 ## 8. Test hooks
 
-`-uiTesting`: the store is in memory and starts empty; location is never asked.
+`-uiTesting`: the store is in memory and starts empty; location is never asked; no
+exchange rate is fetched — one euro is always 10 kronor.
 UI tests also pass `-manualCurrency SEK -dictationLanguage en-US -AppleLanguages (en)
 -AppleLocale en_US`.
+
+## 9. Kronor (1.2, `ExchangeRates.swift`, `Core/…/Statistics.swift`)
+
+Every total is in kronor (his choice, 22 Oct 2026). An amount in another currency is
+multiplied by the European Central Bank's rate of its day: the rate of that day, else the
+last one before it (weekends, holidays, today before the rate is out), else the first one
+after it. Rates come from `https://api.frankfurter.dev/v1/<start>..<end>?base=SEK&symbols=<code>`
+— one request per currency, from a week before the oldest expense in that currency to
+today — and are kept in UserDefaults (`exchangeRates`), so days already fetched work
+offline. Fetched when the app starts or an expense is added or removed, and when
+Statistics opens; at most once an hour unless a currency has no rate at all. Only dates
+and currency codes are sent. An amount with no rate yet is shown apart: "SEK 45 + €12.50".
+Totals are whole kronor.
+
+## 10. Statistics (1.2, `StatisticsScreen.swift`)
+
+- **Totals**: This week (`stats-week-total`; the week starts on the iPhone's first
+  weekday — Monday in Sweden), This month (`stats-month-total`), Last month
+  (`stats-lastmonth-total`); each with "… a day" (`…-perday`): the total divided by the
+  days so far (today included) for this week and this month, by all its days for last month.
+- **Last 30 days** (`stats-chart`): one bar per day, today the last; 0 for a day with nothing.
+- **What you spend most on** (`stats-top-0` …): the 5 descriptions used most often
+  ("coffee" and "Coffee " are one), then the dearest: "Coffee · 14× · 630 kr".
+- **Earlier days** (`stats-day-0` …): every day with an expense except today, newest
+  first, with its total. A day opens `DayScreen`: its expenses (`day-row-0` …), the total
+  (`day-total`); tap one to change it (the same check sheet as §5), swipe to delete it.
+- Footer (`stats-rates-note`): that totals are in kronor at the bank's rate, or that some
+  rates are still missing.

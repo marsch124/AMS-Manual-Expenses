@@ -9,6 +9,7 @@ struct ContentView: View {
     @Query(sort: \Expense.date, order: .reverse) private var expenses: [Expense]
     @StateObject private var speech = SpeechRecognizer()
     @StateObject private var location = LocationService()
+    @EnvironmentObject private var rates: ExchangeRates
     /// Empty means automatic (from location).
     @AppStorage("manualCurrency") private var manualCurrency = ""
     @AppStorage("dictationLanguage") private var language = "en-US"
@@ -48,7 +49,7 @@ struct ContentView: View {
                     HStack(alignment: .top) {
                         Text("Today")
                         Spacer()
-                        Text(totals).multilineTextAlignment(.trailing)
+                        Text(todayTotal).multilineTextAlignment(.trailing)
                             .accessibilityIdentifier("today-total")
                     }
                 }
@@ -68,7 +69,12 @@ struct ContentView: View {
                     }
                     .accessibilityIdentifier("home-language")
                 }
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    NavigationLink { StatisticsScreen() } label: {
+                        Image(systemName: "chart.bar")
+                    }
+                    .accessibilityLabel("Statistics")
+                    .accessibilityIdentifier("home-statistics")
                     Button { showSettings = true } label: {
                         Image(systemName: "gearshape")
                     }
@@ -94,6 +100,9 @@ struct ContentView: View {
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active && !ExpensesApp.uiTesting { location.refresh() }
+        }
+        .task(id: expenses.count) {
+            await rates.update(for: expenses.map(\.spend))
         }
     }
 
@@ -172,11 +181,9 @@ struct ContentView: View {
         return "Tap and say e.g. “Coffee 45 kronor” or “Taxi 12 euros 50”"
     }
 
-    private var totals: String {
-        Dictionary(grouping: todays, by: \.currency)
-            .sorted { $0.key < $1.key }
-            .map { code, items in items.reduce(0) { $0 + $1.amount }.formatted(.currency(code: code)) }
-            .joined(separator: "\n")
+    /// Today's total in kronor (1.2: other currencies at the bank's rate of their day).
+    private var todayTotal: String {
+        todays.isEmpty ? "" : Money.text(Statistics.total(todays.map(\.spend), rates: rates.table, calendar: .current))
     }
 
     private var csv: String {
@@ -209,10 +216,7 @@ struct ContentView: View {
         guard let amount = d.amount else { return }
         let title = d.title.trimmingCharacters(in: .whitespaces).isEmpty ? "Expense" : d.title
         if let e = d.expense {
-            e.title = title
-            e.amount = amount
-            e.currency = d.currency
-            e.date = d.date
+            e.apply(d)
         } else {
             context.insert(Expense(title: title, amount: amount, currency: d.currency, date: d.date,
                                    place: location.placeName ?? "", heard: d.heard))

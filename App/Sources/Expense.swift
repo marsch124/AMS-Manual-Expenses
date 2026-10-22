@@ -1,3 +1,4 @@
+import ExpenseCore
 import Foundation
 import SwiftData
 
@@ -24,6 +25,20 @@ final class Expense {
         self.place = place
         self.heard = heard
         self.createdAt = Date()
+    }
+}
+
+extension Expense {
+    /// What the statistics count.
+    var spend: Spend { Spend(title: title, amount: amount, currency: currency, date: date) }
+
+    /// A checked draft's answers written onto this expense (editing an existing one).
+    func apply(_ d: Draft) {
+        guard let amount = d.amount else { return }
+        title = d.title.trimmingCharacters(in: .whitespaces).isEmpty ? "Expense" : d.title
+        self.amount = amount
+        currency = d.currency
+        date = d.date
     }
 }
 

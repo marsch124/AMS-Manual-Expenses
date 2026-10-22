@@ -69,9 +69,35 @@ final class AMSExpensesUITests: XCTestCase {
 
         XCTAssertTrue(app.buttons["expense-row-0"].waitForExistence(timeout: 10), "the expense is not in today's list")
         XCTAssertFalse(app.staticTexts["today-empty"].exists, "the list still says it is empty")
-        // Wait for the total to be drawn — never snatch a number.
+        // Wait for the total to be drawn — never snatch a number. Since 1.2 it is in kronor:
+        // the UI tests' euro is always 10 kronor, so 12.50 euros make 125.
         let total = app.staticTexts["today-total"]
-        expectation(for: NSPredicate(format: "label CONTAINS '12.50'"), evaluatedWith: total)
+        expectation(for: NSPredicate(format: "label CONTAINS '125'"), evaluatedWith: total)
+        waitForExpectations(timeout: 10)
+    }
+
+    private func add(_ app: XCUIApplication, _ sentence: String) {
+        let field = app.textFields["home-type-field"]
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        field.tap()
+        field.typeText(sentence)
+        app.buttons["home-type-go"].tap()
+        let save = app.buttons["entry-save"]
+        XCTAssertTrue(save.waitForExistence(timeout: 10), "the check sheet did not open for '\(sentence)'")
+        save.tap()
+        XCTAssertTrue(app.textFields["home-type-field"].waitForExistence(timeout: 10))
+    }
+
+    /// 1.2: Statistics counts this week in kronor, euros at the day's rate (10 in UI tests).
+    func testStatisticsCountTheWeekInKronor() {
+        let app = launch()
+        add(app, "Taxi 12 euros 50")
+        add(app, "Coffee 45 kronor")
+
+        app.buttons["home-statistics"].tap()
+        let week = app.staticTexts["stats-week-total"]
+        XCTAssertTrue(week.waitForExistence(timeout: 10), "Statistics shows no week total")
+        expectation(for: NSPredicate(format: "label CONTAINS '170'"), evaluatedWith: week)
         waitForExpectations(timeout: 10)
     }
 }
