@@ -21,6 +21,17 @@ final class AMSExpensesUITests: XCTestCase {
         return app
     }
 
+    /// Runs first (tests run in name order). A cold simulator may fumble the first launch of a
+    /// run — on GitHub on 22 Oct 2026 it timed out — so that fumble is absorbed here, not
+    /// counted against a real test. The same as AMS Packing's.
+    func testAAAWarmsUpTheSimulator() {
+        XCTExpectFailure("a cold simulator may fumble its first launch", options: .nonStrict()) {
+            let app = launch()
+            _ = app.buttons["home-settings"].waitForExistence(timeout: 120)
+            app.terminate()
+        }
+    }
+
     /// Settings shows the version and the build, and What's new starts with exactly this version —
     /// a release that forgets its What's new entry goes red here.
     func testTheVersionHasItsWhatsNew() {

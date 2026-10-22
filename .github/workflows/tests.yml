@@ -70,10 +70,36 @@ jobs:
           xcrun simctl boot "$SIM_UDID" || true
           xcrun simctl bootstatus "$SIM_UDID" -b
 
+      - name: Build the app and its tests
+        run: |
+          set -o pipefail
+          xcodebuild build-for-testing \
+            -project AMSExpenses.xcodeproj \
+            -scheme AMSExpenses \
+            -destination "platform=iOS Simulator,id=$SIM_UDID" \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM="" \
+            2>&1 | tee build-for-testing.log | grep -E "error:|\*\* TEST BUILD" || true
+          grep -q "\*\* TEST BUILD SUCCEEDED \*\*" build-for-testing.log
+
+      # 22 Oct 2026, the first run: a cold GitHub simulator took so long to open the app
+      # that BOTH tests failed at launch ("Timed out while launching application"), with
+      # nothing wrong in the app. So the app is installed and opened once here, outside
+      # the tests, and the suite starts on a warm simulator (AMS Packing has the same).
+      - name: Open the app once before the tests
+        run: |
+          APP=build/Build/Products/Debug-iphonesimulator/AMSExpenses.app
+          xcrun simctl install "$SIM_UDID" "$APP"
+          xcrun simctl launch "$SIM_UDID" com.schabbauer.amsmanualexpenses -uiTesting || true
+          sleep 20
+          xcrun simctl terminate "$SIM_UDID" com.schabbauer.amsmanualexpenses || true
+
       - name: UI tests (and the parser's, inside the app's scheme)
         run: |
           set -o pipefail
-          xcodebuild test \
+          xcodebuild test-without-building \
             -project AMSExpenses.xcodeproj \
             -scheme AMSExpenses \
             -destination "platform=iOS Simulator,id=$SIM_UDID" \
@@ -82,11 +108,8 @@ jobs:
             -collect-test-diagnostics never \
             -test-timeouts-enabled YES \
             -maximum-test-execution-time-allowance 480 \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGN_IDENTITY="" \
-            DEVELOPMENT_TEAM="" \
             2>&1 | tee build-test.log | grep -E "error:|Test Case .*(passed|failed)|Executed|\*\* TEST" || true
-          grep -q "\*\* TEST SUCCEEDED \*\*" build-test.log
+          grep -q "\*\* TEST EXECUTE SUCCEEDED \*\*" build-test.log
 
       - name: Keep the results when it goes red
         if: failure()
@@ -95,4 +118,5 @@ jobs:
           name: TestResults-iPhone
           path: |
             TestResults-iPhone.xcresult
+            build-for-testing.log
             build-test.log
