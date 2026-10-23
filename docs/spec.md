@@ -1,6 +1,6 @@
 # AMS Manual Expenses — specification
 
-What the app does, rule by rule, written from the code (version 1.3, 22 Oct 2026).
+What the app does, rule by rule, written from the code (version 1.4, 23 Oct 2026).
 Change this file in the same commit as the behaviour it describes.
 
 ## 1. The main screen (`ContentView.swift`)
@@ -12,8 +12,8 @@ One list, three parts:
    (`home-currency`) showing the currency in use and "· auto" when it comes from
    location.
 2. **Dictation** — the microphone button (`home-dictate`; red with a stop sign while
-   listening), a status line (`home-status`: the hint, "Listening…", the words heard
-   so far, or an error in red), and a text field (`home-type-field`) with **Go**
+   listening), a status line (`home-status`: "Listening…", the words heard so far, or an
+   error in red — and nothing at all while idle; the hint was removed in 1.4, his ask), and a text field (`home-type-field`) with **Go**
    (`home-type-go`, disabled while the field is empty) for typing the same sentence.
 3. **Today** — today's expenses, newest first (`expense-row-0`, `-1`, …), each with
    description, time (and category, since 1.3) and amount in its own currency. The section header holds "Today"
@@ -72,11 +72,14 @@ The currency menu offers Automatic, SEK, EUR and the local currency if it is ano
 
 ## 5. Checking an entry (`EntryEditor`)
 
-Opens for every new expense and when a row is tapped. Shows what was heard
-(`entry-heard`), Description (`entry-title`), Category (`entry-category`, showing
-`entry-category-value`; opens the chooser, §11 — filled in by itself from the last expense
-with the same description), Amount (`entry-amount`, decimal pad,
-comma or point), Currency (`entry-currency`), Time (`entry-time`, date and time).
+Opens for every new expense and when a row is tapped. From the top (1.4 order, his ask):
+what was heard (`entry-heard`); Description (`entry-title`); Amount (`entry-amount`,
+decimal pad, comma or point) with the Currency beside it (`entry-currency`); the date and
+time on the left as two quiet labels without a heading (`entry-time`; a tap opens the
+calendar with the time in its own sheet, `entry-time-picker`, Cancel / Done); what was heard is in italics; last, the category without a label
+(`entry-category`, showing `entry-category-value`: the name, or "No category" in grey;
+opens the chooser, §11). A new expense's category is the one its description had last
+time, else the default category (§11).
 **Save** (`entry-save`) is off until the amount is a number above 0. **Cancel**
 (`entry-cancel`) keeps nothing. An existing expense also has **Delete expense**
 (`entry-delete`).
@@ -152,7 +155,10 @@ Asked for on 22 Oct 2026: "coffee and café were in different statistics".
   added at the end of the list and chosen. A name already there (any spelling) is chosen
   instead of added twice.
 - **Remembered**: a new expense gets the category of the latest expense with the same
-  description (trimmed, any capitals); none → no category. He can change it before Save.
+  description (trimmed, any capitals); none → the **default category** (1.4, his ask:
+  Café; UserDefaults `defaultCategory`, marked "default" in Settings › Categories,
+  follows a rename, cleared when that category is deleted — then no category). He can
+  change it before Save.
 - **Settings › Categories** (`categories-row-0` …, each with how many expenses use it):
   tap = rename (Cancel / Save; every expense with it moves along; renaming onto another
   category's name joins the two); swipe = delete (when used, asks first — "Delete

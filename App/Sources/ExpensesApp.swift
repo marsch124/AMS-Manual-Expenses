@@ -12,7 +12,10 @@ struct ExpensesApp: App {
     init() {
         // The category list lives in UserDefaults, which a UI test run does not wipe:
         // every test starts from the list a new install has.
-        if Self.uiTesting { UserDefaults.standard.removeObject(forKey: CategoryList.key) }
+        if Self.uiTesting {
+            UserDefaults.standard.removeObject(forKey: CategoryList.key)
+            UserDefaults.standard.removeObject(forKey: CategoryList.defaultKey)
+        }
     }
 
     var body: some Scene {

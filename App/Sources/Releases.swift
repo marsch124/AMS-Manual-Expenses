@@ -9,6 +9,11 @@ struct Release {
 
 enum Releases {
     static let all: [Release] = [
+        Release(version: "1.4", date: "23 October 2026", lines: [
+            "The hint under the microphone is gone.",
+            "A new expense starts in Café, unless its description had another category before.",
+            "The check sheet: the category is the last line, a small coloured label; the date and time sit on the left as quiet labels (tap them to change: Cancel or Done); the words “Category” and “Time” are gone; what was heard is in italics; the amount is bold.",
+        ]),
         Release(version: "1.3", date: "22 October 2026", lines: [
             "Categories: choose one on the check sheet (Category), or later by tapping the expense. “New category…” adds one right there.",
             "The app remembers: the next time you say the same description, its category is filled in by itself.",
@@ -49,7 +54,7 @@ enum Guide {
             "You can also type the same sentence in the field under the microphone and tap Go.",
         ]),
         Section(title: "Check it", lines: [
-            "Every expense opens for checking before it is saved: description, amount, currency and time.",
+            "Every expense opens for checking before it is saved: description, amount and currency, the date and time, and the category.",
             "Save keeps it. Cancel throws it away.",
         ]),
         Section(title: "Time", lines: [
@@ -70,7 +75,8 @@ enum Guide {
             "Tap an expense to change it. Swipe it to the left to delete it.",
         ]),
         Section(title: "Categories", lines: [
-            "The check sheet has a Category row: tap it and choose one, or “New category…” to add one.",
+            "The last line of the check sheet is the category: tap it and choose one, or “New category…” to add one.",
+            "A new expense starts in Café (the default, marked in Settings › Categories).",
             "The next time you say the same description (“Coffee”), its last category is filled in by itself.",
             "To change it later, tap the expense — today, or in Statistics under a day or a category.",
             "Settings › Categories: tap one to rename it (every expense moves with it), swipe to delete it (its expenses keep no category), Edit to change the order, Add category at the bottom.",

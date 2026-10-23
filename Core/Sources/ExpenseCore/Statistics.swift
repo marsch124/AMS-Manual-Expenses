@@ -28,6 +28,14 @@ public enum Categories {
     public static let defaults = ["Café", "Groceries", "Restaurant", "Transport", "Shopping",
                                   "Home", "Health", "Leisure", "Travel", "Other"]
 
+    /// Where a new expense starts when its description has no category yet (his ask, 1.4).
+    public static let initialDefault = "Café"
+
+    /// A new expense's category: the one its description had last time, else the default.
+    public static func initial(for title: String, history: [Spend], default fallback: String) -> String {
+        suggestion(for: title, history: history) ?? fallback
+    }
+
     /// The category last given to an expense with the same description ("coffee" = "Coffee "),
     /// so it is chosen once and then filled in by itself.
     public static func suggestion(for title: String, history: [Spend]) -> String? {

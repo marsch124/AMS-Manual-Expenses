@@ -6,6 +6,10 @@ import SwiftUI
 enum CategoryList {
     static let key = "categories"
     static let initial = encode(Categories.defaults)
+    /// The category a new expense starts in when its description has none yet (1.4: Café).
+    /// It follows a rename and is cleared when that category is deleted.
+    static let defaultKey = "defaultCategory"
+    static let initialDefault = Categories.initialDefault
 
     static func decode(_ text: String) -> [String] {
         text.split(separator: "\n").map(String.init)
@@ -95,6 +99,7 @@ struct CategoryChooser: View {
 struct CategoriesScreen: View {
     @Environment(\.modelContext) private var context
     @AppStorage(CategoryList.key) private var categoriesText = CategoryList.initial
+    @AppStorage(CategoryList.defaultKey) private var defaultCategory = CategoryList.initialDefault
     @Query private var expenses: [Expense]
     @State private var renaming: String?
     @State private var adding = false
@@ -113,6 +118,12 @@ struct CategoriesScreen: View {
                     } label: {
                         HStack {
                             Text(name)
+                            if name == defaultCategory {
+                                Text("default")
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                                    .accessibilityIdentifier("categories-default")
+                            }
                             Spacer()
                             Text("\(used(name))")
                                 .monospacedDigit()
@@ -133,7 +144,7 @@ struct CategoriesScreen: View {
                     categoriesText = CategoryList.encode(list)
                 }
             } footer: {
-                Text("The number is how many expenses have the category. Tap a category to rename it.")
+                Text("The number is how many expenses have the category. Tap a category to rename it. A new expense starts in the default one, unless its description had another category before.")
             }
             Section {
                 Button("Add category") {
@@ -193,16 +204,20 @@ struct CategoriesScreen: View {
         guard !name.isEmpty, name != old else { return }
         if name.lowercased() != old.lowercased(), names.contains(where: { $0.lowercased() == name.lowercased() }) {
             // Renaming onto another category joins the two: its expenses move there.
-            for e in expenses where e.category == old { e.category = names.first { $0.lowercased() == name.lowercased() }! }
+            let target = names.first { $0.lowercased() == name.lowercased() }!
+            for e in expenses where e.category == old { e.category = target }
+            if defaultCategory == old { defaultCategory = target }
             categoriesText = CategoryList.encode(names.filter { $0 != old })
             return
         }
         for e in expenses where e.category == old { e.category = name }
+        if defaultCategory == old { defaultCategory = name }
         categoriesText = CategoryList.encode(names.map { $0 == old ? name : $0 })
     }
 
     private func remove(_ name: String) {
         for e in expenses where e.category == name { e.category = "" }
+        if defaultCategory == name { defaultCategory = "" }
         categoriesText = CategoryList.encode(names.filter { $0 != name })
     }
 }

@@ -55,6 +55,7 @@ final class AMSExpensesUITests: XCTestCase {
     func testATypedExpenseIsCheckedAndSaved() {
         let app = launch()
         XCTAssertTrue(app.staticTexts["today-empty"].waitForExistence(timeout: 10), "today's list is not empty at the start")
+        XCTAssertFalse(app.staticTexts["home-status"].exists, "1.4: no hint under the microphone while idle")
 
         let field = app.textFields["home-type-field"]
         field.tap()
@@ -100,7 +101,8 @@ final class AMSExpensesUITests: XCTestCase {
         let category = app.buttons["entry-category"]
         XCTAssertTrue(category.waitForExistence(timeout: 10), "the check sheet has no category")
         category.tap()
-        let first = app.buttons["category-choice-0"]
+        // Not the first one: since 1.4 that is Café, where a new expense already starts.
+        let first = app.buttons["category-choice-1"]
         XCTAssertTrue(first.waitForExistence(timeout: 10), "the category list did not open")
         let chosen = first.label
         first.tap()
@@ -115,6 +117,25 @@ final class AMSExpensesUITests: XCTestCase {
         XCTAssertTrue(row.waitForExistence(timeout: 10), "By category is empty")
         XCTAssertTrue(row.label.contains(chosen), "the first category reads '\(row.label)', not \(chosen)")
         XCTAssertTrue(row.label.contains("45"), "the category's total reads '\(row.label)'")
+    }
+
+    /// 1.4 (his ask): a new expense whose description has no category yet starts in Café.
+    func testANewExpenseStartsInTheDefaultCategory() {
+        let app = launch()
+        let field = app.textFields["home-type-field"]
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        field.tap()
+        field.typeText("Taxi 300 kronor")
+        app.buttons["home-type-go"].tap()
+        let value = app.staticTexts["entry-category-value"]
+        XCTAssertTrue(value.waitForExistence(timeout: 10), "the check sheet shows no category")
+        XCTAssertEqual(value.label, "Café")
+
+        // 1.4: the date and time are quiet labels; a tap opens the calendar, Cancel closes it.
+        app.buttons["entry-time"].tap()
+        XCTAssertTrue(app.datePickers["entry-time-picker"].waitForExistence(timeout: 10), "no calendar opened")
+        app.buttons["entry-time-cancel"].tap()
+        XCTAssertTrue(app.buttons["entry-save"].waitForExistence(timeout: 10))
     }
 
     /// 1.2: Statistics counts this week in kronor, euros at the day's rate (10 in UI tests).

@@ -13,6 +13,7 @@ struct ContentView: View {
     /// Empty means automatic (from location).
     @AppStorage("manualCurrency") private var manualCurrency = ""
     @AppStorage("dictationLanguage") private var language = "en-US"
+    @AppStorage(CategoryList.defaultKey) private var defaultCategory = CategoryList.initialDefault
     @State private var typed = ""
     @State private var draft: Draft?
     @State private var showSettings = false
@@ -153,11 +154,14 @@ struct ContentView: View {
             .accessibilityLabel(speech.isRecording ? "Stop" : "Dictate expense")
             .accessibilityIdentifier("home-dictate")
 
-            Text(statusText)
-                .font(.footnote)
-                .foregroundStyle(speech.errorMessage == nil ? Color.secondary : Color.red)
-                .multilineTextAlignment(.center)
-                .accessibilityIdentifier("home-status")
+            // 1.4 (his ask): no hint any more — the line is there only while listening or for an error.
+            if !statusText.isEmpty {
+                Text(statusText)
+                    .font(.footnote)
+                    .foregroundStyle(speech.errorMessage == nil ? Color.secondary : Color.red)
+                    .multilineTextAlignment(.center)
+                    .accessibilityIdentifier("home-status")
+            }
 
             HStack {
                 TextField("…or type an expense", text: $typed)
@@ -178,7 +182,7 @@ struct ContentView: View {
     private var statusText: String {
         if let error = speech.errorMessage { return error }
         if speech.isRecording { return speech.transcript.isEmpty ? "Listening…" : speech.transcript }
-        return "Tap and say e.g. “Coffee 45 kronor” or “Taxi 12 euros 50”"
+        return ""
     }
 
     /// Today's total in kronor (1.2: other currencies at the bank's rate of their day).
@@ -209,7 +213,8 @@ struct ContentView: View {
         let parsed = ExpenseParser.parse(sentence, defaultCurrency: defaultCurrency)
         draft = Draft(title: parsed.title, amountText: parsed.amount.map(Draft.format) ?? "",
                       currency: parsed.currency, date: parsed.date, heard: sentence,
-                      category: Categories.suggestion(for: parsed.title, history: expenses.map(\.spend)) ?? "")
+                      category: Categories.initial(for: parsed.title, history: expenses.map(\.spend),
+                                                   default: defaultCategory))
         typed = ""
     }
 
@@ -254,6 +259,8 @@ struct ExpenseRow: View {
 struct EntryEditor: View {
     @Environment(\.dismiss) private var dismiss
     @State private var draft: Draft
+    @State private var showWhen = false
+    @State private var pickedDate = Date()
     private let currencies: [String]
     private let onSave: (Draft) -> Void
     private let onDelete: (() -> Void)?
@@ -269,31 +276,35 @@ struct EntryEditor: View {
         currencies.contains(draft.currency) ? currencies : currencies + [draft.currency]
     }
 
+    private func whenLabel(_ text: String) -> some View {
+        Text(text)
+            .monospacedDigit()
+            .foregroundStyle(.primary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .background(Capsule().fill(Color.secondary.opacity(0.08)))
+    }
+
     var body: some View {
         NavigationStack {
             Form {
                 if !draft.heard.isEmpty {
                     Section("Heard") {
-                        Text(draft.heard).foregroundStyle(.secondary)
+                        // 1.4: a slim line (his ask: "the heard pill is too high").
+                        Text(draft.heard).italic()
+                            .foregroundStyle(.secondary)
+                            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                             .accessibilityIdentifier("entry-heard")
                     }
                 }
                 Section {
                     TextField("Description", text: $draft.title)
                         .accessibilityIdentifier("entry-title")
-                    NavigationLink { CategoryChooser(selection: $draft.category) } label: {
-                        HStack {
-                            Text("Category")
-                            Spacer()
-                            Text(draft.category.isEmpty ? "None" : draft.category)
-                                .foregroundStyle(.secondary)
-                                .accessibilityIdentifier("entry-category-value")
-                        }
-                    }
-                    .accessibilityIdentifier("entry-category")
                     HStack {
                         TextField("Amount", text: $draft.amountText)
                             .keyboardType(.decimalPad)
+                            .font(.title3.weight(.semibold))
+                            .monospacedDigit()
                             .accessibilityIdentifier("entry-amount")
                         Picker("Currency", selection: $draft.currency) {
                             ForEach(options, id: \.self) { Text($0).tag($0) }
@@ -302,8 +313,60 @@ struct EntryEditor: View {
                         .fixedSize()
                         .accessibilityIdentifier("entry-currency")
                     }
-                    DatePicker("Time", selection: $draft.date)
-                        .accessibilityIdentifier("entry-time")
+                    // 1.4 (his ask): no "Time" word, the date and time on the left.
+                    // 1.4: quiet labels instead of the system's grey pills (his ask); a tap
+                    // opens the calendar with the time underneath.
+                    Button {
+                        pickedDate = draft.date
+                        showWhen = true
+                    } label: {
+                        HStack(spacing: 8) {
+                            whenLabel(draft.date.formatted(.dateTime.day().month(.abbreviated).year()))
+                            whenLabel(draft.date.formatted(.dateTime.hour().minute()))
+                            Spacer()
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("entry-time")
+                    .sheet(isPresented: $showWhen) {
+                        NavigationStack {
+                            DatePicker("Time", selection: $pickedDate)
+                                .datePickerStyle(.graphical)
+                                .labelsHidden()
+                                .padding(.horizontal)
+                                .accessibilityIdentifier("entry-time-picker")
+                                .navigationTitle("Date and time")
+                                .navigationBarTitleDisplayMode(.inline)
+                                .toolbar {
+                                    ToolbarItem(placement: .cancellationAction) {
+                                        Button("Cancel") { showWhen = false }
+                                            .accessibilityIdentifier("entry-time-cancel")
+                                    }
+                                    ToolbarItem(placement: .confirmationAction) {
+                                        Button("Done") {
+                                            draft.date = pickedDate
+                                            showWhen = false
+                                        }
+                                        .accessibilityIdentifier("entry-time-done")
+                                    }
+                                }
+                        }
+                        .presentationDetents([.large])
+                    }
+                    // 1.4 (his ask): the category last, without the word "Category".
+                    NavigationLink { CategoryChooser(selection: $draft.category) } label: {
+                        // A small tinted label, like the currency on the main screen.
+                        Text(draft.category.isEmpty ? "No category" : draft.category)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(draft.category.isEmpty ? Color.secondary : Color.accentColor)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 5)
+                            .background(Capsule().fill(draft.category.isEmpty
+                                                       ? Color.secondary.opacity(0.12)
+                                                       : Color.accentColor.opacity(0.15)))
+                            .accessibilityIdentifier("entry-category-value")
+                    }
+                    .accessibilityIdentifier("entry-category")
                 }
                 if let onDelete {
                     Section {
@@ -315,6 +378,9 @@ struct EntryEditor: View {
                     }
                 }
             }
+            // Lets the Heard line be slimmer than a normal row, and the sections sit closer.
+            .environment(\.defaultMinListRowHeight, 30)
+            .listSectionSpacing(.compact)
             .navigationTitle(draft.expense == nil ? "New expense" : "Edit expense")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

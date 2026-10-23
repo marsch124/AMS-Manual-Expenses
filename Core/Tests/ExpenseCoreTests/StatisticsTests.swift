@@ -118,6 +118,11 @@ final class StatisticsTests: XCTestCase {
         XCTAssertEqual(Categories.suggestion(for: "Coffee", history: history), "Café", "the latest one given, any spelling")
         XCTAssertNil(Categories.suggestion(for: "Taxi", history: history))
         XCTAssertNil(Categories.suggestion(for: " ", history: history))
+
+        // 1.4: with nothing remembered, the default (Café); what is remembered wins over it.
+        XCTAssertEqual(Categories.initial(for: "Taxi", history: history, default: "Café"), "Café")
+        XCTAssertEqual(Categories.initial(for: "Coffee", history: history, default: "Groceries"), "Café")
+        XCTAssertEqual(Categories.initial(for: "Taxi", history: history, default: ""), "", "no default: no category")
     }
 
     func testEarlierDaysNewestFirst() {
