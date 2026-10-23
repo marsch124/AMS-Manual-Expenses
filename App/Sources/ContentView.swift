@@ -17,6 +17,9 @@ struct ContentView: View {
     @State private var typed = ""
     @State private var draft: Draft?
     @State private var showSettings = false
+    @ObservedObject private var dictationRequest = DictationRequest.shared
+    /// UI tests cannot use the microphone: there a request is only counted (`home-dictate` value).
+    @State private var testRequests = 0
 
     private var autoCurrency: String {
         location.currency ?? CurrencyDefaults.currency(forTimeZone: TimeZone.current.identifier) ?? "SEK"
@@ -98,7 +101,12 @@ struct ContentView: View {
         .onAppear {
             speech.onFinish = { handle($0) }
             if !ExpensesApp.uiTesting { location.refresh() }
+            if ExpensesApp.uiTesting && ProcessInfo.processInfo.arguments.contains("-uiTestingDictateRequest") {
+                dictationRequest.pending = true
+            }
+            takeDictationRequest()
         }
+        .onChange(of: dictationRequest.pending) { _, _ in takeDictationRequest() }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active && !ExpensesApp.uiTesting { location.refresh() }
         }
@@ -153,6 +161,7 @@ struct ContentView: View {
             .buttonStyle(.borderless)
             .accessibilityLabel(speech.isRecording ? "Stop" : "Dictate expense")
             .accessibilityIdentifier("home-dictate")
+            .accessibilityValue(ExpensesApp.uiTesting ? "requests \(testRequests)" : "")
 
             // 1.4 (his ask): no hint any more — the line is there only while listening or for an error.
             if !statusText.isEmpty {
@@ -205,6 +214,23 @@ struct ContentView: View {
                           String(format: "%.2f", e.amount), e.currency, e.place, e.timeZoneID].map(quote).joined(separator: ","))
         }
         return lines.joined(separator: "\n")
+    }
+
+    /// The Shortcuts action (or the Action button) asked to dictate: start listening at once.
+    private func takeDictationRequest() {
+        guard dictationRequest.pending else { return }
+        dictationRequest.pending = false
+        draft = nil
+        showSettings = false
+        if ExpensesApp.uiTesting {
+            testRequests += 1
+            return
+        }
+        // A moment for the app to be fully on screen after it was opened by the action.
+        Task {
+            try? await Task.sleep(for: .milliseconds(400))
+            if !speech.isRecording { speech.toggle(localeID: language) }
+        }
     }
 
     private func handle(_ text: String) {

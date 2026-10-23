@@ -9,6 +9,11 @@ struct Release {
 
 enum Releases {
     static let all: [Release] = [
+        Release(version: "1.5", date: "23 October 2026", lines: [
+            "“Dictate expense” in the Shortcuts app: it opens Expenses and starts listening straight away.",
+            "Put it on the Action button: iPhone Settings › Action Button › Shortcut › Expenses › Dictate expense.",
+            "Siri knows it too: “Dictate an expense in Expenses”.",
+        ]),
         Release(version: "1.4", date: "23 October 2026", lines: [
             "The hint under the microphone is gone.",
             "A new expense starts in Café, unless its description had another category before.",
@@ -52,6 +57,11 @@ enum Guide {
             "Tap the microphone and say what you paid, for example “Coffee 45 kronor” or “Taxi 12 euros 50”.",
             "Recording stops by itself after a short pause.",
             "You can also type the same sentence in the field under the microphone and tap Go.",
+        ]),
+        Section(title: "Action button and Shortcuts", lines: [
+            "“Dictate expense” opens the app and starts listening at once.",
+            "Action button: iPhone Settings › Action Button, swipe to Shortcut, choose Expenses › Dictate expense.",
+            "It is also in the Shortcuts app under Expenses, and Siri knows “Dictate an expense in Expenses”.",
         ]),
         Section(title: "Check it", lines: [
             "Every expense opens for checking before it is saved: description, amount and currency, the date and time, and the category.",

@@ -119,6 +119,19 @@ final class AMSExpensesUITests: XCTestCase {
         XCTAssertTrue(row.label.contains("45"), "the category's total reads '\(row.label)'")
     }
 
+    /// 1.5: the Shortcuts action's request reaches the main screen and starts dictation once
+    /// (in UI tests the microphone is not used: the request is counted on `home-dictate`).
+    func testTheShortcutsActionStartsDictation() {
+        let app = XCUIApplication()
+        app.launchArguments += ["-uiTesting", "-uiTestingDictateRequest", "-manualCurrency", "SEK",
+                                "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        let mic = app.buttons["home-dictate"]
+        XCTAssertTrue(mic.waitForExistence(timeout: 10))
+        expectation(for: NSPredicate(format: "value == 'requests 1'"), evaluatedWith: mic)
+        waitForExpectations(timeout: 10)
+    }
+
     /// 1.4 (his ask): a new expense whose description has no category yet starts in Café.
     func testANewExpenseStartsInTheDefaultCategory() {
         let app = launch()

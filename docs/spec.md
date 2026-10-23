@@ -1,6 +1,6 @@
 # AMS Manual Expenses — specification
 
-What the app does, rule by rule, written from the code (version 1.4, 23 Oct 2026).
+What the app does, rule by rule, written from the code (version 1.5, 23 Oct 2026).
 Change this file in the same commit as the behaviour it describes.
 
 ## 1. The main screen (`ContentView.swift`)
@@ -164,3 +164,13 @@ Asked for on 22 Oct 2026: "coffee and café were in different statistics".
   category's name joins the two); swipe = delete (when used, asks first — "Delete
   category" / "Keep it"; its expenses keep no category, the expenses stay); Edit
   (`categories-edit`) = reorder; **Add category** (`categories-add`) at the bottom.
+
+## 12. Shortcuts and the Action button (1.5, `Shortcuts.swift`)
+
+`DictateExpenseIntent` ("Dictate expense", opens the app) sets `DictationRequest.pending`;
+the main screen takes it when it appears or when it changes: closes an open check sheet or
+Settings and, 0.4 s later, starts dictation (if not already listening). `ExpenseShortcuts`
+(App Shortcuts) lists it in Shortcuts, the Action button's Shortcut choice and Siri
+("Dictate an expense in Expenses", "Log an expense in Expenses"). UI tests:
+`-uiTestingDictateRequest` plays the action; the microphone is not used, the request is
+counted in `home-dictate`'s value ("requests 1").
