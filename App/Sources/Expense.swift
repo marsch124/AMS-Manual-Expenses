@@ -17,10 +17,13 @@ final class Expense {
     var createdAt: Date = Date()
     /// Since 1.3; "" = no category. A name from Settings › Categories.
     var category: String = ""
+    /// Since 1.6: who the expense was for — Martin (default), AMS or Others.
+    var consumer: String = Consumers.initial
 
     init(title: String, amount: Double, currency: String, date: Date, place: String, heard: String,
-         category: String = "") {
+         category: String = "", consumer: String = Consumers.initial) {
         self.category = category
+        self.consumer = consumer
         self.title = title
         self.amount = amount
         self.currency = currency
@@ -44,6 +47,7 @@ extension Expense {
         currency = d.currency
         date = d.date
         category = d.category
+        consumer = d.consumer
     }
 }
 
@@ -57,6 +61,7 @@ struct Draft: Identifiable {
     var date: Date
     var heard: String
     var category: String = ""
+    var consumer: String = Consumers.initial
 
     var amount: Double? {
         let value = Double(amountText.replacingOccurrences(of: ",", with: ".").trimmingCharacters(in: .whitespaces))
@@ -72,6 +77,12 @@ struct Draft: Identifiable {
 extension Draft {
     init(editing e: Expense) {
         self.init(expense: e, title: e.title, amountText: Draft.format(e.amount),
-                  currency: e.currency, date: e.date, heard: e.heard, category: e.category)
+                  currency: e.currency, date: e.date, heard: e.heard, category: e.category, consumer: e.consumer)
     }
+}
+
+/// Who an expense was for (1.6, his three values; Martin is the default).
+enum Consumers {
+    static let all = ["Martin", "AMS", "Others"]
+    static let initial = "Martin"
 }

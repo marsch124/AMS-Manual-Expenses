@@ -119,6 +119,34 @@ final class AMSExpensesUITests: XCTestCase {
         XCTAssertTrue(row.label.contains("45"), "the category's total reads '\(row.label)'")
     }
 
+    /// 1.6 (his ask): a new expense is for Martin; choosing AMS is kept when it is saved.
+    func testTheConsumerStartsAsMartinAndIsKept() {
+        let app = launch()
+        let field = app.textFields["home-type-field"]
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        field.tap()
+        field.typeText("Paper 89 kronor")
+        app.buttons["home-type-go"].tap()
+
+        let value = app.staticTexts["entry-consumer-value"]
+        XCTAssertTrue(value.waitForExistence(timeout: 10), "the check sheet has no consumer")
+        XCTAssertEqual(value.label, "Martin")
+        app.buttons["entry-consumer"].tap()
+        let ams = app.buttons["consumer-choice-1"]
+        XCTAssertTrue(ams.waitForExistence(timeout: 10))
+        ams.tap()
+        XCTAssertTrue(value.waitForExistence(timeout: 10))
+        XCTAssertEqual(value.label, "AMS")
+        app.buttons["entry-save"].tap()
+
+        // Open it again: the choice was saved, not just shown.
+        let row = app.buttons["expense-row-0"]
+        XCTAssertTrue(row.waitForExistence(timeout: 10))
+        row.tap()
+        XCTAssertTrue(app.staticTexts["entry-consumer-value"].waitForExistence(timeout: 10))
+        XCTAssertEqual(app.staticTexts["entry-consumer-value"].label, "AMS")
+    }
+
     /// 1.5: the Shortcuts action's request reaches the main screen and starts dictation once
     /// (in UI tests the microphone is not used: the request is counted on `home-dictate`).
     func testTheShortcutsActionStartsDictation() {

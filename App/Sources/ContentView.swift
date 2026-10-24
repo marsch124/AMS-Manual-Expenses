@@ -205,12 +205,12 @@ struct ContentView: View {
         let timeFormat = DateFormatter()
         timeFormat.dateFormat = "HH:mm"
         func quote(_ s: String) -> String { "\"" + s.replacingOccurrences(of: "\"", with: "\"\"") + "\"" }
-        var lines = ["Date,Time,Description,Category,Amount,Currency,Place,Time zone"]
+        var lines = ["Date,Time,Description,Category,Consumer,Amount,Currency,Place,Time zone"]
         for e in expenses.reversed() {
             let tz = TimeZone(identifier: e.timeZoneID) ?? .current
             dateFormat.timeZone = tz
             timeFormat.timeZone = tz
-            lines.append([dateFormat.string(from: e.date), timeFormat.string(from: e.date), e.title, e.category,
+            lines.append([dateFormat.string(from: e.date), timeFormat.string(from: e.date), e.title, e.category, e.consumer,
                           String(format: "%.2f", e.amount), e.currency, e.place, e.timeZoneID].map(quote).joined(separator: ","))
         }
         return lines.joined(separator: "\n")
@@ -251,7 +251,7 @@ struct ContentView: View {
             e.apply(d)
         } else {
             context.insert(Expense(title: title, amount: amount, currency: d.currency, date: d.date,
-                                   place: location.placeName ?? "", heard: d.heard, category: d.category))
+                                   place: location.placeName ?? "", heard: d.heard, category: d.category, consumer: d.consumer))
         }
     }
 }
@@ -300,6 +300,16 @@ struct EntryEditor: View {
 
     private var options: [String] {
         currencies.contains(draft.currency) ? currencies : currencies + [draft.currency]
+    }
+
+    /// A small tinted label, like the currency on the main screen (category, consumer).
+    private func pill(_ text: String, filled: Bool) -> some View {
+        Text(text)
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(filled ? Color.accentColor : Color.secondary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 5)
+            .background(Capsule().fill(filled ? Color.accentColor.opacity(0.15) : Color.secondary.opacity(0.12)))
     }
 
     private func whenLabel(_ text: String) -> some View {
@@ -381,18 +391,16 @@ struct EntryEditor: View {
                     }
                     // 1.4 (his ask): the category last, without the word "Category".
                     NavigationLink { CategoryChooser(selection: $draft.category) } label: {
-                        // A small tinted label, like the currency on the main screen.
-                        Text(draft.category.isEmpty ? "No category" : draft.category)
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(draft.category.isEmpty ? Color.secondary : Color.accentColor)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 5)
-                            .background(Capsule().fill(draft.category.isEmpty
-                                                       ? Color.secondary.opacity(0.12)
-                                                       : Color.accentColor.opacity(0.15)))
+                        pill(draft.category.isEmpty ? "No category" : draft.category, filled: !draft.category.isEmpty)
                             .accessibilityIdentifier("entry-category-value")
                     }
                     .accessibilityIdentifier("entry-category")
+                    // 1.6 (his ask): who it was for, the very last line, a pill like the category.
+                    NavigationLink { ConsumerChooser(selection: $draft.consumer) } label: {
+                        pill(draft.consumer, filled: true)
+                            .accessibilityIdentifier("entry-consumer-value")
+                    }
+                    .accessibilityIdentifier("entry-consumer")
                 }
                 if let onDelete {
                     Section {

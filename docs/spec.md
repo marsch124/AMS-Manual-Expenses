@@ -1,6 +1,6 @@
 # AMS Manual Expenses — specification
 
-What the app does, rule by rule, written from the code (version 1.5, 23 Oct 2026).
+What the app does, rule by rule, written from the code (version 1.6, 24 Oct 2026).
 Change this file in the same commit as the behaviour it describes.
 
 ## 1. The main screen (`ContentView.swift`)
@@ -78,7 +78,9 @@ decimal pad, comma or point) with the Currency beside it (`entry-currency`); the
 time on the left as two quiet labels without a heading (`entry-time`; a tap opens the
 calendar with the time in its own sheet, `entry-time-picker`, Cancel / Done); what was heard is in italics; last, the category without a label
 (`entry-category`, showing `entry-category-value`: the name, or "No category" in grey;
-opens the chooser, §11). A new expense's category is the one its description had last
+opens the chooser, §11); the very last line (1.6) the consumer pill (`entry-consumer`,
+value `entry-consumer-value`; chooser `consumer-choice-0` … Martin / AMS / Others; a new
+expense is Martin, earlier ones count as Martin). A new expense's category is the one its description had last
 time, else the default category (§11).
 **Save** (`entry-save`) is off until the amount is a number above 0. **Cancel**
 (`entry-cancel`) keeps nothing. An existing expense also has **Delete expense**
@@ -88,7 +90,7 @@ time, else the default category (§11).
 
 - **Categories** (`settings-categories`): §11.
 - **Export all as CSV** (`settings-export`): every expense, oldest first, columns
-  Date, Time, Description, Category (1.3), Amount, Currency, Place, Time zone; date and time in the
+  Date, Time, Description, Category (1.3), Consumer (1.6), Amount, Currency, Place, Time zone; date and time in the
   time zone where it was logged; every field quoted.
 - **What's new** (`settings-whatsnew`): `Releases.all`, newest first; the top version
   is `whatsnew-0-version`.

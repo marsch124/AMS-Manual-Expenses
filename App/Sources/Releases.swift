@@ -9,6 +9,10 @@ struct Release {
 
 enum Releases {
     static let all: [Release] = [
+        Release(version: "1.6", date: "24 October 2026", lines: [
+            "Who it was for: the last line of the check sheet is a small label — Martin (always first), AMS or Others. Tap it to change.",
+            "The CSV export has a Consumer column. Earlier expenses count as Martin.",
+        ]),
         Release(version: "1.5", date: "23 October 2026", lines: [
             "“Dictate expense” in the Shortcuts app: it opens Expenses and starts listening straight away.",
             "Put it on the Action button: iPhone Settings › Action Button › Shortcut › Expenses › Dictate expense.",
@@ -90,6 +94,9 @@ enum Guide {
             "The next time you say the same description (“Coffee”), its last category is filled in by itself.",
             "To change it later, tap the expense — today, or in Statistics under a day or a category.",
             "Settings › Categories: tap one to rename it (every expense moves with it), swipe to delete it (its expenses keep no category), Edit to change the order, Add category at the bottom.",
+        ]),
+        Section(title: "For whom", lines: [
+            "The very last line of the check sheet says who the expense was for: Martin, AMS or Others. A new one is Martin; tap the label to change it.",
         ]),
         Section(title: "Statistics", lines: [
             "The chart button at the top opens Statistics.",

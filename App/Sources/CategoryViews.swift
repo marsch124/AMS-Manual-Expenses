@@ -221,3 +221,32 @@ struct CategoriesScreen: View {
         categoriesText = CategoryList.encode(names.filter { $0 != name })
     }
 }
+
+/// Choosing who an expense was for (1.6): Martin, AMS or Others; a tap chooses and goes back.
+struct ConsumerChooser: View {
+    @Binding var selection: String
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        List {
+            ForEach(Array(Consumers.all.enumerated()), id: \.element) { index, name in
+                Button {
+                    selection = name
+                    dismiss()
+                } label: {
+                    HStack {
+                        Text(name)
+                        Spacer()
+                        if selection == name {
+                            Image(systemName: "checkmark").foregroundStyle(Color.accentColor)
+                        }
+                    }
+                }
+                .tint(.primary)
+                .accessibilityIdentifier("consumer-choice-\(index)")
+            }
+        }
+        .navigationTitle("For whom")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
