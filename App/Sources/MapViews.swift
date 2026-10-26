@@ -137,9 +137,9 @@ struct TodayMapScreen: View {
                                     .background(Circle().fill(Color.accentColor))
                                     .overlay(Circle().stroke(.white, lineWidth: 2))
                             }
+                            .annotationTitles(.hidden)
                         }
                     }
-                    .annotationTitles(.hidden)
                     .frame(height: 380)
                     .listRowInsets(EdgeInsets())
                     .accessibilityHidden(true)
