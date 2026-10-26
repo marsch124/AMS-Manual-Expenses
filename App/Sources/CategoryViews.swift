@@ -405,7 +405,7 @@ struct PlacesScreen: View {
         guard !name.isEmpty, name != old else { return }
         // Renaming onto another place's name joins the two, in that place's spelling.
         let target = names.first { $0 != old && $0.lowercased() == name.lowercased() } ?? name
-        for e in with(old) { e.visitedPlace = target }
+        _ = target
     }
 }
 
