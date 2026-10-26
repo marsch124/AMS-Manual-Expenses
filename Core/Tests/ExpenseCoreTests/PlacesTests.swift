@@ -27,6 +27,9 @@ final class PlacesTests: XCTestCase {
         let here = Fix(latitude: 59.3431, longitude: 18.0490)   // about 10 m from ICA
         XCTAssertEqual(Places.suggestion(at: here, history: history), "ICA Odenplan")
         XCTAssertEqual(Places.suggestion(at: nextDoor, history: history), "Café Pascal")
+        let near = Places.nearest(at: here, history: history)
+        XCTAssertEqual(near?.place, "ICA Odenplan")
+        XCTAssertEqual(near?.metres ?? -1, 11, accuracy: 2)
     }
 
     func testNothingIsSuggestedFarAwayOrWithoutAFix() {

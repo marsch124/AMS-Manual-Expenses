@@ -183,6 +183,10 @@ final class AMSExpensesUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["entry-place-value"].waitForExistence(timeout: 10))
         XCTAssertEqual(app.staticTexts["entry-place-value"].label, "ICA Odenplan",
                        "the place used at this GPS fix was not offered")
+        // 1.8: and the sheet says it was filled in by itself, from the same spot.
+        let auto = app.staticTexts["entry-place-auto"]
+        XCTAssertTrue(auto.waitForExistence(timeout: 10), "no 'auto' note beside the place")
+        XCTAssertEqual(auto.label, "auto · 0 m away")
 
         // And it is listed under Nearby, first.
         app.buttons["entry-place"].tap()
@@ -237,6 +241,58 @@ final class AMSExpensesUITests: XCTestCase {
         let value = app.staticTexts["entry-place-value"]
         XCTAssertTrue(value.waitForExistence(timeout: 10))
         XCTAssertEqual(value.label, "Ica Odenplan")
+    }
+
+    private func launch(fix: String) -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments += ["-uiTesting", "-uiTestingFix", fix,
+                                "-manualCurrency", "SEK", "-dictationLanguage", "en-US",
+                                "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        return app
+    }
+
+    /// The check sheet's lower rows can sit below a half-high sheet: scroll until it can be tapped.
+    private func reveal(_ app: XCUIApplication, _ element: XCUIElement) {
+        XCTAssertTrue(element.waitForExistence(timeout: 10), "\(element) is not on the check sheet")
+        for _ in 0..<3 where !element.isHittable { app.swipeUp() }
+    }
+
+    /// 1.8 (concepts A and C): a saved expense keeps its GPS fix and its accuracy; the small map
+    /// on the check sheet opens the big one with the position in numbers.
+    func testTheCheckSheetShowsWhereItWasLogged() {
+        let app = launch(fix: "59.3430,18.0490,8")
+        add(app, "Milk 25 kronor")
+
+        let row = app.buttons["expense-row-0"]
+        XCTAssertTrue(row.waitForExistence(timeout: 10))
+        row.tap()
+        let map = app.buttons["entry-map"]
+        reveal(app, map)
+        XCTAssertTrue(map.label.contains("Stockholm"), "the map's caption reads '\(map.label)'")
+        map.tap()
+
+        let position = app.staticTexts["map-position"]
+        XCTAssertTrue(position.waitForExistence(timeout: 10), "the big map shows no position")
+        XCTAssertEqual(position.label, "59.343000, 18.049000")
+        let accuracy = app.staticTexts["map-accuracy"]
+        XCTAssertTrue(accuracy.waitForExistence(timeout: 10), "the accuracy was not kept with the expense")
+        XCTAssertEqual(accuracy.label, "±8 m")
+        XCTAssertTrue(app.buttons["map-open"].exists, "no Open in Maps")
+    }
+
+    /// 1.8 (concept B): Today on the map counts the expenses with a position and lists them.
+    func testTodayIsShownOnTheMap() {
+        let app = launch(fix: "59.3430,18.0490,8")
+        add(app, "Coffee 45 kronor")
+
+        app.buttons["home-map"].tap()
+        let count = app.staticTexts["todaymap-count"]
+        XCTAssertTrue(count.waitForExistence(timeout: 10), "Today on the map did not open")
+        XCTAssertEqual(count.label, "1 of 1 have a position")
+        let first = app.buttons["todaymap-row-0"]
+        XCTAssertTrue(first.waitForExistence(timeout: 10), "the expense is not listed under the map")
+        XCTAssertTrue(first.label.contains("Coffee"), "the row reads '\(first.label)'")
     }
 
     /// 1.5: the Shortcuts action's request reaches the main screen and starts dictation once

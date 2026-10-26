@@ -20,8 +20,12 @@ final class LocationService: NSObject, ObservableObject, CLLocationManagerDelega
         manager.desiredAccuracy = kCLLocationAccuracyBest
         let arguments = ProcessInfo.processInfo.arguments
         if ExpensesApp.uiTesting, let i = arguments.firstIndex(of: "-uiTestingFix"), i + 1 < arguments.count {
+            // <latitude>,<longitude>[,<accuracy in metres>]
             let parts = arguments[i + 1].split(separator: ",").compactMap { Double($0) }
-            if parts.count == 2 { fix = Fix(latitude: parts[0], longitude: parts[1]) }
+            if parts.count >= 2 {
+                fix = Fix(latitude: parts[0], longitude: parts[1], accuracy: parts.count > 2 ? parts[2] : nil)
+                placeName = "Stockholm, Sweden"
+            }
         }
     }
 
@@ -40,7 +44,8 @@ final class LocationService: NSObject, ObservableObject, CLLocationManagerDelega
     nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
         Task { @MainActor in
-            self.fix = Fix(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude)
+            self.fix = Fix(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude,
+                           accuracy: location.horizontalAccuracy >= 0 ? location.horizontalAccuracy : nil)
             await self.lookUp(location)
         }
     }

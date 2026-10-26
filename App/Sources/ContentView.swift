@@ -74,6 +74,12 @@ struct ContentView: View {
                     .accessibilityIdentifier("home-language")
                 }
                 ToolbarItemGroup(placement: .topBarTrailing) {
+                    // 1.8: today's expenses on a map (concept B).
+                    NavigationLink { TodayMapScreen(expenses: todays) } label: {
+                        Image(systemName: "map")
+                    }
+                    .accessibilityLabel("Today on the map")
+                    .accessibilityIdentifier("home-map")
                     NavigationLink { StatisticsScreen() } label: {
                         Image(systemName: "chart.bar")
                     }
@@ -245,12 +251,14 @@ struct ContentView: View {
         guard !sentence.isEmpty else { return }
         let parsed = ExpenseParser.parse(sentence, defaultCurrency: defaultCurrency)
         let fix = location.fix
+        let near = Places.nearest(at: fix, history: expenses.map(\.visit))
         draft = Draft(title: parsed.title, amountText: parsed.amount.map(Draft.format) ?? "",
                       currency: parsed.currency, date: parsed.date, heard: sentence,
                       category: Categories.initial(for: parsed.title, history: expenses.map(\.spend),
                                                    default: defaultCategory),
-                      visitedPlace: Places.suggestion(at: fix, history: expenses.map(\.visit)) ?? "",
-                      fix: fix)
+                      visitedPlace: near?.place ?? "",
+                      fix: fix, area: location.placeName ?? "",
+                      autoPlace: near?.place ?? "", autoPlaceMetres: near?.metres)
         typed = ""
     }
 
@@ -323,6 +331,11 @@ struct EntryEditor: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 5)
             .background(Capsule().fill(filled ? Color.accentColor.opacity(0.15) : Color.secondary.opacity(0.12)))
+    }
+
+    private var mapAmount: String {
+        guard let amount = draft.amount else { return draft.amountText }
+        return amount.formatted(.currency(code: draft.currency))
     }
 
     private func whenLabel(_ text: String) -> some View {
@@ -417,10 +430,38 @@ struct EntryEditor: View {
                     // 1.7 (his ask): the place visited, a pill like the others; the places near
                     // this expense's GPS fix come first in the chooser.
                     NavigationLink { PlaceChooser(selection: $draft.visitedPlace, fix: draft.fix, visits: visits) } label: {
-                        pill(draft.visitedPlace.isEmpty ? "No place" : draft.visitedPlace, filled: !draft.visitedPlace.isEmpty)
-                            .accessibilityIdentifier("entry-place-value")
+                        HStack {
+                            pill(draft.visitedPlace.isEmpty ? "No place" : draft.visitedPlace, filled: !draft.visitedPlace.isEmpty)
+                                .accessibilityIdentifier("entry-place-value")
+                            Spacer()
+                            // 1.8: says when the app filled the place in by itself, and how near.
+                            if !draft.autoPlace.isEmpty, draft.visitedPlace == draft.autoPlace, let m = draft.autoPlaceMetres {
+                                Text("auto · \(Int(m.rounded())) m away")
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                                    .accessibilityIdentifier("entry-place-auto")
+                            }
+                        }
                     }
                     .accessibilityIdentifier("entry-place")
+                    // 1.8 (concept A): a small map of where it was logged; a tap opens the big one (C).
+                    if let fix = draft.fix {
+                        NavigationLink {
+                            ExpenseMapScreen(title: draft.title, amount: mapAmount, date: draft.date, area: draft.area,
+                                             place: draft.visitedPlace, fix: fix)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 6) {
+                                FixPreview(fix: fix)
+                                Label([draft.area, fix.accuracyText ?? ""].filter { !$0.isEmpty }.joined(separator: " · ")
+                                          .ifEmpty("Where it was logged"), systemImage: "mappin.and.ellipse")
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                                    .accessibilityIdentifier("entry-map-caption")
+                            }
+                            .padding(.vertical, 4)
+                        }
+                        .accessibilityIdentifier("entry-map")
+                    }
                 }
                 if let onDelete {
                     Section {
@@ -466,4 +507,8 @@ struct CSVExport: Transferable {
             return SentTransferredFile(url)
         }
     }
+}
+
+extension String {
+    func ifEmpty(_ fallback: String) -> String { isEmpty ? fallback : self }
 }

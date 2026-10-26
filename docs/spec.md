@@ -1,6 +1,6 @@
 # AMS Manual Expenses — specification
 
-What the app does, rule by rule, written from the code (version 1.7, 26 Oct 2026).
+What the app does, rule by rule, written from the code (version 1.8, 26 Oct 2026).
 Change this file in the same commit as the behaviour it describes.
 
 ## 1. The main screen (`ContentView.swift`)
@@ -20,7 +20,7 @@ One list, three parts:
    and the total in kronor (`today-total`, §9; before 1.2 one total per currency). Empty: "No expenses yet today."
    (`today-empty`). Tap a row to change it; swipe left to delete it (no question).
 
-Toolbar: the globe (`home-language`) picks the dictation language — English (en-US),
+Toolbar: the map (`home-map`, 1.8) opens Today on the map (§14). The globe (`home-language`) picks the dictation language — English (en-US),
 Svenska (sv-SE), Deutsch (de-DE); stored as `dictationLanguage`. The chart
 (`home-statistics`) opens Statistics (§10). The gear (`home-settings`) opens Settings.
 
@@ -107,13 +107,14 @@ time, else the default category (§11).
 SwiftData, on the iPhone only. An expense: title, amount, currency, date, time-zone id
 and place at the moment it was logged, the sentence heard, created-at, category (1.3, a
 name; "" = none), consumer (1.6), latitude and longitude (1.7, the GPS fix; nil = none) and
-the place visited (1.7, `visitedPlace`; "" = none). The category list is UserDefaults `categories`, one name per line.
+the place visited (1.7, `visitedPlace`; "" = none), and the fix's accuracy in metres (1.8,
+`locationAccuracy`; nil = not known). The category list is UserDefaults `categories`, one name per line.
 
 ## 8. Test hooks
 
 `-uiTesting`: the store is in memory and starts empty; location is never asked; no
-exchange rate is fetched — one euro is always 10 kronor; `-uiTestingFix <lat>,<lon>` (1.7)
-sets the GPS fix; the category list starts as a
+exchange rate is fetched — one euro is always 10 kronor; `-uiTestingFix <lat>,<lon>[,<accuracy>]` (1.7;
+accuracy 1.8) sets the GPS fix, and then the area is "Stockholm, Sweden"; the category list starts as a
 new install's.
 UI tests also pass `-manualCurrency SEK -dictationLanguage en-US -AppleLanguages (en)
 -AppleLocale en_US`.
@@ -207,3 +208,23 @@ counted in `home-dictate`'s value ("requests 1").
   onto another place's name (any spelling) joins the two in that place's spelling. Swipe =
   delete, always asked first ("Delete place" `places-delete-confirm` / "Keep it"): its
   expenses keep no place, the expenses stay. No Add: a place exists while an expense has it.
+
+## 14. Maps (1.8, his choice 26 Oct 2026 of concepts A, B and C; `MapViews.swift`)
+
+Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its own tiles.
+
+- **A · on the check sheet**, after the place: when the draft has a fix, a small map that does
+  not move (`FixPreview`, 120 pt) with the teal dot, and under it "<area> · ±<accuracy> m"
+  (either part left out when unknown; neither: "Where it was logged"). The row (`entry-map`)
+  opens C. Beside the place pill, while the place is still the one filled in by itself:
+  "auto · N m away" (`entry-place-auto`; N = metres to the nearest earlier expense with that
+  place, `Places.nearest`).
+- **C · Where** (`ExpenseMapScreen`): a big map (it moves) with the dot; rows: description and
+  amount, When, Place, Area, Position (`map-position`, six decimals), Accuracy (`map-accuracy`,
+  when known); **Open in Maps** (`map-open`) opens `https://maps.apple.com/?ll=<lat>,<lon>&q=<place>`.
+  Footer: "The position stays on this iPhone."
+- **B · Today on the map** (`TodayMapScreen`): today's expenses, oldest first, numbered 1, 2 …
+  only those with a fix; all on one map (fitted to them), then the list (`todaymap-row-0` …:
+  number or a grey "–", description, time · place or "no position", amount) with Today's total
+  in the header. A row with a fix opens C. Footer `todaymap-count`: "N of M have a position".
+  None with a fix: "No expense today has a position yet." (`todaymap-empty`).

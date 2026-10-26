@@ -4,10 +4,13 @@ import Foundation
 public struct Fix: Equatable, Sendable {
     public var latitude: Double
     public var longitude: Double
+    /// How sure the iPhone was, in metres (1.8); nil = not known.
+    public var accuracy: Double?
 
-    public init(latitude: Double, longitude: Double) {
+    public init(latitude: Double, longitude: Double, accuracy: Double? = nil) {
         self.latitude = latitude
         self.longitude = longitude
+        self.accuracy = accuracy
     }
 
     /// Metres between two positions, on a round Earth (more than close enough for a shop).
@@ -47,6 +50,11 @@ public enum Places {
     /// The place for a new expense logged at `fix`: the one used nearest to it within
     /// `sameSpot` metres; nil without a fix or with nothing that close.
     public static func suggestion(at fix: Fix?, history: [Visit]) -> String? {
+        nearest(at: fix, history: history)?.place
+    }
+
+    /// The same, with how far away that earlier expense was logged (1.8: "auto · 12 m away").
+    public static func nearest(at fix: Fix?, history: [Visit]) -> (place: String, metres: Double)? {
         guard let fix else { return nil }
         var best: (place: String, metres: Double)?
         for v in history where !v.place.isEmpty {
@@ -54,7 +62,7 @@ public enum Places {
             let d = fix.distance(to: f)
             if d <= sameSpot, best == nil || d < best!.metres { best = (v.place, d) }
         }
-        return best?.place
+        return best
     }
 
     /// Every place used, once each (the latest spelling), split into those within `nearby`

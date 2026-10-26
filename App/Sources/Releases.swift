@@ -9,6 +9,12 @@ struct Release {
 
 enum Releases {
     static let all: [Release] = [
+        Release(version: "1.8", date: "26 October 2026", lines: [
+            "The check sheet shows a small map of where the expense was logged, with the town and how exact the position is (for example ±8 m). Tap it for a big map.",
+            "The big map: the time, the place, the town, the position in numbers, how exact it is, and Open in Maps.",
+            "Today on the map: the new map button at the top of the main screen. Today’s expenses are numbered in the order you paid; one without a position has a grey “–”.",
+            "When the app fills in the place by itself, the check sheet says so: “auto · 12 m away”.",
+        ]),
         Release(version: "1.7", date: "26 October 2026", lines: [
             "Every new expense keeps its GPS position.",
             "The place you visited: a new label under “For whom” on the check sheet. Tap it and choose a place, or type a new one on the top line and tap Add.",
@@ -110,7 +116,14 @@ enum Guide {
             "Every new expense keeps its GPS position. The places you used near it are listed first, under Nearby; the others follow, the latest first.",
             "At the same spot again (within about 150 metres), the place is filled in by itself. You can change it before Save.",
             "Without a position (location turned off, or an expense from before 1.7) there is no Nearby list; the places are all still there.",
+            "When the place was filled in by itself, “auto · 12 m away” beside it says how far away you used it before.",
             "Settings › Places: tap a place to rename it (every expense moves with it; a name that is already there joins the two), swipe it to the left to delete it (its expenses keep no place, the expenses stay).",
+        ]),
+        Section(title: "Maps", lines: [
+            "Under the place, the check sheet shows a small map of where the expense was logged, the town, and how exact the position is (±8 m). Tap it for the big map.",
+            "The big map shows the time, the place, the town, the position in numbers and how exact it is. Open in Maps opens Apple Maps at that spot.",
+            "The map button at the top of the main screen shows today’s expenses on one map, numbered in the order you paid. One without a position has a grey “–” and is not on the map.",
+            "An expense without a position (location turned off, or from before 1.7) has no map.",
         ]),
         Section(title: "Statistics", lines: [
             "The chart button at the top opens Statistics.",

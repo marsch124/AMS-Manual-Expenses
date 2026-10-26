@@ -22,6 +22,8 @@ final class Expense {
     /// Since 1.7: the GPS fix when it was logged (nil: none known, or logged before 1.7).
     var latitude: Double?
     var longitude: Double?
+    /// Since 1.8: how sure the iPhone was about that fix, in metres.
+    var locationAccuracy: Double?
     /// Since 1.7: the place visited, a name he chose on the check sheet; "" = none.
     var visitedPlace: String = ""
 
@@ -31,6 +33,7 @@ final class Expense {
         self.consumer = consumer
         self.latitude = fix?.latitude
         self.longitude = fix?.longitude
+        self.locationAccuracy = fix?.accuracy
         self.visitedPlace = visitedPlace
         self.title = title
         self.amount = amount
@@ -49,7 +52,7 @@ extension Expense {
 
     var fix: Fix? {
         guard let latitude, let longitude else { return nil }
-        return Fix(latitude: latitude, longitude: longitude)
+        return Fix(latitude: latitude, longitude: longitude, accuracy: locationAccuracy)
     }
 
     /// What the place chooser learns from.
@@ -82,6 +85,11 @@ struct Draft: Identifiable {
     var visitedPlace: String = ""
     /// Where it was logged: for a new expense the fix when the check sheet opened.
     var fix: Fix?
+    /// The town and country it was logged in ("Stockholm, Sweden"), shown under the map (1.8).
+    var area: String = ""
+    /// 1.8: the place the app filled in by itself, and how far away it was used before.
+    var autoPlace: String = ""
+    var autoPlaceMetres: Double?
 
     var amount: Double? {
         let value = Double(amountText.replacingOccurrences(of: ",", with: ".").trimmingCharacters(in: .whitespaces))
@@ -98,7 +106,7 @@ extension Draft {
     init(editing e: Expense) {
         self.init(expense: e, title: e.title, amountText: Draft.format(e.amount),
                   currency: e.currency, date: e.date, heard: e.heard, category: e.category, consumer: e.consumer,
-                  visitedPlace: e.visitedPlace, fix: e.fix)
+                  visitedPlace: e.visitedPlace, fix: e.fix, area: e.place)
     }
 }
 
