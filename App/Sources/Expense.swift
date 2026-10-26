@@ -33,7 +33,7 @@ final class Expense {
         self.consumer = consumer
         self.latitude = fix?.latitude
         self.longitude = fix?.longitude
-        self.locationAccuracy = fix?.accuracy
+        self.locationAccuracy = nil
         self.visitedPlace = visitedPlace
         self.title = title
         self.amount = amount
