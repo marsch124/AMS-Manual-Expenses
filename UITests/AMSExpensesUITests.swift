@@ -193,6 +193,53 @@ final class AMSExpensesUITests: XCTestCase {
         XCTAssertTrue(first.label.contains("ICA Odenplan"), "the first place reads '\(first.label)'")
     }
 
+    /// 1.7 (his ask): Settings › Places renames a place, and the expense moves with it.
+    func testRenamingAPlaceMovesItsExpenses() {
+        let app = launch()
+        let field = app.textFields["home-type-field"]
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        field.tap()
+        field.typeText("Milk 25 kronor")
+        app.buttons["home-type-go"].tap()
+        let place = app.buttons["entry-place"]
+        XCTAssertTrue(place.waitForExistence(timeout: 10), "the check sheet has no place")
+        place.tap()
+        let new = app.buttons["place-new"]
+        XCTAssertTrue(new.waitForExistence(timeout: 10))
+        new.tap()
+        let name = app.textFields["place-new-name"]
+        XCTAssertTrue(name.waitForExistence(timeout: 10))
+        name.typeText("Ica")
+        app.buttons["place-new-add"].tap()
+        XCTAssertTrue(app.buttons["entry-save"].waitForExistence(timeout: 10))
+        app.buttons["entry-save"].tap()
+
+        XCTAssertTrue(app.buttons["home-settings"].waitForExistence(timeout: 10))
+        app.buttons["home-settings"].tap()
+        app.buttons["settings-places"].tap()
+        let row = app.buttons["places-row-0"]
+        XCTAssertTrue(row.waitForExistence(timeout: 10), "Settings › Places is empty")
+        XCTAssertTrue(row.label.contains("Ica"), "the place reads '\(row.label)'")
+        row.tap()
+        let rename = app.textFields["places-rename-name"]
+        XCTAssertTrue(rename.waitForExistence(timeout: 10), "no field to rename the place")
+        // Three deletes clear "Ica" whether the field starts selected or with the cursor at its end.
+        rename.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 3) + "Ica Odenplan")
+        app.buttons["places-rename-save"].tap()
+        expectation(for: NSPredicate(format: "label CONTAINS 'Ica Odenplan'"), evaluatedWith: row)
+        waitForExpectations(timeout: 10)
+
+        // The expense itself moved: its check sheet shows the new name.
+        app.navigationBars.buttons.firstMatch.tap()
+        app.buttons["settings-done"].tap()
+        let expense = app.buttons["expense-row-0"]
+        XCTAssertTrue(expense.waitForExistence(timeout: 10))
+        expense.tap()
+        let value = app.staticTexts["entry-place-value"]
+        XCTAssertTrue(value.waitForExistence(timeout: 10))
+        XCTAssertEqual(value.label, "Ica Odenplan")
+    }
+
     /// 1.5: the Shortcuts action's request reaches the main screen and starts dictation once
     /// (in UI tests the microphone is not used: the request is counted on `home-dictate`).
     func testTheShortcutsActionStartsDictation() {

@@ -338,3 +338,91 @@ struct PlaceChooser: View {
         .accessibilityAddTraits(selection == value ? .isSelected : [])
     }
 }
+
+/// Settings › Places (1.7): every place used, A to Z, with how many expenses have it.
+/// Tap = rename (every expense follows; onto another place's name joins the two);
+/// swipe = delete after asking (its expenses keep no place, the expenses stay).
+/// There is no Add here: a place exists as long as an expense has it ("New place…").
+struct PlacesScreen: View {
+    @Query private var expenses: [Expense]
+    @State private var renaming: String?
+    @State private var editedName = ""
+    @State private var deleting: String?
+
+    /// One name per place, any spelling: the spelling of its latest expense.
+    private var names: [String] {
+        let c = Places.choices(at: nil, history: expenses.map(\.visit))
+        return (c.near + c.other).sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+    }
+
+    private func with(_ name: String) -> [Expense] {
+        expenses.filter { $0.visitedPlace.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == name.lowercased() }
+    }
+
+    var body: some View {
+        List {
+            Section {
+                if names.isEmpty {
+                    Text("No places yet. Choose “New place…” on the check sheet to add one.")
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("places-empty")
+                }
+                ForEach(Array(names.enumerated()), id: \.element) { index, name in
+                    Button {
+                        editedName = name
+                        renaming = name
+                    } label: {
+                        HStack {
+                            Text(name)
+                            Spacer()
+                            Text("\(with(name).count)")
+                                .monospacedDigit()
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .tint(.primary)
+                    .accessibilityIdentifier("places-row-\(index)")
+                }
+                .onDelete { offsets in
+                    guard let index = offsets.first else { return }
+                    deleting = names[index]
+                }
+            } footer: {
+                Text("The number is how many expenses have the place. Tap a place to rename it. Swipe to the left to delete it.")
+            }
+        }
+        .navigationTitle("Places")
+        .navigationBarTitleDisplayMode(.inline)
+        .alert("Rename place", isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
+            TextField("Name", text: $editedName)
+                .accessibilityIdentifier("places-rename-name")
+            Button("Cancel", role: .cancel) { renaming = nil }
+            Button("Save") {
+                if let old = renaming { rename(old, to: editedName) }
+                renaming = nil
+            }
+            .accessibilityIdentifier("places-rename-save")
+        } message: {
+            Text("Every expense at this place moves with it.")
+        }
+        .confirmationDialog("Delete this place?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
+                            titleVisibility: .visible) {
+            Button("Delete place", role: .destructive) {
+                if let name = deleting { for e in with(name) { e.visitedPlace = "" } }
+                deleting = nil
+            }
+            .accessibilityIdentifier("places-delete-confirm")
+            Button("Keep it", role: .cancel) { deleting = nil }
+        } message: {
+            Text("\(with(deleting ?? "").count) expenses will have no place. The expenses themselves stay.")
+        }
+    }
+
+    private func rename(_ old: String, to new: String) {
+        let name = new.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty, name != old else { return }
+        // Renaming onto another place's name joins the two, in that place's spelling.
+        let target = names.first { $0 != old && $0.lowercased() == name.lowercased() } ?? name
+        for e in with(old) { e.visitedPlace = target }
+    }
+}

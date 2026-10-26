@@ -13,6 +13,7 @@ enum Releases {
             "Every new expense keeps its GPS position.",
             "The place you visited: a new label under “For whom” on the check sheet. Tap it and choose a place, or “New place…” to type one.",
             "The places near you are listed first, under Nearby. The next time you log an expense at the same spot, its place is filled in by itself.",
+            "Settings › Places: every place with how many expenses have it. Tap one to rename it (every expense follows), swipe to delete it.",
             "The CSV export has the columns Place visited, Latitude and Longitude.",
         ]),
         Release(version: "1.6", date: "24 October 2026", lines: [
@@ -109,6 +110,7 @@ enum Guide {
             "Every new expense keeps its GPS position. The places you used near it are listed first, under Nearby; the others follow, the latest first.",
             "At the same spot again (within about 150 metres), the place is filled in by itself. You can change it before Save.",
             "Without a position (location turned off, or an expense from before 1.7) there is no Nearby list; the places are all still there.",
+            "Settings › Places: tap a place to rename it (every expense moves with it; a name that is already there joins the two), swipe it to the left to delete it (its expenses keep no place, the expenses stay).",
         ]),
         Section(title: "Statistics", lines: [
             "The chart button at the top opens Statistics.",

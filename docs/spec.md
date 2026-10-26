@@ -91,6 +91,7 @@ time, else the default category (§11).
 ## 6. Settings (`SettingsScreen.swift`)
 
 - **Categories** (`settings-categories`): §11.
+- **Places** (`settings-places`, 1.7): §13.
 - **Export all as CSV** (`settings-export`): every expense, oldest first, columns
   Date, Time, Description, Category (1.3), Consumer (1.6), Place visited (1.7), Amount,
   Currency, Place, Time zone, Latitude, Longitude (1.7, six decimals; empty without a fix); date and time in the
@@ -198,3 +199,9 @@ counted in `home-dictate`'s value ("requests 1").
 - **Filled in by itself**: a new expense gets the place used nearest to its fix within 150 m
   (`Places.sameSpot`); none → "No place". He can change it before Save.
 - Nothing about the position leaves the iPhone except in the CSV he exports.
+- **Settings › Places** (`PlacesScreen`): every place used, A to Z, once each (any spelling),
+  with how many expenses have it (`places-row-0` …; empty: `places-empty`). Tap = rename
+  (`places-rename-name`, Cancel / Save `places-rename-save`): every expense with it follows;
+  onto another place's name (any spelling) joins the two in that place's spelling. Swipe =
+  delete, always asked first ("Delete place" `places-delete-confirm` / "Keep it"): its
+  expenses keep no place, the expenses stay. No Add: a place exists while an expense has it.
