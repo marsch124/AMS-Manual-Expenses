@@ -166,11 +166,9 @@ final class AMSExpensesUITests: XCTestCase {
         XCTAssertTrue(value.waitForExistence(timeout: 10), "the check sheet has no place")
         XCTAssertEqual(value.label, "No place", "a first expense has no place yet")
         app.buttons["entry-place"].tap()
-        let new = app.buttons["place-new"]
-        XCTAssertTrue(new.waitForExistence(timeout: 10), "the place list did not open")
-        new.tap()
         let name = app.textFields["place-new-name"]
-        XCTAssertTrue(name.waitForExistence(timeout: 10), "no field for the new place")
+        XCTAssertTrue(name.waitForExistence(timeout: 10), "the place list has no line for a new place")
+        name.tap()
         name.typeText("ICA Odenplan")
         app.buttons["place-new-add"].tap()
         XCTAssertTrue(value.waitForExistence(timeout: 10))
@@ -204,11 +202,9 @@ final class AMSExpensesUITests: XCTestCase {
         let place = app.buttons["entry-place"]
         XCTAssertTrue(place.waitForExistence(timeout: 10), "the check sheet has no place")
         place.tap()
-        let new = app.buttons["place-new"]
-        XCTAssertTrue(new.waitForExistence(timeout: 10))
-        new.tap()
         let name = app.textFields["place-new-name"]
         XCTAssertTrue(name.waitForExistence(timeout: 10))
+        name.tap()
         name.typeText("Ica")
         app.buttons["place-new-add"].tap()
         XCTAssertTrue(app.buttons["entry-save"].waitForExistence(timeout: 10))
@@ -223,10 +219,13 @@ final class AMSExpensesUITests: XCTestCase {
         row.tap()
         let rename = app.textFields["places-rename-name"]
         XCTAssertTrue(rename.waitForExistence(timeout: 10), "no field to rename the place")
-        // Three deletes clear "Ica" whether the field starts selected or with the cursor at its end.
-        rename.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 3) + "Ica Odenplan")
+        rename.tap()
+        // The cursor goes to the end of the short name: deletes clear it, extra ones do nothing.
+        rename.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 6) + "Ica Odenplan")
         app.buttons["places-rename-save"].tap()
-        expectation(for: NSPredicate(format: "label CONTAINS 'Ica Odenplan'"), evaluatedWith: row)
+        let renamed = app.buttons["places-row-0"]
+        XCTAssertTrue(renamed.waitForExistence(timeout: 10))
+        expectation(for: NSPredicate(format: "label CONTAINS 'Ica Odenplan'"), evaluatedWith: renamed)
         waitForExpectations(timeout: 10)
 
         // The expense itself moved: its check sheet shows the new name.

@@ -251,14 +251,14 @@ struct ConsumerChooser: View {
     }
 }
 
-/// Choosing the place visited (1.7): None, the places near this expense's GPS fix (nearest
-/// first), then every other place used before (latest first); "New place…" types a new one.
+/// Choosing the place visited (1.7): a line to type a new place, None, the places near this
+/// expense's GPS fix (nearest first), then every other place used before (latest first).
+/// No pop-up for the new name: a typing line at the top, which the UI tests can reach.
 struct PlaceChooser: View {
     @Binding var selection: String
     let fix: Fix?
     let visits: [Visit]
     @Environment(\.dismiss) private var dismiss
-    @State private var adding = false
     @State private var newName = ""
 
     private var lists: (near: [String], other: [String]) {
@@ -270,11 +270,27 @@ struct PlaceChooser: View {
         return c
     }
 
+    private var trimmed: String { newName.trimmingCharacters(in: .whitespacesAndNewlines) }
+
     var body: some View {
         let c = lists
         List {
             Section {
+                HStack {
+                    TextField("New place", text: $newName)
+                        .submitLabel(.done)
+                        .onSubmit { add(c) }
+                        .accessibilityIdentifier("place-new-name")
+                    Button("Add") { add(c) }
+                        .buttonStyle(.borderless)
+                        .disabled(trimmed.isEmpty)
+                        .accessibilityIdentifier("place-new-add")
+                }
                 choice("None", value: "", id: "place-choice-none")
+            } footer: {
+                if fix == nil {
+                    Text("No GPS position for this expense, so no places nearby.")
+                }
             }
             if !c.near.isEmpty {
                 Section("Nearby") {
@@ -290,34 +306,16 @@ struct PlaceChooser: View {
                     }
                 }
             }
-            Section {
-                Button("New place…") {
-                    newName = ""
-                    adding = true
-                }
-                .accessibilityIdentifier("place-new")
-            } footer: {
-                if fix == nil {
-                    Text("No GPS position for this expense, so no places nearby.")
-                }
-            }
         }
         .navigationTitle("Place")
         .navigationBarTitleDisplayMode(.inline)
-        .alert("New place", isPresented: $adding) {
-            TextField("Name", text: $newName)
-                .accessibilityIdentifier("place-new-name")
-            Button("Cancel", role: .cancel) {}
-                .accessibilityIdentifier("place-new-cancel")
-            Button("Add") {
-                let name = newName.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !name.isEmpty else { return }
-                // A name already there (any spelling) is chosen, not added twice.
-                selection = (c.near + c.other).first { $0.lowercased() == name.lowercased() } ?? name
-                dismiss()
-            }
-            .accessibilityIdentifier("place-new-add")
-        }
+    }
+
+    /// A name already used (any spelling) is chosen, not added twice.
+    private func add(_ c: (near: [String], other: [String])) {
+        guard !trimmed.isEmpty else { return }
+        selection = (c.near + c.other).first { $0.lowercased() == trimmed.lowercased() } ?? trimmed
+        dismiss()
     }
 
     private func choice(_ label: String, value: String, id: String) -> some View {
@@ -340,13 +338,11 @@ struct PlaceChooser: View {
 }
 
 /// Settings › Places (1.7): every place used, A to Z, with how many expenses have it.
-/// Tap = rename (every expense follows; onto another place's name joins the two);
-/// swipe = delete after asking (its expenses keep no place, the expenses stay).
-/// There is no Add here: a place exists as long as an expense has it ("New place…").
+/// Tap = rename on its own screen (every expense follows; onto another place's name joins
+/// the two); swipe = delete after asking (its expenses keep no place, the expenses stay).
+/// There is no Add here: a place exists as long as an expense has it ("New place").
 struct PlacesScreen: View {
     @Query private var expenses: [Expense]
-    @State private var renaming: String?
-    @State private var editedName = ""
     @State private var deleting: String?
 
     /// One name per place, any spelling: the spelling of its latest expense.
@@ -363,14 +359,13 @@ struct PlacesScreen: View {
         List {
             Section {
                 if names.isEmpty {
-                    Text("No places yet. Choose “New place…” on the check sheet to add one.")
+                    Text("No places yet. Type one under “New place” on the check sheet.")
                         .foregroundStyle(.secondary)
                         .accessibilityIdentifier("places-empty")
                 }
                 ForEach(Array(names.enumerated()), id: \.element) { index, name in
-                    Button {
-                        editedName = name
-                        renaming = name
+                    NavigationLink {
+                        PlaceRenameScreen(old: name) { rename(name, to: $0) }
                     } label: {
                         HStack {
                             Text(name)
@@ -380,7 +375,6 @@ struct PlacesScreen: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
-                    .tint(.primary)
                     .accessibilityIdentifier("places-row-\(index)")
                 }
                 .onDelete { offsets in
@@ -393,18 +387,6 @@ struct PlacesScreen: View {
         }
         .navigationTitle("Places")
         .navigationBarTitleDisplayMode(.inline)
-        .alert("Rename place", isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
-            TextField("Name", text: $editedName)
-                .accessibilityIdentifier("places-rename-name")
-            Button("Cancel", role: .cancel) { renaming = nil }
-            Button("Save") {
-                if let old = renaming { rename(old, to: editedName) }
-                renaming = nil
-            }
-            .accessibilityIdentifier("places-rename-save")
-        } message: {
-            Text("Every expense at this place moves with it.")
-        }
         .confirmationDialog("Delete this place?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
                             titleVisibility: .visible) {
             Button("Delete place", role: .destructive) {
@@ -424,5 +406,37 @@ struct PlacesScreen: View {
         // Renaming onto another place's name joins the two, in that place's spelling.
         let target = names.first { $0 != old && $0.lowercased() == name.lowercased() } ?? name
         for e in with(old) { e.visitedPlace = target }
+    }
+}
+
+/// Renaming one place: its name to change, Save (top right) or Back.
+struct PlaceRenameScreen: View {
+    let old: String
+    let onSave: (String) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var name = ""
+
+    var body: some View {
+        Form {
+            Section {
+                TextField("Name", text: $name)
+                    .accessibilityIdentifier("places-rename-name")
+            } footer: {
+                Text("Every expense at this place moves with it.")
+            }
+        }
+        .navigationTitle("Rename place")
+        .navigationBarTitleDisplayMode(.inline)
+        .onAppear { name = old }
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Save") {
+                    onSave(name)
+                    dismiss()
+                }
+                .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .accessibilityIdentifier("places-rename-save")
+            }
+        }
     }
 }

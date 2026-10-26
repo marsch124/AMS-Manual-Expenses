@@ -11,7 +11,7 @@ enum Releases {
     static let all: [Release] = [
         Release(version: "1.7", date: "26 October 2026", lines: [
             "Every new expense keeps its GPS position.",
-            "The place you visited: a new label under “For whom” on the check sheet. Tap it and choose a place, or “New place…” to type one.",
+            "The place you visited: a new label under “For whom” on the check sheet. Tap it and choose a place, or type a new one on the top line and tap Add.",
             "The places near you are listed first, under Nearby. The next time you log an expense at the same spot, its place is filled in by itself.",
             "Settings › Places: every place with how many expenses have it. Tap one to rename it (every expense follows), swipe to delete it.",
             "The CSV export has the columns Place visited, Latitude and Longitude.",
@@ -106,7 +106,7 @@ enum Guide {
             "Under the category, the check sheet says who the expense was for: Martin, AMS or Others. A new one is Martin; tap the label to change it.",
         ]),
         Section(title: "Place visited", lines: [
-            "The last line of the check sheet is the place you visited, for example “ICA Odenplan”. Tap it and choose a place, or “New place…” to type a new one.",
+            "The last line of the check sheet is the place you visited, for example “ICA Odenplan”. Tap it and choose a place, or type a new one on the top line (“New place”) and tap Add.",
             "Every new expense keeps its GPS position. The places you used near it are listed first, under Nearby; the others follow, the latest first.",
             "At the same spot again (within about 150 metres), the place is filled in by itself. You can change it before Save.",
             "Without a position (location turned off, or an expense from before 1.7) there is no Nearby list; the places are all still there.",

@@ -191,17 +191,19 @@ counted in `home-dictate`'s value ("requests 1").
   (location off, not yet known) = none. Expenses from before 1.7 have none.
 - **Place visited**: a name, chosen on the check sheet. The list is every name already used
   (once each, any spelling; the latest spelling wins) — no separate list in Settings.
-- **Chooser** (`PlaceChooser`): None (`place-choice-none`); **Nearby**: the places used within
-  1 km of this expense's fix, nearest first; then the other places, the latest used first
-  (`place-choice-0` … counting on from Nearby). **New place…** (`place-new`) asks for a name
-  (`place-new-name`; Cancel / Add, `place-new-add`); a name already used is chosen instead.
+- **Chooser** (`PlaceChooser`): at the top a typing line "New place" (`place-new-name`) with
+  **Add** (`place-new-add`, off while empty; Done on the keyboard does the same) — a name
+  already used (any spelling) is chosen instead; no pop-up (the UI tests could not reach one).
+  Then None (`place-choice-none`); **Nearby**: the places used within 1 km of this expense's
+  fix, nearest first; then the other places, the latest used first (`place-choice-0` …
+  counting on from Nearby).
   Without a fix the footer says so and there is no Nearby section.
 - **Filled in by itself**: a new expense gets the place used nearest to its fix within 150 m
   (`Places.sameSpot`); none → "No place". He can change it before Save.
 - Nothing about the position leaves the iPhone except in the CSV he exports.
 - **Settings › Places** (`PlacesScreen`): every place used, A to Z, once each (any spelling),
-  with how many expenses have it (`places-row-0` …; empty: `places-empty`). Tap = rename
-  (`places-rename-name`, Cancel / Save `places-rename-save`): every expense with it follows;
+  with how many expenses have it (`places-row-0` …; empty: `places-empty`). Tap = rename on
+  its own screen (`places-rename-name`, Save `places-rename-save`, or Back): every expense with it follows;
   onto another place's name (any spelling) joins the two in that place's spelling. Swipe =
   delete, always asked first ("Delete place" `places-delete-confirm` / "Keep it"): its
   expenses keep no place, the expenses stay. No Add: a place exists while an expense has it.
