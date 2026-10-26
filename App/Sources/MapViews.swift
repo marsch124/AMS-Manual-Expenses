@@ -111,7 +111,7 @@ struct TodayMapScreen: View {
     private var rows: [(expense: Expense, number: Int?)] {
         var n = 0
         return expenses.sorted { $0.date < $1.date }.map { e in
-            guard e.fix != nil else { return (e, nil) }
+            guard e.fix != nil, false else { return (e, nil) }
             n += 1
             return (e, n)
         }
