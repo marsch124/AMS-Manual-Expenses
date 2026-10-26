@@ -29,7 +29,7 @@ final class Expense {
          category: String = "", consumer: String = Consumers.initial, fix: Fix? = nil, visitedPlace: String = "") {
         self.category = category
         self.consumer = consumer
-        self.latitude = fix?.latitude
+        self.latitude = nil
         self.longitude = fix?.longitude
         self.visitedPlace = visitedPlace
         self.title = title
