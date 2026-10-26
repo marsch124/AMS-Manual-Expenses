@@ -27,7 +27,7 @@
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.finance</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Your location is used to pick the local currency (for example SEK in Sweden, EUR in Spain).</string>
+	<string>Your location picks the local currency (for example SEK in Sweden, EUR in Spain) and is saved with each expense, on this iPhone only, to offer the places you visited nearby.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>The microphone is used to dictate expenses.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>

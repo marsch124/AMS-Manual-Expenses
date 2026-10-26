@@ -250,3 +250,91 @@ struct ConsumerChooser: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 }
+
+/// Choosing the place visited (1.7): None, the places near this expense's GPS fix (nearest
+/// first), then every other place used before (latest first); "New place…" types a new one.
+struct PlaceChooser: View {
+    @Binding var selection: String
+    let fix: Fix?
+    let visits: [Visit]
+    @Environment(\.dismiss) private var dismiss
+    @State private var adding = false
+    @State private var newName = ""
+
+    private var lists: (near: [String], other: [String]) {
+        var c = Places.choices(at: fix, history: visits)
+        // A place typed on this sheet but not saved yet is still offered.
+        if !selection.isEmpty, !(c.near + c.other).contains(where: { $0.lowercased() == selection.lowercased() }) {
+            c.other.insert(selection, at: 0)
+        }
+        return c
+    }
+
+    var body: some View {
+        let c = lists
+        List {
+            Section {
+                choice("None", value: "", id: "place-choice-none")
+            }
+            if !c.near.isEmpty {
+                Section("Nearby") {
+                    ForEach(Array(c.near.enumerated()), id: \.element) { index, name in
+                        choice(name, value: name, id: "place-choice-\(index)")
+                    }
+                }
+            }
+            if !c.other.isEmpty {
+                Section(c.near.isEmpty ? "Places" : "Other places") {
+                    ForEach(Array(c.other.enumerated()), id: \.element) { index, name in
+                        choice(name, value: name, id: "place-choice-\(c.near.count + index)")
+                    }
+                }
+            }
+            Section {
+                Button("New place…") {
+                    newName = ""
+                    adding = true
+                }
+                .accessibilityIdentifier("place-new")
+            } footer: {
+                if fix == nil {
+                    Text("No GPS position for this expense, so no places nearby.")
+                }
+            }
+        }
+        .navigationTitle("Place")
+        .navigationBarTitleDisplayMode(.inline)
+        .alert("New place", isPresented: $adding) {
+            TextField("Name", text: $newName)
+                .accessibilityIdentifier("place-new-name")
+            Button("Cancel", role: .cancel) {}
+                .accessibilityIdentifier("place-new-cancel")
+            Button("Add") {
+                let name = newName.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !name.isEmpty else { return }
+                // A name already there (any spelling) is chosen, not added twice.
+                selection = (c.near + c.other).first { $0.lowercased() == name.lowercased() } ?? name
+                dismiss()
+            }
+            .accessibilityIdentifier("place-new-add")
+        }
+    }
+
+    private func choice(_ label: String, value: String, id: String) -> some View {
+        Button {
+            selection = value
+            dismiss()
+        } label: {
+            HStack {
+                Text(label)
+                Spacer()
+                if selection == value {
+                    Image(systemName: "checkmark").foregroundStyle(Color.accentColor)
+                }
+            }
+        }
+        .tint(.primary)
+        .accessibilityIdentifier(id)
+        .accessibilityAddTraits(selection == value ? .isSelected : [])
+    }
+}

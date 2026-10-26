@@ -9,6 +9,12 @@ struct Release {
 
 enum Releases {
     static let all: [Release] = [
+        Release(version: "1.7", date: "26 October 2026", lines: [
+            "Every new expense keeps its GPS position.",
+            "The place you visited: a new label under “For whom” on the check sheet. Tap it and choose a place, or “New place…” to type one.",
+            "The places near you are listed first, under Nearby. The next time you log an expense at the same spot, its place is filled in by itself.",
+            "The CSV export has the columns Place visited, Latitude and Longitude.",
+        ]),
         Release(version: "1.6", date: "24 October 2026", lines: [
             "Who it was for: the last line of the check sheet is a small label — Martin (always first), AMS or Others. Tap it to change.",
             "The CSV export has a Consumer column. Earlier expenses count as Martin.",
@@ -68,7 +74,7 @@ enum Guide {
             "It is also in the Shortcuts app under Expenses, and Siri knows “Dictate an expense in Expenses”.",
         ]),
         Section(title: "Check it", lines: [
-            "Every expense opens for checking before it is saved: description, amount and currency, the date and time, and the category.",
+            "Every expense opens for checking before it is saved: description, amount and currency, the date and time, the category, for whom and the place visited.",
             "Save keeps it. Cancel throws it away.",
         ]),
         Section(title: "Time", lines: [
@@ -96,7 +102,13 @@ enum Guide {
             "Settings › Categories: tap one to rename it (every expense moves with it), swipe to delete it (its expenses keep no category), Edit to change the order, Add category at the bottom.",
         ]),
         Section(title: "For whom", lines: [
-            "The very last line of the check sheet says who the expense was for: Martin, AMS or Others. A new one is Martin; tap the label to change it.",
+            "Under the category, the check sheet says who the expense was for: Martin, AMS or Others. A new one is Martin; tap the label to change it.",
+        ]),
+        Section(title: "Place visited", lines: [
+            "The last line of the check sheet is the place you visited, for example “ICA Odenplan”. Tap it and choose a place, or “New place…” to type a new one.",
+            "Every new expense keeps its GPS position. The places you used near it are listed first, under Nearby; the others follow, the latest first.",
+            "At the same spot again (within about 150 metres), the place is filled in by itself. You can change it before Save.",
+            "Without a position (location turned off, or an expense from before 1.7) there is no Nearby list; the places are all still there.",
         ]),
         Section(title: "Statistics", lines: [
             "The chart button at the top opens Statistics.",
@@ -113,7 +125,8 @@ enum Guide {
         ]),
         Section(title: "Your data", lines: [
             "Your expenses stay on this iPhone.",
-            "Settings › Export all as CSV gives every expense, with its category, as a file for Numbers or Excel.",
+            "Settings › Export all as CSV gives every expense, with its category, place and GPS position, as a file for Numbers or Excel.",
+            "The GPS position is used only on this iPhone and in the CSV file. It is never sent anywhere.",
         ]),
     ]
 }

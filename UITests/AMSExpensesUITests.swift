@@ -147,6 +147,52 @@ final class AMSExpensesUITests: XCTestCase {
         XCTAssertEqual(app.staticTexts["entry-consumer-value"].label, "AMS")
     }
 
+    /// 1.7 (his ask): a new place typed on the check sheet is kept, and the next expense at the
+    /// same GPS fix starts there (the fix is set with -uiTestingFix: no location in UI tests).
+    func testAPlaceIsKeptAndOfferedAtTheSameSpot() {
+        let app = XCUIApplication()
+        app.launchArguments += ["-uiTesting", "-uiTestingFix", "59.3430,18.0490",
+                                "-manualCurrency", "SEK", "-dictationLanguage", "en-US",
+                                "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+
+        let field = app.textFields["home-type-field"]
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        field.tap()
+        field.typeText("Milk 25 kronor")
+        app.buttons["home-type-go"].tap()
+
+        let value = app.staticTexts["entry-place-value"]
+        XCTAssertTrue(value.waitForExistence(timeout: 10), "the check sheet has no place")
+        XCTAssertEqual(value.label, "No place", "a first expense has no place yet")
+        app.buttons["entry-place"].tap()
+        let new = app.buttons["place-new"]
+        XCTAssertTrue(new.waitForExistence(timeout: 10), "the place list did not open")
+        new.tap()
+        let name = app.textFields["place-new-name"]
+        XCTAssertTrue(name.waitForExistence(timeout: 10), "no field for the new place")
+        name.typeText("ICA Odenplan")
+        app.buttons["place-new-add"].tap()
+        XCTAssertTrue(value.waitForExistence(timeout: 10))
+        XCTAssertEqual(value.label, "ICA Odenplan")
+        app.buttons["entry-save"].tap()
+
+        // The second expense, on the same spot: the place is already there.
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        field.tap()
+        field.typeText("Bread 30 kronor")
+        app.buttons["home-type-go"].tap()
+        XCTAssertTrue(app.staticTexts["entry-place-value"].waitForExistence(timeout: 10))
+        XCTAssertEqual(app.staticTexts["entry-place-value"].label, "ICA Odenplan",
+                       "the place used at this GPS fix was not offered")
+
+        // And it is listed under Nearby, first.
+        app.buttons["entry-place"].tap()
+        let first = app.buttons["place-choice-0"]
+        XCTAssertTrue(first.waitForExistence(timeout: 10), "the place list has no places")
+        XCTAssertTrue(first.label.contains("ICA Odenplan"), "the first place reads '\(first.label)'")
+    }
+
     /// 1.5: the Shortcuts action's request reaches the main screen and starts dictation once
     /// (in UI tests the microphone is not used: the request is counted on `home-dictate`).
     func testTheShortcutsActionStartsDictation() {

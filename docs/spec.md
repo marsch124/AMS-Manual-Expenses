@@ -1,6 +1,6 @@
 # AMS Manual Expenses — specification
 
-What the app does, rule by rule, written from the code (version 1.6, 24 Oct 2026).
+What the app does, rule by rule, written from the code (version 1.7, 26 Oct 2026).
 Change this file in the same commit as the behaviour it describes.
 
 ## 1. The main screen (`ContentView.swift`)
@@ -80,7 +80,9 @@ calendar with the time in its own sheet, `entry-time-picker`, Cancel / Done); wh
 (`entry-category`, showing `entry-category-value`: the name, or "No category" in grey;
 opens the chooser, §11); the very last line (1.6) the consumer pill (`entry-consumer`,
 value `entry-consumer-value`; chooser `consumer-choice-0` … Martin / AMS / Others; a new
-expense is Martin, earlier ones count as Martin). A new expense's category is the one its description had last
+expense is Martin, earlier ones count as Martin). Since 1.7 the last line is the place
+visited (`entry-place`, value `entry-place-value`: the name, or "No place" in grey; opens
+the chooser, §13). A new expense's category is the one its description had last
 time, else the default category (§11).
 **Save** (`entry-save`) is off until the amount is a number above 0. **Cancel**
 (`entry-cancel`) keeps nothing. An existing expense also has **Delete expense**
@@ -90,7 +92,8 @@ time, else the default category (§11).
 
 - **Categories** (`settings-categories`): §11.
 - **Export all as CSV** (`settings-export`): every expense, oldest first, columns
-  Date, Time, Description, Category (1.3), Consumer (1.6), Amount, Currency, Place, Time zone; date and time in the
+  Date, Time, Description, Category (1.3), Consumer (1.6), Place visited (1.7), Amount,
+  Currency, Place, Time zone, Latitude, Longitude (1.7, six decimals; empty without a fix); date and time in the
   time zone where it was logged; every field quoted.
 - **What's new** (`settings-whatsnew`): `Releases.all`, newest first; the top version
   is `whatsnew-0-version`.
@@ -102,12 +105,14 @@ time, else the default category (§11).
 
 SwiftData, on the iPhone only. An expense: title, amount, currency, date, time-zone id
 and place at the moment it was logged, the sentence heard, created-at, category (1.3, a
-name; "" = none). The category list is UserDefaults `categories`, one name per line.
+name; "" = none), consumer (1.6), latitude and longitude (1.7, the GPS fix; nil = none) and
+the place visited (1.7, `visitedPlace`; "" = none). The category list is UserDefaults `categories`, one name per line.
 
 ## 8. Test hooks
 
 `-uiTesting`: the store is in memory and starts empty; location is never asked; no
-exchange rate is fetched — one euro is always 10 kronor; the category list starts as a
+exchange rate is fetched — one euro is always 10 kronor; `-uiTestingFix <lat>,<lon>` (1.7)
+sets the GPS fix; the category list starts as a
 new install's.
 UI tests also pass `-manualCurrency SEK -dictationLanguage en-US -AppleLanguages (en)
 -AppleLocale en_US`.
@@ -176,3 +181,20 @@ Settings and, 0.4 s later, starts dictation (if not already listening). `Expense
 ("Dictate an expense in Expenses", "Log an expense in Expenses"). UI tests:
 `-uiTestingDictateRequest` plays the action; the microphone is not used, the request is
 counted in `home-dictate`'s value ("requests 1").
+
+## 13. GPS fix and place visited (1.7, his ask 25 Oct 2026; `LocationService.swift`, `Core/…/Places.swift`, `PlaceChooser`)
+
+- **GPS fix**: location is asked at the best accuracy the iPhone gives, when the app comes
+  to the front and when the microphone is tapped to start. A new expense keeps the latest
+  fix at the moment its check sheet opens (`Draft.fix`); editing never changes it. No fix
+  (location off, not yet known) = none. Expenses from before 1.7 have none.
+- **Place visited**: a name, chosen on the check sheet. The list is every name already used
+  (once each, any spelling; the latest spelling wins) — no separate list in Settings.
+- **Chooser** (`PlaceChooser`): None (`place-choice-none`); **Nearby**: the places used within
+  1 km of this expense's fix, nearest first; then the other places, the latest used first
+  (`place-choice-0` … counting on from Nearby). **New place…** (`place-new`) asks for a name
+  (`place-new-name`; Cancel / Add, `place-new-add`); a name already used is chosen instead.
+  Without a fix the footer says so and there is no Nearby section.
+- **Filled in by itself**: a new expense gets the place used nearest to its fix within 150 m
+  (`Places.sameSpot`); none → "No place". He can change it before Save.
+- Nothing about the position leaves the iPhone except in the CSV he exports.

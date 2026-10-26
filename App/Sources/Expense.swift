@@ -19,11 +19,19 @@ final class Expense {
     var category: String = ""
     /// Since 1.6: who the expense was for — Martin (default), AMS or Others.
     var consumer: String = Consumers.initial
+    /// Since 1.7: the GPS fix when it was logged (nil: none known, or logged before 1.7).
+    var latitude: Double?
+    var longitude: Double?
+    /// Since 1.7: the place visited, a name he chose on the check sheet; "" = none.
+    var visitedPlace: String = ""
 
     init(title: String, amount: Double, currency: String, date: Date, place: String, heard: String,
-         category: String = "", consumer: String = Consumers.initial) {
+         category: String = "", consumer: String = Consumers.initial, fix: Fix? = nil, visitedPlace: String = "") {
         self.category = category
         self.consumer = consumer
+        self.latitude = fix?.latitude
+        self.longitude = fix?.longitude
+        self.visitedPlace = visitedPlace
         self.title = title
         self.amount = amount
         self.currency = currency
@@ -39,6 +47,14 @@ extension Expense {
     /// What the statistics count.
     var spend: Spend { Spend(title: title, amount: amount, currency: currency, date: date, category: category) }
 
+    var fix: Fix? {
+        guard let latitude, let longitude else { return nil }
+        return Fix(latitude: latitude, longitude: longitude)
+    }
+
+    /// What the place chooser learns from.
+    var visit: Visit { Visit(place: visitedPlace, fix: fix, date: date) }
+
     /// A checked draft's answers written onto this expense (editing an existing one).
     func apply(_ d: Draft) {
         guard let amount = d.amount else { return }
@@ -48,6 +64,7 @@ extension Expense {
         date = d.date
         category = d.category
         consumer = d.consumer
+        visitedPlace = d.visitedPlace
     }
 }
 
@@ -62,6 +79,9 @@ struct Draft: Identifiable {
     var heard: String
     var category: String = ""
     var consumer: String = Consumers.initial
+    var visitedPlace: String = ""
+    /// Where it was logged: for a new expense the fix when the check sheet opened.
+    var fix: Fix?
 
     var amount: Double? {
         let value = Double(amountText.replacingOccurrences(of: ",", with: ".").trimmingCharacters(in: .whitespaces))
@@ -77,7 +97,8 @@ struct Draft: Identifiable {
 extension Draft {
     init(editing e: Expense) {
         self.init(expense: e, title: e.title, amountText: Draft.format(e.amount),
-                  currency: e.currency, date: e.date, heard: e.heard, category: e.category, consumer: e.consumer)
+                  currency: e.currency, date: e.date, heard: e.heard, category: e.category, consumer: e.consumer,
+                  visitedPlace: e.visitedPlace, fix: e.fix)
     }
 }
 

@@ -209,6 +209,7 @@ struct ExpenseListScreen: View {
             EntryEditor(
                 draft: d,
                 currencies: [homeCurrency, "EUR"],
+                visits: expenses.map(\.visit),
                 onSave: { d.expense?.apply($0) },
                 onDelete: d.expense.map { e in { context.delete(e) } }
             )

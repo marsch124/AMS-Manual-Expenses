@@ -12,7 +12,7 @@ settings:
     DEVELOPMENT_TEAM: D24ENP83QQ
     CODE_SIGN_STYLE: Automatic
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "1.6"
+    MARKETING_VERSION: "1.7"
     CURRENT_PROJECT_VERSION: "1"
 packages:
   # The parser — everything the app knows about reading a sentence, with no screen in it.
@@ -51,7 +51,7 @@ targets:
         ITSAppUsesNonExemptEncryption: false
         NSMicrophoneUsageDescription: The microphone is used to dictate expenses.
         NSSpeechRecognitionUsageDescription: Your dictation is turned into text to log the expense.
-        NSLocationWhenInUseUsageDescription: Your location is used to pick the local currency (for example SEK in Sweden, EUR in Spain).
+        NSLocationWhenInUseUsageDescription: Your location picks the local currency (for example SEK in Sweden, EUR in Spain) and is saved with each expense, on this iPhone only, to offer the places you visited nearby.
         UILaunchScreen:
           UIColorName: ""
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]

@@ -93,6 +93,7 @@ struct ContentView: View {
                 EntryEditor(
                     draft: d,
                     currencies: currencyOptions,
+                    visits: expenses.map(\.visit),
                     onSave: save,
                     onDelete: d.expense.map { e in { context.delete(e) } }
                 )
@@ -151,7 +152,11 @@ struct ContentView: View {
 
     private var dictation: some View {
         VStack(spacing: 12) {
-            Button { speech.toggle(localeID: language) } label: {
+            Button {
+                // 1.7: a fresh GPS fix while he speaks, for the expense he is about to log.
+                if !speech.isRecording && !ExpensesApp.uiTesting { location.refresh() }
+                speech.toggle(localeID: language)
+            } label: {
                 Image(systemName: speech.isRecording ? "stop.fill" : "mic.fill")
                     .font(.system(size: 40))
                     .foregroundStyle(.white)
@@ -205,13 +210,15 @@ struct ContentView: View {
         let timeFormat = DateFormatter()
         timeFormat.dateFormat = "HH:mm"
         func quote(_ s: String) -> String { "\"" + s.replacingOccurrences(of: "\"", with: "\"\"") + "\"" }
-        var lines = ["Date,Time,Description,Category,Consumer,Amount,Currency,Place,Time zone"]
+        func coordinate(_ value: Double?) -> String { value.map { String(format: "%.6f", $0) } ?? "" }
+        var lines = ["Date,Time,Description,Category,Consumer,Place visited,Amount,Currency,Place,Time zone,Latitude,Longitude"]
         for e in expenses.reversed() {
             let tz = TimeZone(identifier: e.timeZoneID) ?? .current
             dateFormat.timeZone = tz
             timeFormat.timeZone = tz
-            lines.append([dateFormat.string(from: e.date), timeFormat.string(from: e.date), e.title, e.category, e.consumer,
-                          String(format: "%.2f", e.amount), e.currency, e.place, e.timeZoneID].map(quote).joined(separator: ","))
+            lines.append([dateFormat.string(from: e.date), timeFormat.string(from: e.date), e.title, e.category, e.consumer, e.visitedPlace,
+                          String(format: "%.2f", e.amount), e.currency, e.place, e.timeZoneID,
+                          coordinate(e.latitude), coordinate(e.longitude)].map(quote).joined(separator: ","))
         }
         return lines.joined(separator: "\n")
     }
@@ -237,10 +244,13 @@ struct ContentView: View {
         let sentence = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !sentence.isEmpty else { return }
         let parsed = ExpenseParser.parse(sentence, defaultCurrency: defaultCurrency)
+        let fix = location.fix
         draft = Draft(title: parsed.title, amountText: parsed.amount.map(Draft.format) ?? "",
                       currency: parsed.currency, date: parsed.date, heard: sentence,
                       category: Categories.initial(for: parsed.title, history: expenses.map(\.spend),
-                                                   default: defaultCategory))
+                                                   default: defaultCategory),
+                      visitedPlace: Places.suggestion(at: fix, history: expenses.map(\.visit)) ?? "",
+                      fix: fix)
         typed = ""
     }
 
@@ -251,7 +261,8 @@ struct ContentView: View {
             e.apply(d)
         } else {
             context.insert(Expense(title: title, amount: amount, currency: d.currency, date: d.date,
-                                   place: location.placeName ?? "", heard: d.heard, category: d.category, consumer: d.consumer))
+                                   place: location.placeName ?? "", heard: d.heard, category: d.category, consumer: d.consumer,
+                                   fix: d.fix, visitedPlace: d.visitedPlace))
         }
     }
 }
@@ -288,12 +299,14 @@ struct EntryEditor: View {
     @State private var showWhen = false
     @State private var pickedDate = Date()
     private let currencies: [String]
+    private let visits: [Visit]
     private let onSave: (Draft) -> Void
     private let onDelete: (() -> Void)?
 
-    init(draft: Draft, currencies: [String], onSave: @escaping (Draft) -> Void, onDelete: (() -> Void)?) {
+    init(draft: Draft, currencies: [String], visits: [Visit], onSave: @escaping (Draft) -> Void, onDelete: (() -> Void)?) {
         _draft = State(initialValue: draft)
         self.currencies = currencies
+        self.visits = visits
         self.onSave = onSave
         self.onDelete = onDelete
     }
@@ -401,6 +414,13 @@ struct EntryEditor: View {
                             .accessibilityIdentifier("entry-consumer-value")
                     }
                     .accessibilityIdentifier("entry-consumer")
+                    // 1.7 (his ask): the place visited, a pill like the others; the places near
+                    // this expense's GPS fix come first in the chooser.
+                    NavigationLink { PlaceChooser(selection: $draft.visitedPlace, fix: draft.fix, visits: visits) } label: {
+                        pill(draft.visitedPlace.isEmpty ? "No place" : draft.visitedPlace, filled: !draft.visitedPlace.isEmpty)
+                            .accessibilityIdentifier("entry-place-value")
+                    }
+                    .accessibilityIdentifier("entry-place")
                 }
                 if let onDelete {
                     Section {

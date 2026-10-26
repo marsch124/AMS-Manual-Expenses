@@ -1,10 +1,14 @@
 import CoreLocation
+import ExpenseCore
 
-/// Finds the country the phone is in and that country's currency.
+/// Finds the country the phone is in and that country's currency, and (1.7) the GPS fix
+/// saved with each new expense.
 @MainActor
 final class LocationService: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published private(set) var currency: String?
     @Published private(set) var placeName: String?
+    /// The latest GPS fix. UI tests set it with `-uiTestingFix <latitude>,<longitude>`.
+    @Published private(set) var fix: Fix?
 
     private let manager = CLLocationManager()
     private let geocoder = CLGeocoder()
@@ -12,7 +16,13 @@ final class LocationService: NSObject, ObservableObject, CLLocationManagerDelega
     override init() {
         super.init()
         manager.delegate = self
-        manager.desiredAccuracy = kCLLocationAccuracyKilometer
+        // 1.7: the best the phone can do, so a shop can be told from the one next door.
+        manager.desiredAccuracy = kCLLocationAccuracyBest
+        let arguments = ProcessInfo.processInfo.arguments
+        if ExpensesApp.uiTesting, let i = arguments.firstIndex(of: "-uiTestingFix"), i + 1 < arguments.count {
+            let parts = arguments[i + 1].split(separator: ",").compactMap { Double($0) }
+            if parts.count == 2 { fix = Fix(latitude: parts[0], longitude: parts[1]) }
+        }
     }
 
     func refresh() {
@@ -29,7 +39,10 @@ final class LocationService: NSObject, ObservableObject, CLLocationManagerDelega
 
     nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
-        Task { @MainActor in await self.lookUp(location) }
+        Task { @MainActor in
+            self.fix = Fix(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude)
+            await self.lookUp(location)
+        }
     }
 
     nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {}
