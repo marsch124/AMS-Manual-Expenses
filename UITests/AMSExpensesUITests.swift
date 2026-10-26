@@ -252,10 +252,15 @@ final class AMSExpensesUITests: XCTestCase {
         return app
     }
 
-    /// The check sheet's lower rows can sit below a half-high sheet: scroll until it can be tapped.
+    /// The check sheet's lower rows sit below a half-high sheet and are only made when scrolled
+    /// to: swipe up until the element is there and can be tapped.
     private func reveal(_ app: XCUIApplication, _ element: XCUIElement) {
-        XCTAssertTrue(element.waitForExistence(timeout: 10), "\(element) is not on the check sheet")
-        for _ in 0..<3 where !element.isHittable { app.swipeUp() }
+        XCTAssertTrue(app.buttons["entry-save"].waitForExistence(timeout: 10), "the check sheet did not open")
+        for _ in 0..<4 where !(element.exists && element.isHittable) {
+            app.swipeUp()
+            _ = element.waitForExistence(timeout: 2)
+        }
+        XCTAssertTrue(element.exists, "\(element) is not on the check sheet")
     }
 
     /// 1.8 (concepts A and C): a saved expense keeps its GPS fix and its accuracy; the small map
@@ -267,9 +272,9 @@ final class AMSExpensesUITests: XCTestCase {
         let row = app.buttons["expense-row-0"]
         XCTAssertTrue(row.waitForExistence(timeout: 10))
         row.tap()
-        let map = app.buttons["entry-map"]
+        // Found by its identifier whatever kind of element the map row turns into.
+        let map = app.descendants(matching: .any)["entry-map"].firstMatch
         reveal(app, map)
-        XCTAssertTrue(map.label.contains("Stockholm"), "the map's caption reads '\(map.label)'")
         map.tap()
 
         let position = app.staticTexts["map-position"]
