@@ -61,12 +61,14 @@ struct ContentView: View {
                             Spacer(minLength: 12)
                             WeekBars(days: weekDays)
                         }
-                        .padding(.vertical, 6)
-                        // 1.11 (his ask): no "This week" line under the card — only the small bars.
+                        // 1.11 (his ask): tight — no extra space, and no "This week" line under the card.
+                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                     }
                     ForEach(Array(todays.enumerated()), id: \.element.id) { index, expense in
                         Button { draft = Draft(editing: expense) } label: { ExpenseRow(expense: expense) }
                             .tint(.primary)
+                            // 1.11 (his ask): slimmer rows.
+                            .listRowInsets(EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16))
                             .accessibilityIdentifier("expense-row-\(index)")
                             // 1.9: swipe to the right = log the same one again now.
                             .swipeActions(edge: .leading) {
@@ -91,6 +93,9 @@ struct ContentView: View {
                     Text("Today")
                 }
             }
+            // 1.11 (his ask): less space between the parts of the screen and between rows.
+            .listSectionSpacing(.compact)
+            .environment(\.defaultMinListRowHeight, 34)
             .navigationTitle("Expenses")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -374,9 +379,9 @@ struct ExpenseRow: View {
     }
 
     var body: some View {
-        HStack(spacing: 12) {
-            CategoryIcon(name: expense.category)
-            VStack(alignment: .leading, spacing: 3) {
+        HStack(spacing: 10) {
+            CategoryIcon(name: expense.category, size: 26)
+            VStack(alignment: .leading, spacing: 1) {
                 Text(expense.title)
                 HStack(spacing: 6) {
                     Text(expense.category.isEmpty ? when : when + " · " + expense.category)
@@ -386,7 +391,7 @@ struct ExpenseRow: View {
                 }
             }
             Spacer()
-            VStack(alignment: .trailing, spacing: 2) {
+            VStack(alignment: .trailing, spacing: 0) {
                 Text(expense.amount, format: .currency(code: expense.currency))
                     .bold()
                     .monospacedDigit()

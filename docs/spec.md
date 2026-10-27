@@ -255,6 +255,9 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
   height = its kronor over the week's highest day (4 pt stub for none), today full accent colour,
   earlier days lighter, days to come grey; narrow weekday letters under them, today's bold. (1.10
   also had a "This week" sum under the card; 1.11 removed it, his ask: only the small bars.)
+  1.11 (his ask "take away all extra space"): the main list has compact section spacing and a
+  34 pt minimum row height; the card's row insets are 4 pt top and bottom, each expense row's 3 pt;
+  rows use a 26 pt category icon and no gap between their lines.
 - **Same again**: swipe a Today row to the right (`row-same-again`; a full swipe runs it at once),
   or open an expense from the main screen and tap **Same again, now** (`entry-same-again`, above
   Delete expense; not in Statistics' lists, which have no location): a new draft with the same

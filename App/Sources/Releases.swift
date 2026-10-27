@@ -11,6 +11,7 @@ enum Releases {
     static let all: [Release] = [
         Release(version: "1.11", date: "27 October 2026", lines: [
             "The “This week” line under the Today card is gone. The small bars on the right stay.",
+            "The main screen is tighter: less space around the Today card and between the parts, and slimmer expense rows.",
         ]),
         Release(version: "1.10", date: "27 October 2026", lines: [
             "The Today card shows this week on the right: a small bar for each day, Monday to Sunday. Today’s bar is the strong one; days still to come are grey.",
