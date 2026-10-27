@@ -250,7 +250,7 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
   rate is missing).
 - **Today card**: the first row of Today when there is something: the total (`today-total`,
   34 pt bold) and "1 expense" / "N expenses" (`today-count`). The section header is just "Today".
-- **Same again**: swipe a Today row to the right (`row-same-again`): a new draft with the same
+- **Same again**: swipe a Today row to the right (`row-same-again`; a full swipe runs it at once): a new draft with the same
   description, amount, currency, category, For whom and place, the time now, the GPS fix and
   area now, no "Heard"; it opens for checking like any new expense.
 - **Saved**: every Save (new or changed) gives the success vibration and shows "Saved"
