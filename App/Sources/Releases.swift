@@ -9,6 +9,10 @@ struct Release {
 
 enum Releases {
     static let all: [Release] = [
+        Release(version: "1.10", date: "27 October 2026", lines: [
+            "The Today card shows this week on the right: a small bar for each day, Monday to Sunday. Today’s bar is the strong one; days still to come are grey.",
+            "Under it, “This week” with the week’s total in kronor.",
+        ]),
         Release(version: "1.9", date: "27 October 2026", lines: [
             "Every category has its own icon and colour: in the lists, on the check sheet and in Statistics. Change one in Settings › Categories: tap its icon.",
             "Who it was for, in colour on every expense: Martin blue, AMS yellow, Anna green, Others grey. Anna is new under “For whom”.",
@@ -109,7 +113,7 @@ enum Guide {
         ]),
         Section(title: "Today", lines: [
             "The list shows today’s expenses and their total in kronor.",
-            "The card at the top shows today’s total in large numbers and how many expenses.",
+            "The card at the top shows today’s total in large numbers and how many expenses, and on the right this week as small bars (today in strong colour). Under it, this week’s total.",
             "An amount in euros has its kronor under it (≈ SEK 125), at the bank’s rate of its day.",
             "Tap an expense to change it. Swipe it to the left to delete it. Swipe it to the right (or open it and tap “Same again, now”) for the same expense again, now, opened for checking.",
             "Save gives a short vibration and shows “Saved”.",

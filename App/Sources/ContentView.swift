@@ -43,20 +43,35 @@ struct ContentView: View {
                         Text("No expenses yet today.").foregroundStyle(.secondary)
                             .accessibilityIdentifier("today-empty")
                     } else {
-                        // 1.9: the Today card — today's total, big, and how many.
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(todayTotal)
-                                .font(.system(size: 34, weight: .bold, design: .rounded))
-                                .monospacedDigit()
-                                .minimumScaleFactor(0.6)
-                                .lineLimit(1)
-                                .accessibilityIdentifier("today-total")
-                            Text(todays.count == 1 ? "1 expense" : "\(todays.count) expenses")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                                .accessibilityIdentifier("today-count")
+                        // 1.9: the Today card — today's total, big, and how many;
+                        // 1.10 (his pick B): this week's days as small bars on the right.
+                        HStack(alignment: .center) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(todayTotal)
+                                    .font(.system(size: 34, weight: .bold, design: .rounded))
+                                    .monospacedDigit()
+                                    .minimumScaleFactor(0.6)
+                                    .lineLimit(1)
+                                    .accessibilityIdentifier("today-total")
+                                Text(todays.count == 1 ? "1 expense" : "\(todays.count) expenses")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                                    .accessibilityIdentifier("today-count")
+                            }
+                            Spacer(minLength: 12)
+                            WeekBars(days: weekDays)
                         }
                         .padding(.vertical, 6)
+                        HStack {
+                            Text("This week").foregroundStyle(.secondary)
+                            Spacer()
+                            Text(Money.text(Statistics.total(expenses.map(\.spend), in: .thisWeek, now: Date(),
+                                                             rates: rates.table, calendar: .current).total))
+                                .fontWeight(.semibold)
+                                .monospacedDigit()
+                                .accessibilityIdentifier("today-week-total")
+                        }
+                        .font(.footnote)
                     }
                     ForEach(Array(todays.enumerated()), id: \.element.id) { index, expense in
                         Button { draft = Draft(editing: expense) } label: { ExpenseRow(expense: expense) }
@@ -247,6 +262,20 @@ struct ContentView: View {
         if let error = speech.errorMessage { return error }
         if speech.isRecording { return speech.transcript.isEmpty ? "Listening…" : speech.transcript }
         return ""
+    }
+
+    /// 1.10: this week, Monday (the iPhone's first weekday) to Sunday, in kronor per day.
+    private var weekDays: [WeekBars.Day] {
+        let calendar = Calendar.current
+        guard let week = calendar.dateInterval(of: .weekOfYear, for: Date()) else { return [] }
+        let spends = expenses.map(\.spend)
+        return (0..<7).compactMap { offset -> WeekBars.Day? in
+            guard let day = calendar.date(byAdding: .day, value: offset, to: week.start) else { return nil }
+            let inDay = spends.filter { calendar.isDate($0.date, inSameDayAs: day) }
+            let kronor: Double = Statistics.total(inDay, rates: rates.table, calendar: calendar).kronor
+            return WeekBars.Day(date: day, kronor: kronor,
+                                isToday: calendar.isDateInToday(day), isFuture: day > Date() && !calendar.isDateInToday(day))
+        }
     }
 
     /// Today's total in kronor (1.2: other currencies at the bank's rate of their day).
@@ -607,4 +636,54 @@ struct CSVExport: Transferable {
 
 extension String {
     func ifEmpty(_ fallback: String) -> String { isEmpty ? fallback : self }
+}
+
+/// 1.10: the week's seven small bars on the Today card — today in full colour, earlier days
+/// lighter, days still to come a grey stub; each bar's height is its day's share of the
+/// week's highest day.
+struct WeekBars: View {
+    struct Day: Identifiable {
+        let date: Date
+        let kronor: Double
+        let isToday: Bool
+        let isFuture: Bool
+        var id: Date { date }
+    }
+
+    let days: [Day]
+    private let barHeight: CGFloat = 52
+
+    var body: some View {
+        let top: Double = max(days.map(\.kronor).max() ?? 0, 1)
+        HStack(alignment: .bottom, spacing: 6) {
+            ForEach(days) { day in
+                VStack(spacing: 4) {
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(color(day))
+                        .frame(width: 11, height: height(day, top: top))
+                        .frame(height: barHeight, alignment: .bottom)
+                    Text(day.date.formatted(.dateTime.weekday(.narrow)))
+                        .font(.system(size: 10, weight: day.isToday ? .bold : .regular))
+                        .foregroundStyle(day.isToday ? Color.accentColor : Color.secondary)
+                }
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("This week by day")
+        .accessibilityValue(days.map { "\($0.date.formatted(.dateTime.weekday(.abbreviated))) \(Money.kronor($0.kronor))" }
+            .joined(separator: ", "))
+        .accessibilityIdentifier("today-week-bars")
+    }
+
+    private func height(_ day: Day, top: Double) -> CGFloat {
+        guard day.kronor > 0 else { return 4 }
+        let share: Double = day.kronor / top
+        return max(6, CGFloat(share) * barHeight)
+    }
+
+    private func color(_ day: Day) -> Color {
+        if day.isToday { return .accentColor }
+        if day.isFuture || day.kronor == 0 { return Color.secondary.opacity(0.2) }
+        return Color.accentColor.opacity(0.35)
+    }
 }
