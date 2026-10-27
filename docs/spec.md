@@ -7,7 +7,7 @@ Change this file in the same commit as the behaviour it describes.
 
 One list, three parts:
 
-1. **Header** — the time (updates every minute) and the date; the place
+1. **Header** (one block since 1.11, §15) — the time (updates every minute) and the date; the place
    (from location, else the time-zone name); the **currency button**
    (`home-currency`) showing the currency in use and "· auto" when it comes from
    location.
@@ -257,7 +257,10 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
   also had a "This week" sum under the card; 1.11 removed it, his ask: only the small bars.)
   1.11 (his ask "take away all extra space"): the main list has compact section spacing and a
   34 pt minimum row height; the card's row insets are 4 pt top and bottom, each expense row's 3 pt;
-  rows use a 26 pt category icon and no gap between their lines.
+  rows use a 26 pt category icon and no gap between their lines. The header is one block: the
+  time (32 pt) and under it "Tue 27 Oct · <place>" in grey, the currency button on the right.
+  Dictation is one row: the microphone (64 pt) on the left, the typing field and Go beside it,
+  the status line under the field.
 - **Same again**: swipe a Today row to the right (`row-same-again`; a full swipe runs it at once),
   or open an expense from the main screen and tap **Same again, now** (`entry-same-again`, above
   Delete expense; not in Statistics' lists, which have no location): a new draft with the same

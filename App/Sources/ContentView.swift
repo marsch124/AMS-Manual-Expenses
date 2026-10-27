@@ -177,22 +177,28 @@ struct ContentView: View {
         }
     }
 
+    /// 1.11 (his ask "tighten things up"): one block — the time, under it the date and the place
+    /// on one grey line, the currency on the right.
     private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        HStack(alignment: .center, spacing: 8) {
             TimelineView(.everyMinute) { context in
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 0) {
                     Text(context.date, format: .dateTime.hour().minute())
-                        .font(.system(size: 44, weight: .bold, design: .rounded))
+                        .font(.system(size: 32, weight: .bold, design: .rounded))
                         .monospacedDigit()
-                    Text(context.date, format: .dateTime.weekday(.wide).day().month(.wide))
-                        .foregroundStyle(.secondary)
+                    HStack(spacing: 4) {
+                        Text(context.date, format: .dateTime.weekday(.abbreviated).day().month(.abbreviated))
+                        Text("·")
+                        Image(systemName: "location.fill").font(.caption2)
+                        Text(location.placeName ?? TimeZone.current.identifier)
+                    }
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
                 }
             }
             HStack {
-                Label(location.placeName ?? TimeZone.current.identifier, systemImage: "location")
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                Spacer()
+                Spacer(minLength: 0)
                 Menu {
                     Picker("Currency", selection: $manualCurrency) {
                         Text("Automatic (\(autoCurrency))").tag("")
@@ -209,19 +215,21 @@ struct ContentView: View {
             }
             .font(.subheadline)
         }
+        .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
     }
 
+    /// 1.11 (his ask "tighten things up"): the microphone on the left, the typing field beside it.
     private var dictation: some View {
-        VStack(spacing: 12) {
+        HStack(alignment: .center, spacing: 12) {
             Button {
                 // 1.7: a fresh GPS fix while he speaks, for the expense he is about to log.
                 if !speech.isRecording && !ExpensesApp.uiTesting { location.refresh() }
                 speech.toggle(localeID: language)
             } label: {
                 Image(systemName: speech.isRecording ? "stop.fill" : "mic.fill")
-                    .font(.system(size: 40))
+                    .font(.system(size: 28))
                     .foregroundStyle(.white)
-                    .frame(width: 96, height: 96)
+                    .frame(width: 64, height: 64)
                     .background(Circle().fill(speech.isRecording ? Color.red : Color.accentColor))
             }
             .buttonStyle(.borderless)
@@ -229,29 +237,30 @@ struct ContentView: View {
             .accessibilityIdentifier("home-dictate")
             .accessibilityValue(ExpensesApp.uiTesting ? "requests \(testRequests)" : "")
 
-            // 1.4 (his ask): no hint any more — the line is there only while listening or for an error.
-            if !statusText.isEmpty {
-                Text(statusText)
-                    .font(.footnote)
-                    .foregroundStyle(speech.errorMessage == nil ? Color.secondary : Color.red)
-                    .multilineTextAlignment(.center)
-                    .accessibilityIdentifier("home-status")
-            }
-
-            HStack {
-                TextField("…or type an expense", text: $typed)
-                    .textFieldStyle(.roundedBorder)
-                    .submitLabel(.done)
-                    .onSubmit { handle(typed) }
-                    .accessibilityIdentifier("home-type-field")
-                Button("Go") { handle(typed) }
-                    .buttonStyle(.borderless)
-                    .disabled(typed.trimmingCharacters(in: .whitespaces).isEmpty)
-                    .accessibilityIdentifier("home-type-go")
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    TextField("…or type an expense", text: $typed)
+                        .textFieldStyle(.roundedBorder)
+                        .submitLabel(.done)
+                        .onSubmit { handle(typed) }
+                        .accessibilityIdentifier("home-type-field")
+                    Button("Go") { handle(typed) }
+                        .buttonStyle(.borderless)
+                        .disabled(typed.trimmingCharacters(in: .whitespaces).isEmpty)
+                        .accessibilityIdentifier("home-type-go")
+                }
+                // 1.4 (his ask): no hint any more — the line is there only while listening or for an error.
+                if !statusText.isEmpty {
+                    Text(statusText)
+                        .font(.footnote)
+                        .foregroundStyle(speech.errorMessage == nil ? Color.secondary : Color.red)
+                        .lineLimit(3)
+                        .accessibilityIdentifier("home-status")
+                }
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 8)
+        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
     }
 
     private var statusText: String {
