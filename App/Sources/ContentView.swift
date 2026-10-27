@@ -62,16 +62,7 @@ struct ContentView: View {
                             WeekBars(days: weekDays)
                         }
                         .padding(.vertical, 6)
-                        HStack {
-                            Text("This week").foregroundStyle(.secondary)
-                            Spacer()
-                            Text(Money.text(Statistics.total(expenses.map(\.spend), in: .thisWeek, now: Date(),
-                                                             rates: rates.table, calendar: .current).total))
-                                .fontWeight(.semibold)
-                                .monospacedDigit()
-                                .accessibilityIdentifier("today-week-total")
-                        }
-                        .font(.footnote)
+                        // 1.11 (his ask): no "This week" line under the card — only the small bars.
                     }
                     ForEach(Array(todays.enumerated()), id: \.element.id) { index, expense in
                         Button { draft = Draft(editing: expense) } label: { ExpenseRow(expense: expense) }

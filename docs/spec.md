@@ -1,6 +1,6 @@
 # AMS Manual Expenses — specification
 
-What the app does, rule by rule, written from the code (version 1.10, 27 Oct 2026).
+What the app does, rule by rule, written from the code (version 1.11, 27 Oct 2026).
 Change this file in the same commit as the behaviour it describes.
 
 ## 1. The main screen (`ContentView.swift`)
@@ -253,8 +253,8 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
   1.10 (his pick B of the 27 Oct concept): on its right `WeekBars` (`today-week-bars`; value
   "Mon SEK 0, Tue SEK 125, …"): this week from the iPhone's first weekday, one bar per day,
   height = its kronor over the week's highest day (4 pt stub for none), today full accent colour,
-  earlier days lighter, days to come grey; narrow weekday letters under them, today's bold. Then
-  a row "This week" with the week's total (`today-week-total`, same sum as Statistics › This week).
+  earlier days lighter, days to come grey; narrow weekday letters under them, today's bold. (1.10
+  also had a "This week" sum under the card; 1.11 removed it, his ask: only the small bars.)
 - **Same again**: swipe a Today row to the right (`row-same-again`; a full swipe runs it at once),
   or open an expense from the main screen and tap **Same again, now** (`entry-same-again`, above
   Delete expense; not in Statistics' lists, which have no location): a new draft with the same

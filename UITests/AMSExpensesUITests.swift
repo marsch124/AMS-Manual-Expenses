@@ -115,7 +115,7 @@ final class AMSExpensesUITests: XCTestCase {
         waitForExpectations(timeout: 10)
     }
 
-    /// 1.10 (his pick B): the Today card shows this week as bars, today's in it, and the week's total.
+    /// 1.10 (his pick B): the Today card shows this week as bars, with today's in it; 1.11: and no week sum.
     func testTheTodayCardShowsTheWeek() {
         let app = launch()
         add(app, "Taxi 12 euros 50")
@@ -125,9 +125,8 @@ final class AMSExpensesUITests: XCTestCase {
         let value = bars.value as? String ?? ""
         XCTAssertEqual(value.components(separatedBy: ", ").count, 7, "the bars read '\(value)'")
         XCTAssertTrue(value.contains("125"), "today is not in the bars: '\(value)'")
-        let week = app.staticTexts["today-week-total"]
-        XCTAssertTrue(week.waitForExistence(timeout: 10), "no This week line")
-        XCTAssertTrue(week.label.contains("125"), "This week reads '\(week.label)'")
+        // 1.11 (his ask): no This week sum under the card.
+        XCTAssertFalse(app.staticTexts["today-week-total"].exists, "the This week line is still there")
     }
 
     /// 1.9: Settings › Categories: tap a category's icon and pick another; it is kept.
