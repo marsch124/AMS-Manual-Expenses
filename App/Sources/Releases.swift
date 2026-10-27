@@ -15,7 +15,7 @@ enum Releases {
             "Statistics › By category: a ring in the category colours, with the total in the middle. In Last 30 days, today’s bar is the strong one.",
             "The Today card: today’s total in large numbers, and how many expenses.",
             "An amount in euros has its kronor under it, for example “≈ SEK 125”.",
-            "Same again: swipe an expense to the right to log it again now. It opens for checking; tap Save.",
+            "Same again: swipe an expense to the right, or open it and tap “Same again, now”, to log it again now. It opens for checking; tap Save.",
             "A short vibration and “Saved” when you save.",
             "The app icon has a dark and a tinted look, for dark and tinted home screens.",
         ]),
@@ -111,7 +111,7 @@ enum Guide {
             "The list shows today’s expenses and their total in kronor.",
             "The card at the top shows today’s total in large numbers and how many expenses.",
             "An amount in euros has its kronor under it (≈ SEK 125), at the bank’s rate of its day.",
-            "Tap an expense to change it. Swipe it to the left to delete it. Swipe it to the right for “Same again”: the same expense, now, opened for checking.",
+            "Tap an expense to change it. Swipe it to the left to delete it. Swipe it to the right (or open it and tap “Same again, now”) for the same expense again, now, opened for checking.",
             "Save gives a short vibration and shows “Saved”.",
         ]),
         Section(title: "Categories", lines: [

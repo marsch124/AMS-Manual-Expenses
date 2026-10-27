@@ -128,7 +128,8 @@ struct ContentView: View {
                     currencies: currencyOptions,
                     visits: expenses.map(\.visit),
                     onSave: save,
-                    onDelete: d.expense.map { e in { context.delete(e) } }
+                    onDelete: d.expense.map { e in { context.delete(e) } },
+                    onSameAgain: d.expense.map { e in { sameAgain(e) } }
                 )
             }
         }
@@ -389,8 +390,12 @@ struct EntryEditor: View {
     private let visits: [Visit]
     private let onSave: (Draft) -> Void
     private let onDelete: (() -> Void)?
+    /// 1.9: an existing expense can be logged again now (main screen only: it needs the location).
+    private let onSameAgain: (() -> Void)?
 
-    init(draft: Draft, currencies: [String], visits: [Visit], onSave: @escaping (Draft) -> Void, onDelete: (() -> Void)?) {
+    init(draft: Draft, currencies: [String], visits: [Visit], onSave: @escaping (Draft) -> Void, onDelete: (() -> Void)?,
+         onSameAgain: (() -> Void)? = nil) {
+        self.onSameAgain = onSameAgain
         _draft = State(initialValue: draft)
         self.currencies = currencies
         self.visits = visits
@@ -549,6 +554,13 @@ struct EntryEditor: View {
                 }
                 if let onDelete {
                     Section {
+                        if let onSameAgain {
+                            // The new draft replaces this sheet with a fresh one.
+                            Button { onSameAgain() } label: {
+                                Label("Same again, now", systemImage: "arrow.clockwise")
+                            }
+                            .accessibilityIdentifier("entry-same-again")
+                        }
                         Button("Delete expense", role: .destructive) {
                             onDelete()
                             dismiss()

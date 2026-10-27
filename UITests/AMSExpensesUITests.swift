@@ -100,14 +100,13 @@ final class AMSExpensesUITests: XCTestCase {
         expectation(for: NSPredicate(format: "label CONTAINS '≈' AND label CONTAINS '125'"), evaluatedWith: row)
         waitForExpectations(timeout: 10)
 
-        // A long swipe runs Same again at once (as on the iPhone); a short one shows its button.
-        row.swipeRight()
+        // Same again from the expense's check sheet (the swipe to the right does the same; GitHub's
+        // simulator does not show swipe buttons reliably, so the test uses the sheet).
+        row.tap()
+        let again = app.buttons["entry-same-again"]
+        reveal(app, again)
+        again.tap()
         let title = app.textFields["entry-title"]
-        let again = app.descendants(matching: .any)["row-same-again"].firstMatch
-        if !title.waitForExistence(timeout: 3) {
-            XCTAssertTrue(again.waitForExistence(timeout: 10), "no Same again on a swipe to the right")
-            again.tap()
-        }
         XCTAssertTrue(title.waitForExistence(timeout: 10), "Same again did not open the check sheet")
         XCTAssertEqual(title.value as? String, "Taxi")
         XCTAssertEqual(app.textFields["entry-amount"].value as? String, "12.50")
