@@ -17,7 +17,7 @@ final class Expense {
     var createdAt: Date = Date()
     /// Since 1.3; "" = no category. A name from Settings › Categories.
     var category: String = ""
-    /// Since 1.6: who the expense was for — Martin (default), AMS or Others.
+    /// Since 1.6: who the expense was for — Martin (default), AMS, Anna (1.9) or Others.
     var consumer: String = Consumers.initial
     /// Since 1.7: the GPS fix when it was logged (nil: none known, or logged before 1.7).
     var latitude: Double?
@@ -110,8 +110,8 @@ extension Draft {
     }
 }
 
-/// Who an expense was for (1.6, his three values; Martin is the default).
+/// Who an expense was for (1.6, his three values; Martin is the default; 1.9 adds Anna).
 enum Consumers {
-    static let all = ["Martin", "AMS", "Others"]
+    static let all = ["Martin", "AMS", "Anna", "Others"]
     static let initial = "Martin"
 }

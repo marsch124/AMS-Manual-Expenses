@@ -77,6 +77,58 @@ final class AMSExpensesUITests: XCTestCase {
         waitForExpectations(timeout: 10)
     }
 
+    /// 1.9: Save shows "Saved"; the Today card counts; an amount in euros has its kronor under it;
+    /// "Same again" (swipe right) opens the same expense for checking, now.
+    func testTheTodayCardAndSameAgain() {
+        let app = launch()
+        let field = app.textFields["home-type-field"]
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        field.tap()
+        field.typeText("Taxi 12 euros 50")
+        app.buttons["home-type-go"].tap()
+        XCTAssertTrue(app.buttons["entry-save"].waitForExistence(timeout: 10))
+        app.buttons["entry-save"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["home-saved"].firstMatch.waitForExistence(timeout: 5),
+                      "no Saved check mark")
+
+        let count = app.staticTexts["today-count"]
+        XCTAssertTrue(count.waitForExistence(timeout: 10), "no Today card")
+        XCTAssertEqual(count.label, "1 expense")
+        let row = app.buttons["expense-row-0"]
+        XCTAssertTrue(row.waitForExistence(timeout: 10))
+        // The UI tests' euro is 10 kronor: 12.50 euros show "≈ SEK 125" under them.
+        expectation(for: NSPredicate(format: "label CONTAINS '≈' AND label CONTAINS '125'"), evaluatedWith: row)
+        waitForExpectations(timeout: 10)
+
+        row.swipeRight()
+        let again = app.buttons["row-same-again"]
+        XCTAssertTrue(again.waitForExistence(timeout: 10), "no Same again on a swipe to the right")
+        again.tap()
+        let title = app.textFields["entry-title"]
+        XCTAssertTrue(title.waitForExistence(timeout: 10), "Same again did not open the check sheet")
+        XCTAssertEqual(title.value as? String, "Taxi")
+        XCTAssertEqual(app.textFields["entry-amount"].value as? String, "12.50")
+        app.buttons["entry-save"].tap()
+        expectation(for: NSPredicate(format: "label == '2 expenses'"), evaluatedWith: count)
+        waitForExpectations(timeout: 10)
+    }
+
+    /// 1.9: Settings › Categories: tap a category's icon and pick another; it is kept.
+    func testACategoryIconCanBeChanged() {
+        let app = launch()
+        app.buttons["home-settings"].tap()
+        app.buttons["settings-categories"].tap()
+        let icon = app.buttons["categories-icon-0"]
+        XCTAssertTrue(icon.waitForExistence(timeout: 10), "the categories have no icons")
+        XCTAssertEqual(icon.value as? String, "cup.and.saucer.fill", "Café does not start with the cup")
+        icon.tap()
+        let gift = app.buttons["icon-choice-12"]
+        XCTAssertTrue(gift.waitForExistence(timeout: 10), "the icons to choose from did not open")
+        gift.tap()
+        expectation(for: NSPredicate(format: "value == 'gift.fill'"), evaluatedWith: icon)
+        waitForExpectations(timeout: 10)
+    }
+
     private func add(_ app: XCUIApplication, _ sentence: String) {
         let field = app.textFields["home-type-field"]
         XCTAssertTrue(field.waitForExistence(timeout: 10))
@@ -117,6 +169,8 @@ final class AMSExpensesUITests: XCTestCase {
         XCTAssertTrue(row.waitForExistence(timeout: 10), "By category is empty")
         XCTAssertTrue(row.label.contains(chosen), "the first category reads '\(row.label)', not \(chosen)")
         XCTAssertTrue(row.label.contains("45"), "the category's total reads '\(row.label)'")
+        // 1.9: and the span is drawn as a ring above the list.
+        XCTAssertTrue(app.descendants(matching: .any)["stats-category-ring"].firstMatch.exists, "no ring chart")
     }
 
     /// 1.6 (his ask): a new expense is for Martin; choosing AMS is kept when it is saved.
@@ -145,6 +199,29 @@ final class AMSExpensesUITests: XCTestCase {
         row.tap()
         XCTAssertTrue(app.staticTexts["entry-consumer-value"].waitForExistence(timeout: 10))
         XCTAssertEqual(app.staticTexts["entry-consumer-value"].label, "AMS")
+    }
+
+    /// 1.9: the row says who it was for (his colours), and Anna is a choice.
+    func testTheRowShowsWhoItWasFor() {
+        let app = launch()
+        let field = app.textFields["home-type-field"]
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        field.tap()
+        field.typeText("Flowers 120 kronor")
+        app.buttons["home-type-go"].tap()
+        let consumer = app.buttons["entry-consumer"]
+        XCTAssertTrue(consumer.waitForExistence(timeout: 10))
+        consumer.tap()
+        let anna = app.buttons["consumer-choice-2"]
+        XCTAssertTrue(anna.waitForExistence(timeout: 10), "no third choice under For whom")
+        anna.tap()
+        XCTAssertTrue(app.staticTexts["entry-consumer-value"].waitForExistence(timeout: 10))
+        XCTAssertEqual(app.staticTexts["entry-consumer-value"].label, "Anna")
+        app.buttons["entry-save"].tap()
+
+        let row = app.buttons["expense-row-0"]
+        XCTAssertTrue(row.waitForExistence(timeout: 10))
+        XCTAssertTrue(row.label.contains("for Anna"), "the row reads '\(row.label)'")
     }
 
     /// 1.7 (his ask): a new place typed on the check sheet is kept, and the next expense at the

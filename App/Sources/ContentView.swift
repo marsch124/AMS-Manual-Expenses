@@ -20,6 +20,9 @@ struct ContentView: View {
     @ObservedObject private var dictationRequest = DictationRequest.shared
     /// UI tests cannot use the microphone: there a request is only counted (`home-dictate` value).
     @State private var testRequests = 0
+    /// 1.9: counts saves, for the little vibration and the "Saved" check mark.
+    @State private var saves = 0
+    @State private var showSaved = false
 
     private var autoCurrency: String {
         location.currency ?? CurrencyDefaults.currency(forTimeZone: TimeZone.current.identifier) ?? "SEK"
@@ -39,23 +42,47 @@ struct ContentView: View {
                     if todays.isEmpty {
                         Text("No expenses yet today.").foregroundStyle(.secondary)
                             .accessibilityIdentifier("today-empty")
+                    } else {
+                        // 1.9: the Today card — today's total, big, and how many.
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(todayTotal)
+                                .font(.system(size: 34, weight: .bold, design: .rounded))
+                                .monospacedDigit()
+                                .minimumScaleFactor(0.6)
+                                .lineLimit(1)
+                                .accessibilityIdentifier("today-total")
+                            Text(todays.count == 1 ? "1 expense" : "\(todays.count) expenses")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .accessibilityIdentifier("today-count")
+                        }
+                        .padding(.vertical, 6)
                     }
                     ForEach(Array(todays.enumerated()), id: \.element.id) { index, expense in
                         Button { draft = Draft(editing: expense) } label: { ExpenseRow(expense: expense) }
                             .tint(.primary)
                             .accessibilityIdentifier("expense-row-\(index)")
+                            // 1.9: swipe to the right = log the same one again now.
+                            .swipeActions(edge: .leading) {
+                                Button { sameAgain(expense) } label: {
+                                    Label("Same again", systemImage: "arrow.clockwise")
+                                }
+                                .tint(.accentColor)
+                                .accessibilityIdentifier("row-same-again")
+                            }
+                            // A row with its own swipe actions loses the automatic Delete: so it is here too.
+                            .swipeActions(edge: .trailing) {
+                                Button(role: .destructive) { context.delete(expense) } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                            }
                     }
                     .onDelete { offsets in
                         let items = offsets.map { todays[$0] }
                         for item in items { context.delete(item) }
                     }
                 } header: {
-                    HStack(alignment: .top) {
-                        Text("Today")
-                        Spacer()
-                        Text(todayTotal).multilineTextAlignment(.trailing)
-                            .accessibilityIdentifier("today-total")
-                    }
+                    Text("Today")
                 }
             }
             .navigationTitle("Expenses")
@@ -103,6 +130,22 @@ struct ContentView: View {
                     onSave: save,
                     onDelete: d.expense.map { e in { context.delete(e) } }
                 )
+            }
+        }
+        // 1.9: a short vibration and a check mark when an expense is saved.
+        .sensoryFeedback(.success, trigger: saves)
+        .overlay(alignment: .top) {
+            if showSaved {
+                Label("Saved", systemImage: "checkmark.circle.fill")
+                    .font(.headline)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 18)
+                    .padding(.vertical, 10)
+                    .background(Capsule().fill(Color.accentColor))
+                    .shadow(radius: 4)
+                    .padding(.top, 8)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .accessibilityIdentifier("home-saved")
             }
         }
         .onAppear {
@@ -262,8 +305,23 @@ struct ContentView: View {
         typed = ""
     }
 
+    /// 1.9: the same expense again, now and here — opened for checking like any new one.
+    private func sameAgain(_ e: Expense) {
+        let fix = location.fix
+        draft = Draft(title: e.title, amountText: Draft.format(e.amount), currency: e.currency, date: Date(),
+                      heard: "", category: e.category, consumer: e.consumer, visitedPlace: e.visitedPlace,
+                      fix: fix, area: location.placeName ?? "")
+    }
+
     private func save(_ d: Draft) {
         guard let amount = d.amount else { return }
+        saves += 1
+        withAnimation { showSaved = true }
+        let shown = saves
+        Task {
+            try? await Task.sleep(for: .seconds(1.6))
+            if saves == shown { withAnimation { showSaved = false } }
+        }
         let title = d.title.trimmingCharacters(in: .whitespaces).isEmpty ? "Expense" : d.title
         if let e = d.expense {
             e.apply(d)
@@ -278,6 +336,14 @@ struct ContentView: View {
 struct ExpenseRow: View {
     let expense: Expense
     var showsDate = false
+    @EnvironmentObject private var rates: ExchangeRates
+
+    /// 1.9: "≈ SEK 125" under an amount in another currency, at its day's rate.
+    private var kronorText: String? {
+        guard expense.currency != homeCurrency,
+              let kronor = rates.table.kronor(expense.spend, calendar: .current) else { return nil }
+        return "≈ " + Money.kronor(kronor)
+    }
 
     private var when: String {
         showsDate
@@ -286,17 +352,29 @@ struct ExpenseRow: View {
     }
 
     var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
+        HStack(spacing: 12) {
+            CategoryIcon(name: expense.category)
+            VStack(alignment: .leading, spacing: 3) {
                 Text(expense.title)
-                Text(expense.category.isEmpty ? when : when + " · " + expense.category)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                HStack(spacing: 6) {
+                    Text(expense.category.isEmpty ? when : when + " · " + expense.category)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    ConsumerTag(name: expense.consumer)
+                }
             }
             Spacer()
-            Text(expense.amount, format: .currency(code: expense.currency))
-                .bold()
-                .monospacedDigit()
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(expense.amount, format: .currency(code: expense.currency))
+                    .bold()
+                    .monospacedDigit()
+                if let kronorText {
+                    Text(kronorText)
+                        .font(.caption)
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                }
+            }
         }
     }
 }
@@ -324,13 +402,13 @@ struct EntryEditor: View {
     }
 
     /// A small tinted label, like the currency on the main screen (category, consumer).
-    private func pill(_ text: String, filled: Bool) -> some View {
+    private func pill(_ text: String, filled: Bool, color: Color = .accentColor) -> some View {
         Text(text)
             .font(.subheadline.weight(.semibold))
-            .foregroundStyle(filled ? Color.accentColor : Color.secondary)
+            .foregroundStyle(filled ? color : Color.secondary)
             .padding(.horizontal, 12)
             .padding(.vertical, 5)
-            .background(Capsule().fill(filled ? Color.accentColor.opacity(0.15) : Color.secondary.opacity(0.12)))
+            .background(Capsule().fill(filled ? color.opacity(0.15) : Color.secondary.opacity(0.12)))
     }
 
     private var mapAmount: String {
@@ -417,13 +495,18 @@ struct EntryEditor: View {
                     }
                     // 1.4 (his ask): the category last, without the word "Category".
                     NavigationLink { CategoryChooser(selection: $draft.category) } label: {
-                        pill(draft.category.isEmpty ? "No category" : draft.category, filled: !draft.category.isEmpty)
-                            .accessibilityIdentifier("entry-category-value")
+                        HStack(spacing: 10) {
+                            CategoryIcon(name: draft.category, size: 28)
+                            pill(draft.category.isEmpty ? "No category" : draft.category, filled: !draft.category.isEmpty)
+                                .accessibilityIdentifier("entry-category-value")
+                        }
                     }
                     .accessibilityIdentifier("entry-category")
                     // 1.6 (his ask): who it was for, the very last line, a pill like the category.
                     NavigationLink { ConsumerChooser(selection: $draft.consumer) } label: {
-                        pill(draft.consumer, filled: true)
+                        // 1.9: in his colour for that person (yellow is too light for text: dark then).
+                        pill(draft.consumer, filled: true,
+                             color: draft.consumer == "AMS" ? Color(red: 0.6, green: 0.45, blue: 0) : Looks.consumer(draft.consumer).fill)
                             .accessibilityIdentifier("entry-consumer-value")
                     }
                     .accessibilityIdentifier("entry-consumer")

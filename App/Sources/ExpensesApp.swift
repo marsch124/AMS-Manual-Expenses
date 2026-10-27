@@ -15,6 +15,7 @@ struct ExpensesApp: App {
         if Self.uiTesting {
             UserDefaults.standard.removeObject(forKey: CategoryList.key)
             UserDefaults.standard.removeObject(forKey: CategoryList.defaultKey)
+            UserDefaults.standard.removeObject(forKey: Looks.iconsKey)
         }
     }
 

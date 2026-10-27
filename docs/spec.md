@@ -1,6 +1,6 @@
 # AMS Manual Expenses — specification
 
-What the app does, rule by rule, written from the code (version 1.8, 26 Oct 2026).
+What the app does, rule by rule, written from the code (version 1.9, 27 Oct 2026).
 Change this file in the same commit as the behaviour it describes.
 
 ## 1. The main screen (`ContentView.swift`)
@@ -79,7 +79,7 @@ time on the left as two quiet labels without a heading (`entry-time`; a tap open
 calendar with the time in its own sheet, `entry-time-picker`, Cancel / Done); what was heard is in italics; last, the category without a label
 (`entry-category`, showing `entry-category-value`: the name, or "No category" in grey;
 opens the chooser, §11); the very last line (1.6) the consumer pill (`entry-consumer`,
-value `entry-consumer-value`; chooser `consumer-choice-0` … Martin / AMS / Others; a new
+value `entry-consumer-value`; chooser `consumer-choice-0` … Martin / AMS / Anna (1.9) / Others; a new
 expense is Martin, earlier ones count as Martin). Since 1.7 the last line is the place
 visited (`entry-place`, value `entry-place-value`: the name, or "No place" in grey; opens
 the chooser, §13). A new expense's category is the one its description had last
@@ -228,3 +228,35 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
   number or a grey "–", description, time · place or "no position", amount) with Today's total
   in the header. A row with a fix opens C. Footer `todaymap-count`: "N of M have a position".
   None with a fix: "No expense today has a position yet." (`todaymap-empty`).
+
+## 15. Colours and icons (1.9, his ask 27 Oct 2026: "implement all of them"; `Looks.swift`, `Core/…/Looks.swift`)
+
+- **Category look**: an SF Symbol in a coloured circle (`CategoryIcon`). A new install's ten
+  categories each have one (`CategoryLooks.defaults`: Café cup/brown, Groceries cart/green,
+  Restaurant fork and knife/orange, Transport car/blue, Shopping bag/pink, Home house/indigo,
+  Health heart/red, Leisure masks/purple, Travel airplane/teal, Other grid/grey); any other
+  category a grey tag; no category a grey question mark. Shown in every expense row, the
+  category chooser, the check sheet (beside the category pill) and Statistics › By category.
+- **Settings › Categories**: the icon (`categories-icon-0` …, value = the symbol) is its own
+  button; it opens the 17 choices (`icon-choice-0` …; Cancel `icon-cancel`); a tap chooses and
+  closes. Kept in UserDefaults `categoryIcons`, "name<TAB>symbol" per line. Renaming keeps the
+  look (onto another category: that one's look stays); deleting drops the choice.
+- **For whom** (his colours): Martin blue, AMS yellow (dark text), Anna green (new in 1.9,
+  `consumer-choice-2`; Others is now `consumer-choice-3`), Others grey. Each row shows the name
+  in a small coloured label (`ConsumerTag`, read aloud "for <name>"); the check sheet's pill and
+  the chooser use the same colours.
+- **Rows** (`ExpenseRow`): icon · description over "time · category" and the For-whom label ·
+  amount, and under an amount in another currency "≈ SEK N" at its day's rate (none while the
+  rate is missing).
+- **Today card**: the first row of Today when there is something: the total (`today-total`,
+  34 pt bold) and "1 expense" / "N expenses" (`today-count`). The section header is just "Today".
+- **Same again**: swipe a Today row to the right (`row-same-again`): a new draft with the same
+  description, amount, currency, category, For whom and place, the time now, the GPS fix and
+  area now, no "Heard"; it opens for checking like any new expense.
+- **Saved**: every Save (new or changed) gives the success vibration and shows "Saved"
+  (`home-saved`) at the top for 1.6 s.
+- **Statistics**: above By category's rows a ring (`stats-category-ring`) of the span's
+  categories in their colours, the total and the span in the middle. Last 30 days: today's bar
+  full colour, the others lighter.
+- **App icon**: dark (light teal microphone on near-black) and tinted (white on black, the
+  iPhone tints it) versions, both opaque like the main one.

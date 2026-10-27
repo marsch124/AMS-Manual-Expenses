@@ -43,7 +43,7 @@ struct CategoryChooser: View {
             Section {
                 choice("None", value: "", id: "category-choice-none")
                 ForEach(Array(names.enumerated()), id: \.element) { index, name in
-                    choice(name, value: name, id: "category-choice-\(index)")
+                    choice(name, value: name, id: "category-choice-\(index)", icon: true)
                 }
             }
             Section {
@@ -75,12 +75,13 @@ struct CategoryChooser: View {
         }
     }
 
-    private func choice(_ label: String, value: String, id: String) -> some View {
+    private func choice(_ label: String, value: String, id: String, icon: Bool = false) -> some View {
         Button {
             selection = value
             dismiss()
         } label: {
-            HStack {
+            HStack(spacing: 12) {
+                if icon { CategoryIcon(name: value, size: 28) }
                 Text(label)
                 Spacer()
                 if selection == value {
@@ -94,6 +95,11 @@ struct CategoryChooser: View {
     }
 }
 
+/// The category whose icon is being picked, as a sheet item (1.9).
+private struct Picking: Identifiable {
+    let id: String
+}
+
 /// Settings › Categories: add (at the bottom), rename (tap; every expense follows), delete
 /// (swipe; its expenses keep no category, after asking when some use it), reorder (Edit).
 struct CategoriesScreen: View {
@@ -105,6 +111,9 @@ struct CategoriesScreen: View {
     @State private var adding = false
     @State private var editedName = ""
     @State private var deleting: String?
+    @AppStorage(Looks.iconsKey) private var iconsText = ""
+    /// 1.9: the category whose icon is being picked.
+    @State private var picking: String?
 
     private var names: [String] { CategoryList.decode(categoriesText) }
 
@@ -112,26 +121,35 @@ struct CategoriesScreen: View {
         List {
             Section {
                 ForEach(Array(names.enumerated()), id: \.element) { index, name in
-                    Button {
-                        editedName = name
-                        renaming = name
-                    } label: {
-                        HStack {
-                            Text(name)
-                            if name == defaultCategory {
-                                Text("default")
-                                    .font(.footnote)
+                    HStack(spacing: 12) {
+                        // 1.9: the icon is its own button (tap = pick another); the rest of the row renames.
+                        Button { picking = name } label: { CategoryIcon(name: name, size: 34) }
+                            .buttonStyle(.borderless)
+                            .accessibilityLabel("Icon for \(name)")
+                            .accessibilityValue(CategoryLooks.look(for: name, custom: CategoryLooks.decode(iconsText)).symbol)
+                            .accessibilityIdentifier("categories-icon-\(index)")
+                        Button {
+                            editedName = name
+                            renaming = name
+                        } label: {
+                            HStack {
+                                Text(name)
+                                if name == defaultCategory {
+                                    Text("default")
+                                        .font(.footnote)
+                                        .foregroundStyle(.secondary)
+                                        .accessibilityIdentifier("categories-default")
+                                }
+                                Spacer()
+                                Text("\(used(name))")
+                                    .monospacedDigit()
                                     .foregroundStyle(.secondary)
-                                    .accessibilityIdentifier("categories-default")
                             }
-                            Spacer()
-                            Text("\(used(name))")
-                                .monospacedDigit()
-                                .foregroundStyle(.secondary)
                         }
+                        .tint(.primary)
+                        .buttonStyle(.borderless)
+                        .accessibilityIdentifier("categories-row-\(index)")
                     }
-                    .tint(.primary)
-                    .accessibilityIdentifier("categories-row-\(index)")
                 }
                 .onDelete { offsets in
                     guard let index = offsets.first else { return }
@@ -144,7 +162,7 @@ struct CategoriesScreen: View {
                     categoriesText = CategoryList.encode(list)
                 }
             } footer: {
-                Text("The number is how many expenses have the category. Tap a category to rename it. A new expense starts in the default one, unless its description had another category before.")
+                Text("The number is how many expenses have the category. Tap the icon to choose another one; tap the name to rename it. A new expense starts in the default one, unless its description had another category before.")
             }
             Section {
                 Button("Add category") {
@@ -156,6 +174,9 @@ struct CategoriesScreen: View {
         }
         .navigationTitle("Categories")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(item: Binding(get: { picking.map(Picking.init) }, set: { picking = $0?.id })) { p in
+            CategoryIconPicker(category: p.id)
+        }
         .toolbar {
             EditButton().accessibilityIdentifier("categories-edit")
         }
@@ -207,9 +228,13 @@ struct CategoriesScreen: View {
             let target = names.first { $0.lowercased() == name.lowercased() }!
             for e in expenses where e.category == old { e.category = target }
             if defaultCategory == old { defaultCategory = target }
+            iconsText = CategoryLooks.removed(iconsText, old)
             categoriesText = CategoryList.encode(names.filter { $0 != old })
             return
         }
+        // 1.9: the icon moves with the name.
+        let look = CategoryLooks.look(for: old, custom: CategoryLooks.decode(iconsText))
+        iconsText = CategoryLooks.renamed(iconsText, from: old, to: name, keeping: look)
         for e in expenses where e.category == old { e.category = name }
         if defaultCategory == old { defaultCategory = name }
         categoriesText = CategoryList.encode(names.map { $0 == old ? name : $0 })
@@ -218,11 +243,13 @@ struct CategoriesScreen: View {
     private func remove(_ name: String) {
         for e in expenses where e.category == name { e.category = "" }
         if defaultCategory == name { defaultCategory = "" }
+        iconsText = CategoryLooks.removed(iconsText, name)
         categoriesText = CategoryList.encode(names.filter { $0 != name })
     }
 }
 
-/// Choosing who an expense was for (1.6): Martin, AMS or Others; a tap chooses and goes back.
+/// Choosing who an expense was for (1.6): Martin, AMS, Anna (1.9) or Others, each with its
+/// colour; a tap chooses and goes back.
 struct ConsumerChooser: View {
     @Binding var selection: String
     @Environment(\.dismiss) private var dismiss
@@ -234,7 +261,9 @@ struct ConsumerChooser: View {
                     selection = name
                     dismiss()
                 } label: {
-                    HStack {
+                    HStack(spacing: 12) {
+                        Circle().fill(Looks.consumer(name).fill).frame(width: 14, height: 14)
+                            .accessibilityHidden(true)
                         Text(name)
                         Spacer()
                         if selection == name {

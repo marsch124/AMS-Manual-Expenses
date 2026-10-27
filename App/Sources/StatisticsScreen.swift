@@ -10,6 +10,7 @@ struct StatisticsScreen: View {
     @EnvironmentObject private var rates: ExchangeRates
     @Query(sort: \Expense.date, order: .reverse) private var expenses: [Expense]
     @State private var categorySpan: CategorySpan = .thisMonth
+    @AppStorage(Looks.iconsKey) private var iconsText = ""
 
     /// The span the category totals cover (1.3).
     enum CategorySpan: String, CaseIterable, Identifiable {
@@ -60,6 +61,8 @@ struct StatisticsScreen: View {
                 .accessibilityIdentifier("stats-category-span")
                 if categories.isEmpty {
                     Text("Nothing in this span.").foregroundStyle(.secondary)
+                } else {
+                    categoryRing
                 }
                 ForEach(Array(categories.enumerated()), id: \.element.id) { index, c in
                     NavigationLink {
@@ -68,7 +71,8 @@ struct StatisticsScreen: View {
                                                                       calendar: calendar).count == 1
                         }
                     } label: {
-                        HStack {
+                        HStack(spacing: 12) {
+                            CategoryIcon(name: c.name, size: 28)
                             Text(c.name.isEmpty ? "No category" : c.name)
                             Spacer()
                             Text("\(c.count)× · \(Money.kronor(c.kronor))")
@@ -81,8 +85,9 @@ struct StatisticsScreen: View {
             }
             Section("Last 30 days") {
                 Chart(daily) { d in
+                    // 1.9: today's bar stronger than the others.
                     BarMark(x: .value("Day", d.day, unit: .day), y: .value("Kronor", d.kronor))
-                        .foregroundStyle(Color.accentColor)
+                        .foregroundStyle(calendar.isDateInToday(d.day) ? Color.accentColor : Color.accentColor.opacity(0.4))
                 }
                 .chartXAxis {
                     AxisMarks(values: .stride(by: .day, count: 7)) { _ in
@@ -144,6 +149,30 @@ struct StatisticsScreen: View {
         .task {
             await rates.update(for: spends)
         }
+    }
+
+    /// 1.9: the span's categories as a ring, in their colours, the total in the middle.
+    private var categoryRing: some View {
+        let custom = CategoryLooks.decode(iconsText)
+        let total: Double = categories.reduce(0.0) { $0 + $1.kronor }
+        return Chart(categories) { c in
+            SectorMark(angle: .value("Kronor", c.kronor), innerRadius: .ratio(0.62), angularInset: 1.5)
+                .cornerRadius(3)
+                .foregroundStyle(Looks.color(CategoryLooks.look(for: c.name, custom: custom).color))
+        }
+        .frame(height: 190)
+        .overlay {
+            VStack(spacing: 0) {
+                Text(Money.kronor(total))
+                    .font(.title3.bold())
+                    .monospacedDigit()
+                Text(categorySpan.rawValue)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 8)
+        .accessibilityIdentifier("stats-category-ring")
     }
 
     private func periodRow(_ title: String, _ period: Statistics.Period, id: String) -> some View {

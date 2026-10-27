@@ -9,6 +9,16 @@ struct Release {
 
 enum Releases {
     static let all: [Release] = [
+        Release(version: "1.9", date: "27 October 2026", lines: [
+            "Every category has its own icon and colour: in the lists, on the check sheet and in Statistics. Change one in Settings › Categories: tap its icon.",
+            "Who it was for, in colour on every expense: Martin blue, AMS yellow, Anna green, Others grey. Anna is new under “For whom”.",
+            "Statistics › By category: a ring in the category colours, with the total in the middle. In Last 30 days, today’s bar is the strong one.",
+            "The Today card: today’s total in large numbers, and how many expenses.",
+            "An amount in euros has its kronor under it, for example “≈ SEK 125”.",
+            "Same again: swipe an expense to the right to log it again now. It opens for checking; tap Save.",
+            "A short vibration and “Saved” when you save.",
+            "The app icon has a dark and a tinted look, for dark and tinted home screens.",
+        ]),
         Release(version: "1.8", date: "26 October 2026", lines: [
             "The check sheet shows a small map of where the expense was logged, with the town and how exact the position is (for example ±8 m). Tap it for a big map.",
             "The big map: the time, the place, the town, the position in numbers, how exact it is, and Open in Maps.",
@@ -99,7 +109,10 @@ enum Guide {
         ]),
         Section(title: "Today", lines: [
             "The list shows today’s expenses and their total in kronor.",
-            "Tap an expense to change it. Swipe it to the left to delete it.",
+            "The card at the top shows today’s total in large numbers and how many expenses.",
+            "An amount in euros has its kronor under it (≈ SEK 125), at the bank’s rate of its day.",
+            "Tap an expense to change it. Swipe it to the left to delete it. Swipe it to the right for “Same again”: the same expense, now, opened for checking.",
+            "Save gives a short vibration and shows “Saved”.",
         ]),
         Section(title: "Categories", lines: [
             "The last line of the check sheet is the category: tap it and choose one, or “New category…” to add one.",
@@ -107,9 +120,11 @@ enum Guide {
             "The next time you say the same description (“Coffee”), its last category is filled in by itself.",
             "To change it later, tap the expense — today, or in Statistics under a day or a category.",
             "Settings › Categories: tap one to rename it (every expense moves with it), swipe to delete it (its expenses keep no category), Edit to change the order, Add category at the bottom.",
+            "Every category has an icon and a colour. Tap the icon in Settings › Categories to choose another one. A new category starts with a grey tag.",
         ]),
         Section(title: "For whom", lines: [
-            "Under the category, the check sheet says who the expense was for: Martin, AMS or Others. A new one is Martin; tap the label to change it.",
+            "Under the category, the check sheet says who the expense was for: Martin, AMS, Anna or Others. A new one is Martin; tap the label to change it.",
+            "Every expense in the lists shows it in colour: Martin blue, AMS yellow, Anna green, Others grey.",
         ]),
         Section(title: "Place visited", lines: [
             "The last line of the check sheet is the place you visited, for example “ICA Odenplan”. Tap it and choose a place, or type a new one on the top line (“New place”) and tap Add.",
@@ -129,7 +144,7 @@ enum Guide {
             "The chart button at the top opens Statistics.",
             "Totals: this week (from Monday), this month and last month, each with the average per day.",
             "Last 30 days: one bar per day.",
-            "By category: each category with how many and its total, for the week, the month, last month or all time. Tap one to see its expenses.",
+            "By category: a ring in the category colours, then each category with how many and its total, for the week, the month, last month or all time. Tap one to see its expenses.",
             "What you spend most on: the descriptions you use most often, how many times, and their total.",
             "Earlier days: tap a day to see its expenses; tap one to change it, swipe to delete it.",
         ]),
