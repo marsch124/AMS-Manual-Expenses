@@ -269,7 +269,7 @@ struct ContentView: View {
         let calendar = Calendar.current
         guard let week = calendar.dateInterval(of: .weekOfYear, for: Date()) else { return [] }
         let spends = expenses.map(\.spend)
-        return (0..<7).compactMap { offset -> WeekBars.Day? in
+        return (0..<6).compactMap { offset -> WeekBars.Day? in
             guard let day = calendar.date(byAdding: .day, value: offset, to: week.start) else { return nil }
             let inDay = spends.filter { calendar.isDate($0.date, inSameDayAs: day) }
             let kronor: Double = Statistics.total(inDay, rates: rates.table, calendar: calendar).kronor
