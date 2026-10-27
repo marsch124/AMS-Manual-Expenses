@@ -254,7 +254,7 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
   description, amount, currency, category, For whom and place, the time now, the GPS fix and
   area now, no "Heard"; it opens for checking like any new expense.
 - **Saved**: every Save (new or changed) gives the success vibration and shows "Saved"
-  (`home-saved`) at the top for 1.6 s.
+  (`home-saved`) at the top for 2.5 s (15 s under `-uiTesting`, so the slow CI simulator sees it).
 - **Statistics**: above By category's rows a ring (`stats-category-ring`) of the span's
   categories in their colours, the total and the span in the middle. Last 30 days: today's bar
   full colour, the others lighter.

@@ -319,7 +319,8 @@ struct ContentView: View {
         withAnimation { showSaved = true }
         let shown = saves
         Task {
-            try? await Task.sleep(for: .seconds(1.6))
+            // Long enough to see; in UI tests longer, so GitHub's slow simulator can catch it.
+            try? await Task.sleep(for: .seconds(ExpensesApp.uiTesting ? 15 : 2.5))
             if saves == shown { withAnimation { showSaved = false } }
         }
         let title = d.title.trimmingCharacters(in: .whitespaces).isEmpty ? "Expense" : d.title
