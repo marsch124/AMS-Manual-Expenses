@@ -309,7 +309,7 @@ struct ContentView: View {
     /// 1.9: the same expense again, now and here — opened for checking like any new one.
     private func sameAgain(_ e: Expense) {
         let fix = location.fix
-        draft = Draft(title: e.title, amountText: Draft.format(e.amount), currency: e.currency, date: Date(),
+        draft = Draft(title: "", amountText: Draft.format(e.amount), currency: e.currency, date: Date(),
                       heard: "", category: e.category, consumer: e.consumer, visitedPlace: e.visitedPlace,
                       fix: fix, area: location.placeName ?? "")
     }
