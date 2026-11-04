@@ -411,9 +411,12 @@ struct ContentView: View {
         if let e = d.expense {
             e.apply(d)
         } else {
-            context.insert(Expense(title: title, amount: amount, currency: d.currency, date: d.date,
-                                   place: location.placeName ?? "", heard: d.heard, category: d.category, consumer: d.consumer,
-                                   fix: d.fix, visitedPlace: d.visitedPlace))
+            let e = Expense(title: title, amount: amount, currency: d.currency, date: d.date,
+                            place: location.placeName ?? "", heard: d.heard, category: d.category, consumer: d.consumer,
+                            fix: d.fix, visitedPlace: d.visitedPlace)
+            e.photo = d.photo
+            e.photoThumb = d.photoThumb
+            context.insert(e)
         }
     }
 }
@@ -449,6 +452,15 @@ struct ExpenseRow: View {
                 }
             }
             Spacer()
+            // 1.13: a small copy of its photo.
+            if let thumb = expense.photoThumb, let image = UIImage(data: thumb) {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 30, height: 30)
+                    .clipShape(RoundedRectangle(cornerRadius: 5))
+                    .accessibilityLabel("Photo")
+            }
             VStack(alignment: .trailing, spacing: 0) {
                 Text(expense.amount, format: .currency(code: expense.currency))
                     .bold()
@@ -635,6 +647,8 @@ struct EntryEditor: View {
                         .accessibilityIdentifier("entry-map")
                     }
                 }
+                // 1.13 (his ask): one photo — the receipt or what was bought.
+                PhotoSection(photo: $draft.photo, thumb: $draft.photoThumb)
                 if let onDelete {
                     Section {
                         if let onSameAgain {

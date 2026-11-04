@@ -280,3 +280,22 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
   full colour, the others lighter.
 - **App icon**: dark (light teal microphone on near-black) and tinted (white on black, the
   iPhone tints it) versions, both opaque like the main one.
+
+## 1.13 · A photo per expense (his ask, 4 Nov 2026)
+
+- Data: `Expense.photo` (JPEG, longest side 1600 px, quality 0.7, `.externalStorage`) and
+  `Expense.photoThumb` (120 px) — both optional, so older expenses simply have none. Draft carries
+  both; Save (new or edited) writes them. Never leaves the iPhone (not in the CSV).
+- Check sheet, own section after the main one (`PhotoSection` in `PhotoViews.swift`):
+  none → "Take photo" (`entry-photo-camera`, filled, only where there is a camera; opens the camera
+  full screen) and "Choose photo" (`entry-photo-choose`, bordered; opens the photo library, images
+  only; in UI tests it puts in a plain teal test picture instead). With one → the photo 160 pt high,
+  full width (`entry-photo`, tap → `PhotoViewer` sheet: the photo fitted, `photo-viewer-image`,
+  Done `photo-viewer-done`) and "Remove photo" (`entry-photo-remove`, red, no question; the change
+  counts only on Save, Cancel keeps the old one).
+- List row (`ExpenseRow`, Today, Yesterday, Statistics' day lists): the small copy 30×30, rounded,
+  left of the amount; accessibility label "Photo".
+- Camera permission text: "The camera takes a photo of a receipt or of what you bought, kept with
+  the expense on this iPhone only."
+- Test: `testAPhotoIsKeptWithTheExpense`.
+

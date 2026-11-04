@@ -26,6 +26,10 @@ final class Expense {
     var locationAccuracy: Double?
     /// Since 1.7: the place visited, a name he chose on the check sheet; "" = none.
     var visitedPlace: String = ""
+    /// Since 1.13: one photo (receipt or what was bought), JPEG, kept beside the store on the iPhone.
+    @Attribute(.externalStorage) var photo: Data?
+    /// Since 1.13: a small copy of the photo for the list rows.
+    var photoThumb: Data?
 
     init(title: String, amount: Double, currency: String, date: Date, place: String, heard: String,
          category: String = "", consumer: String = Consumers.initial, fix: Fix? = nil, visitedPlace: String = "") {
@@ -68,6 +72,8 @@ extension Expense {
         category = d.category
         consumer = d.consumer
         visitedPlace = d.visitedPlace
+        photo = d.photo
+        photoThumb = d.photoThumb
     }
 }
 
@@ -90,6 +96,9 @@ struct Draft: Identifiable {
     /// 1.8: the place the app filled in by itself, and how far away it was used before.
     var autoPlace: String = ""
     var autoPlaceMetres: Double?
+    /// 1.13: the photo and its small copy (see `Photos`).
+    var photo: Data?
+    var photoThumb: Data?
 
     var amount: Double? {
         let value = Double(amountText.replacingOccurrences(of: ",", with: ".").trimmingCharacters(in: .whitespaces))
@@ -106,7 +115,7 @@ extension Draft {
     init(editing e: Expense) {
         self.init(expense: e, title: e.title, amountText: Draft.format(e.amount),
                   currency: e.currency, date: e.date, heard: e.heard, category: e.category, consumer: e.consumer,
-                  visitedPlace: e.visitedPlace, fix: e.fix, area: e.place)
+                  visitedPlace: e.visitedPlace, fix: e.fix, area: e.place, photo: e.photo, photoThumb: e.photoThumb)
     }
 }
 

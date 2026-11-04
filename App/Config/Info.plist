@@ -26,6 +26,8 @@
 	<false/>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.finance</string>
+	<key>NSCameraUsageDescription</key>
+	<string>The camera takes a photo of a receipt or of what you bought, kept with the expense on this iPhone only.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Your location picks the local currency (for example SEK in Sweden, EUR in Spain) and is saved with each expense, on this iPhone only, to offer the places you visited nearby.</string>
 	<key>NSMicrophoneUsageDescription</key>

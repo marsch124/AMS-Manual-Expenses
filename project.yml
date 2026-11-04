@@ -12,7 +12,7 @@ settings:
     DEVELOPMENT_TEAM: D24ENP83QQ
     CODE_SIGN_STYLE: Automatic
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "1.12"
+    MARKETING_VERSION: "1.13"
     CURRENT_PROJECT_VERSION: "1"
 packages:
   # The parser — everything the app knows about reading a sentence, with no screen in it.
@@ -49,6 +49,7 @@ targets:
         CFBundleIconName: AppIcon
         LSApplicationCategoryType: public.app-category.finance
         ITSAppUsesNonExemptEncryption: false
+        NSCameraUsageDescription: The camera takes a photo of a receipt or of what you bought, kept with the expense on this iPhone only.
         NSMicrophoneUsageDescription: The microphone is used to dictate expenses.
         NSSpeechRecognitionUsageDescription: Your dictation is turned into text to log the expense.
         NSLocationWhenInUseUsageDescription: Your location picks the local currency (for example SEK in Sweden, EUR in Spain) and is saved with each expense, on this iPhone only, to offer the places you visited nearby.

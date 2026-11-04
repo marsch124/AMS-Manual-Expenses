@@ -9,6 +9,12 @@ struct Release {
 
 enum Releases {
     static let all: [Release] = [
+        Release(version: "1.13", date: "4 November 2026", lines: [
+            "A photo with each expense: on the check sheet, tap “Take photo” for the camera or “Choose photo” for your photo library — for example the receipt, or what you bought.",
+            "The photo shows small on the expense’s row in the list. Open the expense and tap the photo to see it big; Done closes it.",
+            "“Remove photo” on the check sheet takes it away again. One photo per expense; the photos stay on this iPhone only.",
+            "The first time you take a photo, the iPhone asks if the app may use the camera.",
+        ]),
         Release(version: "1.12", date: "4 November 2026", lines: [
             "Yesterday: a new line under Today with yesterday’s number of expenses and their total in kronor. Tap it and yesterday’s expenses fold open, so you can quickly check that everything was entered. Tap it again to fold them away.",
             "It starts folded every time you open the app.",
@@ -126,6 +132,7 @@ enum Guide {
             "An amount in euros has its kronor under it (≈ SEK 125), at the bank’s rate of its day.",
             "Tap an expense to change it. Swipe it to the left to delete it. Swipe it to the right (or open it and tap “Same again, now”) for the same expense again, now, opened for checking.",
             "Save gives a short vibration and shows “Saved”.",
+            "A photo with an expense: on the check sheet tap “Take photo” (camera) or “Choose photo” (photo library). It shows small on the row; open the expense and tap it to see it big. “Remove photo” takes it away. One photo per expense, kept on this iPhone only.",
             "Under Today, the Yesterday line shows how many expenses yesterday had and their total. Tap it to fold yesterday’s expenses open, tap again to fold them away. Tap one to change it, swipe left to delete it.",
         ]),
         Section(title: "Categories", lines: [

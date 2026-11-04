@@ -414,6 +414,36 @@ final class AMSExpensesUITests: XCTestCase {
         waitForExpectations(timeout: 10)
     }
 
+    /// 1.13 (his ask): a photo on the check sheet is kept with the expense, shown small on its row
+    /// and big when tapped. (UI tests cannot use the camera or the photo library: there
+    /// "Choose photo" puts in a made-up picture.)
+    func testAPhotoIsKeptWithTheExpense() {
+        let app = launch()
+        let field = app.textFields["home-type-field"]
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        field.tap()
+        field.typeText("Lunch 120 kronor")
+        app.buttons["home-type-go"].tap()
+
+        let choose = app.buttons["entry-photo-choose"]
+        reveal(app, choose)
+        choose.tap()
+        XCTAssertTrue(app.buttons["entry-photo"].waitForExistence(timeout: 10), "the check sheet shows no photo")
+        app.buttons["entry-save"].tap()
+
+        let row = app.buttons["expense-row-0"]
+        XCTAssertTrue(row.waitForExistence(timeout: 10))
+        XCTAssertTrue(row.label.contains("Photo"), "the row shows no photo: '\(row.label)'")
+
+        row.tap()
+        let photo = app.buttons["entry-photo"]
+        reveal(app, photo)
+        photo.tap()
+        XCTAssertTrue(app.images["photo-viewer-image"].waitForExistence(timeout: 10), "the big photo did not open")
+        app.buttons["photo-viewer-done"].tap()
+        XCTAssertTrue(app.buttons["entry-photo-remove"].waitForExistence(timeout: 10))
+    }
+
     /// 1.5: the Shortcuts action's request reaches the main screen and starts dictation once
     /// (in UI tests the microphone is not used: the request is counted on `home-dictate`).
     func testTheShortcutsActionStartsDictation() {
