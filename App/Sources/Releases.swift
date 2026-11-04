@@ -9,6 +9,10 @@ struct Release {
 
 enum Releases {
     static let all: [Release] = [
+        Release(version: "1.14", date: "4 November 2026", lines: [
+            "Yesterday is now almost invisible: a small grey “Yesterday ›” under Today, with no count, no sum and no card behind it. Tap it to fold yesterday’s expenses open, tap again to fold them away.",
+            "The photo buttons on the check sheet are small round icons, no words: the camera (filled) takes a photo, the picture (light) chooses one from your photo library. Both icons are hand-drawn, in the style of your other apps.",
+        ]),
         Release(version: "1.13", date: "4 November 2026", lines: [
             "A photo with each expense: on the check sheet, tap “Take photo” for the camera or “Choose photo” for your photo library — for example the receipt, or what you bought.",
             "The photo shows small on the expense’s row in the list. Open the expense and tap the photo to see it big; Done closes it.",
@@ -132,8 +136,8 @@ enum Guide {
             "An amount in euros has its kronor under it (≈ SEK 125), at the bank’s rate of its day.",
             "Tap an expense to change it. Swipe it to the left to delete it. Swipe it to the right (or open it and tap “Same again, now”) for the same expense again, now, opened for checking.",
             "Save gives a short vibration and shows “Saved”.",
-            "A photo with an expense: on the check sheet tap “Take photo” (camera) or “Choose photo” (photo library). It shows small on the row; open the expense and tap it to see it big. “Remove photo” takes it away. One photo per expense, kept on this iPhone only.",
-            "Under Today, the Yesterday line shows how many expenses yesterday had and their total. Tap it to fold yesterday’s expenses open, tap again to fold them away. Tap one to change it, swipe left to delete it.",
+            "A photo with an expense: on the check sheet, in the Photo row, tap the round camera to take one or the round picture to choose one from your photo library. It shows small on the row; open the expense and tap it to see it big. “Remove photo” takes it away. One photo per expense, kept on this iPhone only.",
+            "Under Today, a small grey “Yesterday ›”: tap it to fold yesterday’s expenses open, tap again to fold them away. Tap one to change it, swipe left to delete it.",
         ]),
         Section(title: "Categories", lines: [
             "The last line of the check sheet is the category: tap it and choose one, or “New category…” to add one.",

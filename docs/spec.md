@@ -299,3 +299,15 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
   the expense on this iPhone only."
 - Test: `testAPhotoIsKeptWithTheExpense`.
 
+## 1.14 · Quieter Yesterday, icon photo buttons (his asks, 4 Nov 2026)
+
+- `yesterday-toggle` (replaces §4's 1.12 look): "Yesterday" + a small chevron (turns down when
+  open), footnote, secondary colour, no row background (`listRowBackground(.clear)`), no count and no
+  total — his words: "almost invisible". Behaviour unchanged.
+- Photo row (replaces 1.13's two wide buttons): "Photo" in grey on the left; on the right two 40 pt
+  circles without words — `entry-photo-camera` (accent fill, white camera) and `entry-photo-choose`
+  (light accent, accent picture); accessibility labels "Take photo" / "Choose photo".
+- Icons: `LineIcon` draws on the AMS Icon Library grid (24 pt, 1.9 stroke, round ends, no fill).
+  `CameraGlyph` = the library's camera; `PictureGlyph` is new (frame, two hills, sun) and not yet
+  in the library.
+

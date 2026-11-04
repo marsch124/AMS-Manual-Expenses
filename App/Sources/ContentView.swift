@@ -36,9 +36,6 @@ struct ContentView: View {
     private var todays: [Expense] { expenses.filter { Calendar.current.isDateInToday($0.date) } }
     /// 1.12: yesterday's expenses, newest first, for the folded Yesterday section.
     private var yesterdays: [Expense] { expenses.filter { Calendar.current.isDateInYesterday($0.date) } }
-    private var yesterdayTotal: String {
-        yesterdays.isEmpty ? "" : Money.text(Statistics.total(yesterdays.map(\.spend), rates: rates.table, calendar: .current))
-    }
 
     var body: some View {
         NavigationStack {
@@ -105,23 +102,21 @@ struct ContentView: View {
                     Button {
                         withAnimation { showYesterday.toggle() }
                     } label: {
-                        HStack(spacing: 8) {
-                            Text("Yesterday").font(.headline)
-                            Text(yesterdays.count == 1 ? "1 expense" : "\(yesterdays.count) expenses")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                            Spacer()
-                            if !yesterdays.isEmpty {
-                                Text(yesterdayTotal).bold().monospacedDigit()
-                            }
+                        // 1.14 (his ask): almost invisible — a small grey word and arrow, no card, no count, no sum.
+                        HStack(spacing: 4) {
+                            Text("Yesterday")
                             Image(systemName: "chevron.right")
-                                .font(.footnote.weight(.semibold))
-                                .foregroundStyle(Color.accentColor)
+                                .font(.caption2.weight(.semibold))
                                 .rotationEffect(.degrees(showYesterday ? 90 : 0))
+                            Spacer()
                         }
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .contentShape(Rectangle())
                     }
-                    .tint(.primary)
-                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                    .buttonStyle(.plain)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets(top: 2, leading: 20, bottom: 2, trailing: 16))
                     .accessibilityIdentifier("yesterday-toggle")
                     if showYesterday {
                         if yesterdays.isEmpty {

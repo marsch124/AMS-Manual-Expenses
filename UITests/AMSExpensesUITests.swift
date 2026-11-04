@@ -400,7 +400,8 @@ final class AMSExpensesUITests: XCTestCase {
 
         let toggle = app.buttons["yesterday-toggle"]
         XCTAssertTrue(toggle.waitForExistence(timeout: 10), "there is no Yesterday line")
-        XCTAssertTrue(toggle.label.contains("1 expense"), "the Yesterday line reads '\(toggle.label)'")
+        // 1.14 (his ask): almost invisible — no count, no sum.
+        XCTAssertFalse(toggle.label.contains("expense") || toggle.label.contains("SEK"), "the Yesterday line reads '\(toggle.label)'")
         XCTAssertFalse(app.buttons["yesterday-row-0"].exists, "yesterday is not folded at the start")
         XCTAssertTrue(app.staticTexts["today-empty"].exists, "yesterday's taxi was counted as today")
 

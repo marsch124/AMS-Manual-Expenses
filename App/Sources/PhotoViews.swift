@@ -66,22 +66,31 @@ struct PhotoSection: View {
                 }
                 .accessibilityIdentifier("entry-photo-remove")
             } else {
-                HStack(spacing: 10) {
+                // 1.14 (his ask): small round buttons, no words — hand-drawn icons (AMS Icon Library style).
+                HStack(spacing: 12) {
+                    Text("Photo").foregroundStyle(.secondary)
+                    Spacer()
                     if hasCamera {
                         Button { showCamera = true } label: {
-                            Label("Take photo", systemImage: "camera")
-                                .frame(maxWidth: .infinity)
+                            LineIcon(shape: CameraGlyph(), size: 22)
+                                .foregroundStyle(.white)
+                                .frame(width: 40, height: 40)
+                                .background(Circle().fill(Color.accentColor))
                         }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(.borderless)
+                        .accessibilityLabel("Take photo")
                         .accessibilityIdentifier("entry-photo-camera")
                     }
                     Button {
                         if ExpensesApp.uiTesting { set(Photos.testImage) } else { showLibrary = true }
                     } label: {
-                        Label("Choose photo", systemImage: "photo")
-                            .frame(maxWidth: .infinity)
+                        LineIcon(shape: PictureGlyph(), size: 22)
+                            .foregroundStyle(Color.accentColor)
+                            .frame(width: 40, height: 40)
+                            .background(Circle().fill(Color.accentColor.opacity(0.15)))
                     }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(.borderless)
+                    .accessibilityLabel("Choose photo")
                     .accessibilityIdentifier("entry-photo-choose")
                 }
                 .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
@@ -162,5 +171,59 @@ struct CameraPicker: UIViewControllerRepresentable {
         }
 
         func imagePickerControllerDidCancel(_ picker: UIImagePickerController) { parent.dismiss() }
+    }
+}
+
+/// A hand-drawn line icon on the AMS Icon Library's grid: 24 × 24, one 1.9 stroke, round ends, no fill.
+struct LineIcon<S: Shape>: View {
+    let shape: S
+    var size: CGFloat = 24
+
+    var body: some View {
+        shape
+            .stroke(style: StrokeStyle(lineWidth: 1.9 * size / 24, lineCap: .round, lineJoin: .round))
+            .frame(width: size, height: size)
+    }
+}
+
+/// Draws on a 24-point grid, scaled to the frame it is given.
+private func grid(_ rect: CGRect, _ build: (inout Path) -> Void) -> Path {
+    var p = Path()
+    build(&p)
+    let k = min(rect.width, rect.height) / 24
+    return p.applying(CGAffineTransform(scaleX: k, y: k).concatenating(
+        CGAffineTransform(translationX: rect.minX, y: rect.minY)))
+}
+
+/// The library's "camera" (AMS Packing TemplateIcons).
+struct CameraGlyph: Shape {
+    func path(in rect: CGRect) -> Path {
+        grid(rect) { p in
+            p.move(to: CGPoint(x: 3.5, y: 8))
+            p.addLine(to: CGPoint(x: 7.5, y: 8))
+            p.addLine(to: CGPoint(x: 9, y: 5.5))
+            p.addLine(to: CGPoint(x: 15, y: 5.5))
+            p.addLine(to: CGPoint(x: 16.5, y: 8))
+            p.addLine(to: CGPoint(x: 20.5, y: 8))
+            p.addLine(to: CGPoint(x: 20.5, y: 19))
+            p.addLine(to: CGPoint(x: 3.5, y: 19))
+            p.closeSubpath()
+            p.addEllipse(in: CGRect(x: 8.6, y: 9.9, width: 6.8, height: 6.8))
+        }
+    }
+}
+
+/// New in 1.14, drawn in the library's style: a picture — frame, two hills, a sun.
+struct PictureGlyph: Shape {
+    func path(in rect: CGRect) -> Path {
+        grid(rect) { p in
+            p.addRoundedRect(in: CGRect(x: 3.5, y: 5, width: 17, height: 14), cornerSize: CGSize(width: 2, height: 2))
+            p.move(to: CGPoint(x: 3.5, y: 16.5))
+            p.addLine(to: CGPoint(x: 9, y: 11))
+            p.addLine(to: CGPoint(x: 13.5, y: 15.5))
+            p.addLine(to: CGPoint(x: 16, y: 13))
+            p.addLine(to: CGPoint(x: 20.5, y: 17.5))
+            p.addEllipse(in: CGRect(x: 14, y: 7.5, width: 3.2, height: 3.2))
+        }
     }
 }
