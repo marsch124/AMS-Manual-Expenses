@@ -23,6 +23,8 @@ struct ContentView: View {
     /// 1.9: counts saves, for the little vibration and the "Saved" check mark.
     @State private var saves = 0
     @State private var showSaved = false
+    /// 1.12: the Yesterday section starts folded.
+    @State private var showYesterday = false
 
     private var autoCurrency: String {
         location.currency ?? CurrencyDefaults.currency(forTimeZone: TimeZone.current.identifier) ?? "SEK"
@@ -32,6 +34,11 @@ struct ContentView: View {
         ["SEK", "EUR"].contains(autoCurrency) ? ["SEK", "EUR"] : ["SEK", "EUR", autoCurrency]
     }
     private var todays: [Expense] { expenses.filter { Calendar.current.isDateInToday($0.date) } }
+    /// 1.12: yesterday's expenses, newest first, for the folded Yesterday section.
+    private var yesterdays: [Expense] { expenses.filter { Calendar.current.isDateInYesterday($0.date) } }
+    private var yesterdayTotal: String {
+        yesterdays.isEmpty ? "" : Money.text(Statistics.total(yesterdays.map(\.spend), rates: rates.table, calendar: .current))
+    }
 
     var body: some View {
         NavigationStack {
@@ -91,6 +98,48 @@ struct ContentView: View {
                     }
                 } header: {
                     Text("Today")
+                }
+                // 1.12 (his ask): yesterday, folded under Today — a quick look back to check
+                // that everything was entered. Folded again every time the app starts.
+                Section {
+                    Button {
+                        withAnimation { showYesterday.toggle() }
+                    } label: {
+                        HStack(spacing: 8) {
+                            Text("Yesterday").font(.headline)
+                            Text(yesterdays.count == 1 ? "1 expense" : "\(yesterdays.count) expenses")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            if !yesterdays.isEmpty {
+                                Text(yesterdayTotal).bold().monospacedDigit()
+                            }
+                            Image(systemName: "chevron.right")
+                                .font(.footnote.weight(.semibold))
+                                .foregroundStyle(Color.accentColor)
+                                .rotationEffect(.degrees(showYesterday ? 90 : 0))
+                        }
+                    }
+                    .tint(.primary)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                    .accessibilityIdentifier("yesterday-toggle")
+                    if showYesterday {
+                        if yesterdays.isEmpty {
+                            Text("Nothing was logged yesterday.").foregroundStyle(.secondary)
+                                .accessibilityIdentifier("yesterday-empty")
+                        }
+                        ForEach(Array(yesterdays.enumerated()), id: \.element.id) { index, expense in
+                            Button { draft = Draft(editing: expense) } label: { ExpenseRow(expense: expense) }
+                                .tint(.primary)
+                                .listRowInsets(EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16))
+                                .accessibilityIdentifier("yesterday-row-\(index)")
+                                .swipeActions(edge: .trailing) {
+                                    Button(role: .destructive) { context.delete(expense) } label: {
+                                        Label("Delete", systemImage: "trash")
+                                    }
+                                }
+                        }
+                    }
                 }
             }
             // 1.11 (his ask): less space between the parts of the screen and between rows.

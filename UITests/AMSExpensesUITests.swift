@@ -393,6 +393,27 @@ final class AMSExpensesUITests: XCTestCase {
         XCTAssertTrue(first.label.contains("Coffee"), "the row reads '\(first.label)'")
     }
 
+    /// 1.12 (his ask): yesterday's expenses sit folded under Today; a tap opens them, another folds them.
+    func testYesterdayFoldsOpenUnderToday() {
+        let app = launch()
+        add(app, "Taxi 300 kronor yesterday")
+
+        let toggle = app.buttons["yesterday-toggle"]
+        XCTAssertTrue(toggle.waitForExistence(timeout: 10), "there is no Yesterday line")
+        XCTAssertTrue(toggle.label.contains("1 expense"), "the Yesterday line reads '\(toggle.label)'")
+        XCTAssertFalse(app.buttons["yesterday-row-0"].exists, "yesterday is not folded at the start")
+        XCTAssertTrue(app.staticTexts["today-empty"].exists, "yesterday's taxi was counted as today")
+
+        toggle.tap()
+        let row = app.buttons["yesterday-row-0"]
+        XCTAssertTrue(row.waitForExistence(timeout: 10), "a tap did not open yesterday")
+        XCTAssertTrue(row.label.contains("Taxi"), "the row reads '\(row.label)'")
+
+        toggle.tap()
+        expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: row)
+        waitForExpectations(timeout: 10)
+    }
+
     /// 1.5: the Shortcuts action's request reaches the main screen and starts dictation once
     /// (in UI tests the microphone is not used: the request is counted on `home-dictate`).
     func testTheShortcutsActionStartsDictation() {

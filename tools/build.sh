@@ -28,7 +28,7 @@ xcodebuild \
   -destination "platform=iOS Simulator,name=$SIM" \
   -derivedDataPath "$DD" \
   "${EXTRA[@]}" \
-  "${1:-build}"
+  "${1:-build}" ${ONLY:+-only-testing:AMSExpensesUITests/AMSExpensesUITests/$ONLY}
 
 echo
 echo "App: $DD/Build/Products/Debug-iphonesimulator/AMSExpenses.app"

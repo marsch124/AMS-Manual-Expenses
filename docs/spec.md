@@ -19,6 +19,13 @@ One list, three parts:
    description, time (and category, since 1.3) and amount in its own currency. The section header holds "Today"
    and the total in kronor (`today-total`, §9; before 1.2 one total per currency). Empty: "No expenses yet today."
    (`today-empty`). Tap a row to change it; swipe left to delete it (no question).
+4. **Yesterday** (1.12, his ask: a quick look back when he logs the day's first expense) — its own
+   section under Today. First row `yesterday-toggle`: "Yesterday" (headline), "1 expense" / "N expenses"
+   (secondary), yesterday's total in kronor on the right (§9, only when there is one) and an accent
+   chevron that turns down when open. A tap folds open / shut (animated). Folded at every start
+   (plain view state, not remembered). Open: yesterday's expenses newest first (`yesterday-row-0` …,
+   the same `ExpenseRow` as Today); a tap opens the editor, swipe left deletes. Open with none:
+   "Nothing was logged yesterday." (`yesterday-empty`). Test: `testYesterdayFoldsOpenUnderToday`.
 
 Toolbar: the map (`home-map`, 1.8) opens Today on the map (§14). The globe (`home-language`) picks the dictation language — English (en-US),
 Svenska (sv-SE), Deutsch (de-DE); stored as `dictationLanguage`. The chart

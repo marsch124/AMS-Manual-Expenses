@@ -9,6 +9,11 @@ struct Release {
 
 enum Releases {
     static let all: [Release] = [
+        Release(version: "1.12", date: "4 November 2026", lines: [
+            "Yesterday: a new line under Today with yesterday’s number of expenses and their total in kronor. Tap it and yesterday’s expenses fold open, so you can quickly check that everything was entered. Tap it again to fold them away.",
+            "It starts folded every time you open the app.",
+            "Tap one of yesterday’s expenses to change it; swipe it to the left to delete it.",
+        ]),
         Release(version: "1.11", date: "27 October 2026", lines: [
             "The “This week” line under the Today card is gone. The small bars on the right stay.",
             "The main screen is tighter: the time is smaller, with the date and place on one line under it; the microphone sits on the left with the typing field beside it; less space around the Today card and between the parts; slimmer expense rows.",
@@ -121,6 +126,7 @@ enum Guide {
             "An amount in euros has its kronor under it (≈ SEK 125), at the bank’s rate of its day.",
             "Tap an expense to change it. Swipe it to the left to delete it. Swipe it to the right (or open it and tap “Same again, now”) for the same expense again, now, opened for checking.",
             "Save gives a short vibration and shows “Saved”.",
+            "Under Today, the Yesterday line shows how many expenses yesterday had and their total. Tap it to fold yesterday’s expenses open, tap again to fold them away. Tap one to change it, swipe left to delete it.",
         ]),
         Section(title: "Categories", lines: [
             "The last line of the check sheet is the category: tap it and choose one, or “New category…” to add one.",
