@@ -342,3 +342,27 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
 - Permission text, `NSPhotoLibraryAddUsageDescription`: "Photos you take in the app are also saved to
   your photo library."
 - Guide (How it works): the Today, Place visited and photo lines are updated for all four changes.
+
+## 1.16 · Nearest first on the place page, Last week line
+
+- **Nearest first** (adds to §13 and 1.15, `PlaceChooser`): a button at the top right of the place page,
+  identifier `place-sort`, reading "Nearest first". Tap it and all places show in one list, in a
+  section titled "By distance", the nearest first (smallest distance, the 1.15 distance, first). Places
+  without a distance come last, in their usual order (the "Other places" order: latest used first). The
+  Nearby and Other places lists are not shown in this order. The button then reads "Usual order"; tap it
+  and Nearby and Other places come back.
+- The choice is remembered: the next time the place page opens, it is in the order you left it. It is
+  kept on this iPhone only.
+- Without a GPS position for the expense (location turned off, or an expense from before 1.7, or a
+  draft without a fix) there is no distance to sort by, so the button is not shown, and the page
+  is in the usual order whatever was chosen before.
+- The search ("Search places", 1.15) works in both orders: only names that contain the typed letters
+  are shown, and the order of what is shown stays as chosen. "New place" and None are never filtered
+  and stay in both orders. `place-choice-N` and `place-distance-N` number the places in the shown order.
+- **Last week line** (adds to §1 and 1.15): under the small grey "Yesterday ›" line on the main screen
+  there is a second small grey line, identifier `last-week-summary`, for example
+  "Last week · SEK 1 234 · 12 expenses" (1 expense: "1 expense"). Last week = the week before this
+  one, Monday to Sunday. The total is in kronor (euro expenses at their kronor value, as everywhere).
+  It is just a line to read: not a button, it does not open or fold anything. Same small grey look as
+  "Yesterday ›". Nothing logged last week: the line is not shown.
+- Guide (How it works): the Place visited and Today lines are updated for both changes.

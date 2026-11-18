@@ -130,4 +130,14 @@ final class StatisticsTests: XCTestCase {
         XCTAssertEqual(days.map(\.day), [day(10, 22), day(10, 20), day(10, 5), day(9, 30)].map(calendar.startOfDay(for:)))
         XCTAssertEqual(days[1].total.kronor, 112, accuracy: 0.001)
     }
+
+    // 1.16: "Last week" = Monday 12 to Sunday 18 October, seen from Thursday 22 October.
+    func testLastWeekIsTheWeekBeforeThisOne() {
+        let r = Statistics.range(.lastWeek, now: now, calendar: calendar)
+        XCTAssertEqual(r.interval.start, calendar.startOfDay(for: day(10, 12)))
+        XCTAssertEqual(r.interval.end, calendar.startOfDay(for: day(10, 19)))
+        let spends = [Spend(title: "A", amount: 1, currency: "SEK", date: day(10, 18, 23)),
+                      Spend(title: "B", amount: 1, currency: "SEK", date: day(10, 19, 0))]
+        XCTAssertEqual(Statistics.inside(spends, .lastWeek, now: now, calendar: calendar).map(\.title), ["A"])
+    }
 }

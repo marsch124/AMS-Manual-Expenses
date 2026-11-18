@@ -80,4 +80,10 @@ final class PlacesTests: XCTestCase {
         XCTAssertEqual(Places.matching(names, search: "cafe"), ["Café Pascal"])
         XCTAssertEqual(Places.matching(names, search: "an"), ["ICA Odenplan", "Gamla stan"])
     }
+
+    // 1.16: Nearest first.
+    func testNearestFirstPutsPlacesWithoutADistanceLast() {
+        let d = ["b": 900.0, "a": 50.0]
+        XCTAssertEqual(Places.byDistance(["X", "B", "Y", "A"], distances: d), ["A", "B", "X", "Y"])
+    }
 }

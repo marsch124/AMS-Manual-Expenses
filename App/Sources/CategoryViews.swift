@@ -291,6 +291,8 @@ struct PlaceChooser: View {
     @State private var newName = ""
     /// 1.15 (his ask): the search at the top of the page.
     @State private var search = ""
+    /// 1.16 (his pick): all places in one list, nearest first; remembered.
+    @AppStorage("placesNearestFirst") private var nearestFirst = false
 
     private var lists: (near: [String], other: [String]) {
         var c = Places.choices(at: fix, history: visits)
@@ -310,6 +312,7 @@ struct PlaceChooser: View {
         let all = lists
         let c = (near: Places.matching(all.near, search: search), other: Places.matching(all.other, search: search))
         let far = distances
+        let sorted = nearestFirst && fix != nil
         List {
             Section {
                 HStack {
@@ -328,14 +331,24 @@ struct PlaceChooser: View {
                     Text("No GPS position for this expense, so no places nearby.")
                 }
             }
-            if !c.near.isEmpty {
+            if sorted {
+                let byDistance = Places.byDistance(c.near + c.other, distances: far)
+                if !byDistance.isEmpty {
+                    Section("By distance") {
+                        ForEach(Array(byDistance.enumerated()), id: \.element) { index, name in
+                            choice(name, value: name, id: "place-choice-\(index)", metres: far[name.lowercased()])
+                        }
+                    }
+                }
+            }
+            if !sorted, !c.near.isEmpty {
                 Section("Nearby") {
                     ForEach(Array(c.near.enumerated()), id: \.element) { index, name in
                         choice(name, value: name, id: "place-choice-\(index)", metres: far[name.lowercased()])
                     }
                 }
             }
-            if !c.other.isEmpty {
+            if !sorted, !c.other.isEmpty {
                 Section(c.near.isEmpty ? "Places" : "Other places") {
                     ForEach(Array(c.other.enumerated()), id: \.element) { index, name in
                         choice(name, value: name, id: "place-choice-\(c.near.count + index)", metres: far[name.lowercased()])
@@ -348,6 +361,14 @@ struct PlaceChooser: View {
             }
         }
         .searchable(text: $search, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search places")
+        .toolbar {
+            if fix != nil {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(nearestFirst ? "Usual order" : "Nearest first") { nearestFirst.toggle() }
+                        .accessibilityIdentifier("place-sort")
+                }
+            }
+        }
         .navigationTitle("Place")
         .navigationBarTitleDisplayMode(.inline)
     }

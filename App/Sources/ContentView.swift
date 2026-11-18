@@ -36,6 +36,14 @@ struct ContentView: View {
     private var todays: [Expense] { expenses.filter { Calendar.current.isDateInToday($0.date) } }
     /// 1.12: yesterday's expenses, newest first, for the folded Yesterday section.
     private var yesterdays: [Expense] { expenses.filter { Calendar.current.isDateInYesterday($0.date) } }
+    /// 1.16: last week's expenses (Monday to Sunday before this week).
+    private var lastWeeks: [Expense] {
+        let week = Statistics.range(.lastWeek, now: Date(), calendar: .current).interval
+        return expenses.filter { $0.date >= week.start && $0.date < week.end }
+    }
+    private var lastWeekTotal: String {
+        Money.text(Statistics.total(lastWeeks.map(\.spend), rates: rates.table, calendar: .current))
+    }
 
     var body: some View {
         NavigationStack {
@@ -118,6 +126,15 @@ struct ContentView: View {
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets(top: 2, leading: 20, bottom: 2, trailing: 16))
                     .accessibilityIdentifier("yesterday-toggle")
+                    // 1.16 (his pick): a second quiet line — last week's total and count, just to read.
+                    if !lastWeeks.isEmpty {
+                        Text("Last week · \(lastWeekTotal) · " + (lastWeeks.count == 1 ? "1 expense" : "\(lastWeeks.count) expenses"))
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .listRowBackground(Color.clear)
+                            .listRowInsets(EdgeInsets(top: 2, leading: 20, bottom: 2, trailing: 16))
+                            .accessibilityIdentifier("last-week-summary")
+                    }
                     if showYesterday {
                         if yesterdays.isEmpty {
                             Text("Nothing was logged yesterday.").foregroundStyle(.secondary)

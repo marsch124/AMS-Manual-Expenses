@@ -86,6 +86,14 @@ public enum Places {
         return "\(Int((metres / 1000).rounded())) km"
     }
 
+    /// 1.16 (his pick): "Nearest first" — the names by distance, nearest first; names
+    /// without a distance keep their order at the end.
+    public static func byDistance(_ names: [String], distances: [String: Double]) -> [String] {
+        let known = names.filter { distances[$0.lowercased()] != nil }
+            .sorted { distances[$0.lowercased()]! < distances[$1.lowercased()]! }
+        return known + names.filter { distances[$0.lowercased()] == nil }
+    }
+
     /// 1.15 (his ask): the search on the Place page — names that contain the typed letters,
     /// any capitals; an empty search keeps them all.
     public static func matching(_ names: [String], search: String) -> [String] {

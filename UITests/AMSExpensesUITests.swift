@@ -286,6 +286,14 @@ final class AMSExpensesUITests: XCTestCase {
         let first = app.buttons["place-choice-0"]
         XCTAssertTrue(first.waitForExistence(timeout: 10), "the place list has no places")
         XCTAssertTrue(first.label.contains("ICA Odenplan"), "the first place reads '\(first.label)'")
+        // 1.15: with its distance; 1.16: Nearest first keeps it on top and flips the button.
+        XCTAssertTrue(first.label.contains("0 m"), "no distance on the place: '\(first.label)'")
+        let sort = app.buttons["place-sort"]
+        XCTAssertTrue(sort.waitForExistence(timeout: 10), "no Nearest first button")
+        sort.tap()
+        XCTAssertEqual(sort.label, "Usual order")
+        XCTAssertTrue(app.buttons["place-choice-0"].label.contains("ICA Odenplan"))
+        sort.tap()
     }
 
     /// 1.7 (his ask): Settings › Places renames a place, and the expense moves with it.

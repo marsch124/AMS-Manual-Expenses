@@ -140,6 +140,8 @@ public enum Statistics {
 
     public enum Period: String, CaseIterable, Sendable {
         case thisWeek, thisMonth, lastMonth
+        /// 1.16: the week before this one, Monday to Sunday (the "Last week" line).
+        case lastWeek
     }
 
     /// The period's days, and how many of them count for "a day" — so far for this week and
@@ -151,6 +153,10 @@ public enum Statistics {
             let week = calendar.dateInterval(of: .weekOfYear, for: now)!
             let days = (calendar.dateComponents([.day], from: week.start, to: today).day ?? 0) + 1
             return (week, days)
+        case .lastWeek:
+            let week = calendar.dateInterval(of: .weekOfYear, for: now)!
+            let last = calendar.dateInterval(of: .weekOfYear, for: week.start.addingTimeInterval(-1))!
+            return (last, 7)
         case .thisMonth:
             let month = calendar.dateInterval(of: .month, for: now)!
             return (month, calendar.component(.day, from: now))
