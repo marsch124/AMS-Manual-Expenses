@@ -57,4 +57,27 @@ final class PlacesTests: XCTestCase {
         XCTAssertEqual(noFix.near, [])
         XCTAssertEqual(noFix.other, ["ica odenplan", "Gamla stan", "Hotel", "Café Pascal"])
     }
+
+    // 1.15: distances on the Place page, and its search.
+    func testDistancesAndSearchOnThePlacePage() {
+        let history = [
+            Visit(place: "ICA Odenplan", fix: ica, date: date(1)),
+            Visit(place: "ica odenplan", fix: gamlaStan, date: date(2)),
+            Visit(place: "Gamla stan", fix: gamlaStan, date: date(3)),
+            Visit(place: "Hotel", fix: nil, date: date(4)),
+        ]
+        let d = Places.distances(at: nextDoor, history: history)
+        XCTAssertLessThan(d["ica odenplan"]!, 80)          // the nearest spot counts
+        XCTAssertGreaterThan(d["gamla stan"]!, 2_000)
+        XCTAssertNil(d["hotel"])                           // no GPS, no distance
+        XCTAssertEqual(Places.distances(at: nil, history: history), [:])
+        XCTAssertEqual(Places.distanceText(57), "60 m")
+        XCTAssertEqual(Places.distanceText(3_420), "3.4 km")
+        XCTAssertEqual(Places.distanceText(25_400), "25 km")
+        let names = ["ICA Odenplan", "Café Pascal", "Gamla stan"]
+        XCTAssertEqual(Places.matching(names, search: "  "), names)
+        XCTAssertEqual(Places.matching(names, search: "ica"), ["ICA Odenplan"])
+        XCTAssertEqual(Places.matching(names, search: "cafe"), ["Café Pascal"])
+        XCTAssertEqual(Places.matching(names, search: "an"), ["ICA Odenplan", "Gamla stan"])
+    }
 }

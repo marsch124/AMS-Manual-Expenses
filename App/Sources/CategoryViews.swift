@@ -289,6 +289,8 @@ struct PlaceChooser: View {
     let visits: [Visit]
     @Environment(\.dismiss) private var dismiss
     @State private var newName = ""
+    /// 1.15 (his ask): the search at the top of the page.
+    @State private var search = ""
 
     private var lists: (near: [String], other: [String]) {
         var c = Places.choices(at: fix, history: visits)
@@ -299,10 +301,15 @@ struct PlaceChooser: View {
         return c
     }
 
+    /// 1.15 (his ask): how far away each place is, from this expense's GPS fix.
+    private var distances: [String: Double] { Places.distances(at: fix, history: visits) }
+
     private var trimmed: String { newName.trimmingCharacters(in: .whitespacesAndNewlines) }
 
     var body: some View {
-        let c = lists
+        let all = lists
+        let c = (near: Places.matching(all.near, search: search), other: Places.matching(all.other, search: search))
+        let far = distances
         List {
             Section {
                 HStack {
@@ -324,18 +331,23 @@ struct PlaceChooser: View {
             if !c.near.isEmpty {
                 Section("Nearby") {
                     ForEach(Array(c.near.enumerated()), id: \.element) { index, name in
-                        choice(name, value: name, id: "place-choice-\(index)")
+                        choice(name, value: name, id: "place-choice-\(index)", metres: far[name.lowercased()])
                     }
                 }
             }
             if !c.other.isEmpty {
                 Section(c.near.isEmpty ? "Places" : "Other places") {
                     ForEach(Array(c.other.enumerated()), id: \.element) { index, name in
-                        choice(name, value: name, id: "place-choice-\(c.near.count + index)")
+                        choice(name, value: name, id: "place-choice-\(c.near.count + index)", metres: far[name.lowercased()])
                     }
                 }
             }
+            if !search.isEmpty, c.near.isEmpty, c.other.isEmpty {
+                Text("No place matches “\(search)”.").foregroundStyle(.secondary)
+                    .accessibilityIdentifier("place-search-empty")
+            }
         }
+        .searchable(text: $search, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search places")
         .navigationTitle("Place")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -347,7 +359,7 @@ struct PlaceChooser: View {
         dismiss()
     }
 
-    private func choice(_ label: String, value: String, id: String) -> some View {
+    private func choice(_ label: String, value: String, id: String, metres: Double? = nil) -> some View {
         Button {
             selection = value
             dismiss()
@@ -355,6 +367,13 @@ struct PlaceChooser: View {
             HStack {
                 Text(label)
                 Spacer()
+                if let metres {
+                    Text(Places.distanceText(metres))
+                        .font(.subheadline)
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("place-distance-\(id.replacingOccurrences(of: "place-choice-", with: ""))")
+                }
                 if selection == value {
                     Image(systemName: "checkmark").foregroundStyle(Color.accentColor)
                 }

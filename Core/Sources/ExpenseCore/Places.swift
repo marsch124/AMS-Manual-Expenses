@@ -65,6 +65,35 @@ public enum Places {
         return best
     }
 
+    /// 1.15 (his ask): how far each place is from `fix` — the nearest spot where it was used,
+    /// keyed by the lowercased name. Places without a GPS fix are missing; no fix = empty.
+    public static func distances(at fix: Fix?, history: [Visit]) -> [String: Double] {
+        guard let fix else { return [:] }
+        var out: [String: Double] = [:]
+        for v in history {
+            let key = v.place.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            guard !key.isEmpty, let f = v.fix else { continue }
+            let d = fix.distance(to: f)
+            if out[key] == nil || d < out[key]! { out[key] = d }
+        }
+        return out
+    }
+
+    /// 1.15: "80 m" under 1 km (to 10 m), "3.4 km" under 10 km, "25 km" from there.
+    public static func distanceText(_ metres: Double) -> String {
+        if metres < 995 { return "\(Int((metres / 10).rounded()) * 10) m" }
+        if metres < 9_950 { return String(format: "%.1f km", metres / 1000) }
+        return "\(Int((metres / 1000).rounded())) km"
+    }
+
+    /// 1.15 (his ask): the search on the Place page — names that contain the typed letters,
+    /// any capitals; an empty search keeps them all.
+    public static func matching(_ names: [String], search: String) -> [String] {
+        let q = search.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !q.isEmpty else { return names }
+        return names.filter { $0.range(of: q, options: [.caseInsensitive, .diacriticInsensitive]) != nil }
+    }
+
     /// Every place used, once each (the latest spelling), split into those within `nearby`
     /// metres of `fix` (nearest first) and the rest (most recently used first).
     public static func choices(at fix: Fix?, history: [Visit]) -> (near: [String], other: [String]) {

@@ -32,6 +32,8 @@
 	<string>Your location picks the local currency (for example SEK in Sweden, EUR in Spain) and is saved with each expense, on this iPhone only, to offer the places you visited nearby.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>The microphone is used to dictate expenses.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Photos you take in the app are also saved to your photo library.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Your dictation is turned into text to log the expense.</string>
 	<key>UILaunchScreen</key>

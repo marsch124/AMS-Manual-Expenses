@@ -105,7 +105,12 @@ struct PhotoSection: View {
                     }
                 }
                 .fullScreenCover(isPresented: $showCamera) {
-                    CameraPicker { image in set(image) }
+                    CameraPicker { image in
+                        set(image)
+                        // 1.15 (his ask): a photo taken in the app also goes to Apple Photos.
+                        // The iPhone asks once; a no keeps the photo with the expense only.
+                        UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
+                    }
                         .ignoresSafeArea()
                 }
             }

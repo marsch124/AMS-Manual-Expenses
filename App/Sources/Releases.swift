@@ -9,6 +9,12 @@ struct Release {
 
 enum Releases {
     static let all: [Release] = [
+        Release(version: "1.15", date: "18 November 2026", lines: [
+            "Yesterday has a summary now, like Today: open the small grey “Yesterday ›” and the first thing you see is yesterday’s total in kronor in large numbers, with how many expenses under it. The “Yesterday ›” line itself stays small and quiet.",
+            "The Place page has a search field at the top, “Search places”. Type a few letters and only the places with those letters stay in the list; capitals and accents do not matter. Clear it to see all again.",
+            "Every place on the Place page shows how far away it is, in grey on the right: for example “80 m”, “3.4 km” or “25 km”. It is measured from where this expense was logged to the nearest spot where you used that place before. A place without a GPS position shows no distance.",
+            "A photo you take with the camera in the app is now also saved in Apple Photos. The first time, the iPhone asks if the app may add photos. A photo you choose from your library is not saved a second time. If you say no, the photo still stays with the expense.",
+        ]),
         Release(version: "1.14", date: "4 November 2026", lines: [
             "Yesterday is now almost invisible: a small grey “Yesterday ›” under Today, with no count, no sum and no card behind it. Tap it to fold yesterday’s expenses open, tap again to fold them away.",
             "The photo buttons on the check sheet are small round icons, no words: the camera (filled) takes a photo, the picture (light) chooses one from your photo library. Both icons are hand-drawn, in the style of your other apps.",
@@ -136,8 +142,10 @@ enum Guide {
             "An amount in euros has its kronor under it (≈ SEK 125), at the bank’s rate of its day.",
             "Tap an expense to change it. Swipe it to the left to delete it. Swipe it to the right (or open it and tap “Same again, now”) for the same expense again, now, opened for checking.",
             "Save gives a short vibration and shows “Saved”.",
-            "A photo with an expense: on the check sheet, in the Photo row, tap the round camera to take one or the round picture to choose one from your photo library. It shows small on the row; open the expense and tap it to see it big. “Remove photo” takes it away. One photo per expense, kept on this iPhone only.",
+            "A photo with an expense: on the check sheet, in the Photo row, tap the round camera to take one or the round picture to choose one from your photo library. It shows small on the row; open the expense and tap it to see it big. “Remove photo” takes it away. One photo per expense, kept with the expense on this iPhone.",
+            "A photo you take with the camera in the app is also saved to Apple Photos (your photo library). The first time, the iPhone asks if the app may add photos. A photo you choose from the library is not saved again. If you say no, the photo still stays with the expense.",
             "Under Today, a small grey “Yesterday ›”: tap it to fold yesterday’s expenses open, tap again to fold them away. Tap one to change it, swipe left to delete it.",
+            "When Yesterday is open, the first thing under it is a card like Today’s: yesterday’s total in large numbers and under it how many expenses, for example “3 expenses”. There are no week bars on it. If nothing was logged yesterday, it says “Nothing was logged yesterday.”",
         ]),
         Section(title: "Categories", lines: [
             "The last line of the check sheet is the category: tap it and choose one, or “New category…” to add one.",
@@ -153,6 +161,8 @@ enum Guide {
         ]),
         Section(title: "Place visited", lines: [
             "The last line of the check sheet is the place you visited, for example “ICA Odenplan”. Tap it and choose a place, or type a new one on the top line (“New place”) and tap Add.",
+            "At the top of the place page is a search field, “Search places”. Type some letters and the Nearby and Other places lists show only the names that contain them (capitals do not matter). Clear the field to see all places again. “New place” and None stay.",
+            "Each place shows on the right, in grey, how far away it is: for example “80 m” (under 1 km, rounded to 10 m), “3.4 km” (under 10 km) or “25 km” (10 km and more). It is the distance from where this expense was logged to the nearest spot where you used that place before. A place with no position, or an expense without a position, shows no distance.",
             "Every new expense keeps its GPS position. The places you used near it are listed first, under Nearby; the others follow, the latest first.",
             "At the same spot again (within about 150 metres), the place is filled in by itself. You can change it before Save.",
             "Without a position (location turned off, or an expense from before 1.7) there is no Nearby list; the places are all still there.",

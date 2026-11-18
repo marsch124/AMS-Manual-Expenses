@@ -122,6 +122,22 @@ struct ContentView: View {
                         if yesterdays.isEmpty {
                             Text("Nothing was logged yesterday.").foregroundStyle(.secondary)
                                 .accessibilityIdentifier("yesterday-empty")
+                        } else {
+                            // 1.15 (his ask): a summary like Today's — the total big, and how many.
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(yesterdayTotal)
+                                    .font(.system(size: 34, weight: .bold, design: .rounded))
+                                    .monospacedDigit()
+                                    .minimumScaleFactor(0.6)
+                                    .lineLimit(1)
+                                    .accessibilityIdentifier("yesterday-total")
+                                Text(yesterdays.count == 1 ? "1 expense" : "\(yesterdays.count) expenses")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                                    .accessibilityIdentifier("yesterday-count")
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                         }
                         ForEach(Array(yesterdays.enumerated()), id: \.element.id) { index, expense in
                             Button { draft = Draft(editing: expense) } label: { ExpenseRow(expense: expense) }
@@ -325,6 +341,11 @@ struct ContentView: View {
             return WeekBars.Day(date: day, kronor: kronor,
                                 isToday: calendar.isDateInToday(day), isFuture: day > Date() && !calendar.isDateInToday(day))
         }
+    }
+
+    /// 1.15: yesterday's total in kronor, the same way.
+    private var yesterdayTotal: String {
+        yesterdays.isEmpty ? "" : Money.text(Statistics.total(yesterdays.map(\.spend), rates: rates.table, calendar: .current))
     }
 
     /// Today's total in kronor (1.2: other currencies at the bank's rate of their day).

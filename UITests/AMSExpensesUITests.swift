@@ -409,6 +409,9 @@ final class AMSExpensesUITests: XCTestCase {
         let row = app.buttons["yesterday-row-0"]
         XCTAssertTrue(row.waitForExistence(timeout: 10), "a tap did not open yesterday")
         XCTAssertTrue(row.label.contains("Taxi"), "the row reads '\(row.label)'")
+        // 1.15: the summary card, like Today's.
+        XCTAssertTrue(app.staticTexts["yesterday-total"].label.contains("300"), "no yesterday total")
+        XCTAssertEqual(app.staticTexts["yesterday-count"].label, "1 expense")
 
         toggle.tap()
         expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: row)

@@ -311,3 +311,34 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
   `CameraGlyph` = the library's camera; `PictureGlyph` is new (frame, two hills, sun) and not yet
   in the library.
 
+
+## 1.15 · Yesterday summary, place search and distance, photos to Apple Photos
+
+- **Yesterday card** (adds to §4 and 1.14; the grey `yesterday-toggle` line stays as it is). When open,
+  the first row under it is a summary card like Today's but without the week bars: yesterday's total
+  in kronor in large numbers (`yesterday-total`, §9, same look as the Today card) and under it the
+  count as "1 expense" / "N expenses" (`yesterday-count`). Then yesterday's expenses
+  (`yesterday-row-0` …) as before. Nothing logged yesterday: no card, only "Nothing was logged
+  yesterday." (`yesterday-empty`). Folded: no card.
+- **Place search** (adds to §13, `PlaceChooser`): the system search bar at the top of the place page,
+  prompt "Search places". Typing filters the Nearby and Other places lists to the names that contain
+  the typed letters, ignoring capitals (a contains match, not only the start). Empty field = all
+  places again. The "New place" line (`place-new-name`, `place-new-add`) and None
+  (`place-choice-none`) are never filtered. A name that does not match is not shown, and the numbering
+  `place-choice-N` follows the shown list.
+- **Place distance** (adds to §13): each place row shows its distance on the right, in grey, identifier
+  `place-distance-N` on the distance of choice N (the same N as `place-choice-N`). Value = metres from
+  this expense's fix to the nearest earlier spot where that place was used (the nearest expense with
+  that place and a fix; `Places.nearest`). Format: under 1 km: metres rounded to 10 m ("80 m");
+  from 1 km to under 10 km: one decimal ("3.4 km"); from 10 km: whole kilometres ("25 km"). A
+  place with no expense that has a position, or an expense (draft) without a fix: no distance, and no
+  `place-distance-N` element. None and "New place" have no distance.
+- **Photos to Apple Photos** (adds to 1.13): a photo taken with the in-app camera is also saved to the
+  photo library (add-only access, `PHPhotoLibrary` `.addOnly`). The first save makes iOS ask for
+  permission. A photo chosen from the library is never saved again. If permission is refused, or the
+  save fails, nothing is shown and the photo stays with the expense as before. The saved copy is
+  independent: removing the photo from the expense, or deleting the expense, does not remove it from
+  Apple Photos.
+- Permission text, `NSPhotoLibraryAddUsageDescription`: "Photos you take in the app are also saved to
+  your photo library."
+- Guide (How it works): the Today, Place visited and photo lines are updated for all four changes.
