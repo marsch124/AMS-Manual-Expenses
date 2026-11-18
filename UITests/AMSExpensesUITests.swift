@@ -415,6 +415,10 @@ final class AMSExpensesUITests: XCTestCase {
         // 1.14 (his ask): almost invisible — no count, no sum.
         XCTAssertFalse(toggle.label.contains("expense") || toggle.label.contains("SEK"), "the Yesterday line reads '\(toggle.label)'")
         XCTAssertFalse(app.buttons["yesterday-row-0"].exists, "yesterday is not folded at the start")
+        // 1.18: the quiet This week line (yesterday's taxi counts unless today is a Monday).
+        if Calendar.current.component(.weekday, from: Date()) != Calendar.current.firstWeekday {
+            XCTAssertTrue(app.staticTexts["this-week-summary"].label.contains("1 expense"), "no This week line")
+        }
         XCTAssertTrue(app.staticTexts["today-empty"].exists, "yesterday's taxi was counted as today")
 
         toggle.tap()

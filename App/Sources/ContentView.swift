@@ -38,6 +38,11 @@ struct ContentView: View {
     private var todays: [Expense] { expenses.filter { Calendar.current.isDateInToday($0.date) } }
     /// 1.12: yesterday's expenses, newest first, for the folded Yesterday section.
     private var yesterdays: [Expense] { expenses.filter { Calendar.current.isDateInYesterday($0.date) } }
+    /// 1.18: this week's expenses, Monday to now.
+    private var thisWeeks: [Expense] {
+        let week = Statistics.range(.thisWeek, now: Date(), calendar: .current).interval
+        return expenses.filter { $0.date >= week.start && $0.date < week.end }
+    }
     /// 1.16: last week's expenses (Monday to Sunday before this week).
     private var lastWeeks: [Expense] {
         let week = Statistics.range(.lastWeek, now: Date(), calendar: .current).interval
@@ -109,6 +114,17 @@ struct ContentView: View {
                 // 1.12 (his ask): yesterday, folded under Today — a quick look back to check
                 // that everything was entered. Folded again every time the app starts.
                 Section {
+                    // 1.18 (his pick): this week's total and count, a quiet line to read.
+                    if !thisWeeks.isEmpty {
+                        Text("This week · \(Money.text(Statistics.total(thisWeeks.map(\.spend), rates: rates.table, calendar: .current))) · "
+                             + (thisWeeks.count == 1 ? "1 expense" : "\(thisWeeks.count) expenses"))
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .listRowBackground(Color.clear)
+                            .listRowInsets(EdgeInsets(top: 2, leading: 20, bottom: 2, trailing: 16))
+                            .accessibilityIdentifier("this-week-summary")
+                    }
                     Button {
                         withAnimation { showYesterday.toggle() }
                     } label: {

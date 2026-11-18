@@ -9,6 +9,9 @@ struct Release {
 
 enum Releases {
     static let all: [Release] = [
+        Release(version: "1.18", date: "18 November 2026", lines: [
+            "Main screen: a new small grey line just above “Yesterday ›”, for example “This week · SEK 1 234 · 12 expenses” — this week’s total in kronor and how many, Monday to today. It is only a line to read. It is hidden when nothing was logged this week. The Today card with its small week bars stays as it is.",
+        ]),
         Release(version: "1.17", date: "18 November 2026", lines: [
             "Last week now folds open like Yesterday: tap the small grey “Last week · …” line and last week’s expenses show under it, newest first. Tap it again to fold them away. It starts folded every time you open the app. Tap an expense to change it; swipe it to the left to delete it.",
             "The Place page has a small map at the bottom, under the list. Each place with a GPS position shows as a small dot with its name, where you used it last; the teal dot is where this expense was logged. Tap a name on the map to choose that place. The map follows the search: only the places still in the list are on it.",
@@ -152,6 +155,7 @@ enum Guide {
             "Save gives a short vibration and shows “Saved”.",
             "A photo with an expense: on the check sheet, in the Photo row, tap the round camera to take one or the round picture to choose one from your photo library. It shows small on the row; open the expense and tap it to see it big. “Remove photo” takes it away. One photo per expense, kept with the expense on this iPhone.",
             "A photo you take with the camera in the app is also saved to Apple Photos (your photo library). The first time, the iPhone asks if the app may add photos. A photo you choose from the library is not saved again. If you say no, the photo still stays with the expense.",
+            "Just above the small grey “Yesterday ›” is a quiet grey line, “This week”, with this week’s total in kronor and how many expenses, for example “This week · SEK 1 234 · 12 expenses”. This week is Monday to today. It is only a line to read, not a button. If nothing was logged this week, it is not shown.",
             "Under Today, a small grey “Yesterday ›”: tap it to fold yesterday’s expenses open, tap again to fold them away. Tap one to change it, swipe left to delete it.",
             "When Yesterday is open, the first thing under it is a card like Today’s: yesterday’s total in large numbers and under it how many expenses, for example “3 expenses”. There are no week bars on it. If nothing was logged yesterday, it says “Nothing was logged yesterday.”",
             "Under “Yesterday ›” is a second small grey line, “Last week”, with last week’s total in kronor and how many expenses, for example “Last week · SEK 1 234 · 12 expenses”. Last week is the week before this one, Monday to Sunday. It has a small arrow like Yesterday: tap it and last week’s expenses fold open under it, the newest first; tap again to fold them away. It is folded every time the app opens. Tap an expense to change it, swipe it to the left to delete it. If nothing was logged last week, it is not shown.",

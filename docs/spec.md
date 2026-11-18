@@ -391,3 +391,17 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
   place ever used with a position). If only the expense has a position, the map shows just the teal dot;
   if only places have one, just their dots.
 - Guide (How it works): the Today line (Last week) and the Place visited line (map) are updated.
+
+## 1.18 · This week line
+
+- **This week line** (adds to the Today screen, 1.15 to 1.17): on the main screen, just above the small
+  grey "Yesterday ›" line, there is a new small grey line, for example
+  "This week · SEK 1 234 · 12 expenses" (1 expense: "1 expense"). Identifier `this-week-summary`.
+- This week = Monday to today. The total is in kronor (expenses in other currencies at the bank's rate
+  of their day, as everywhere). The number is how many expenses were logged in that time.
+- It is just a line to read: not a button, it does not open or fold anything. Same quiet small grey look
+  as "Yesterday ›" and the "Last week" line.
+- Nothing logged this week (for example on a Monday morning before the first expense): the line is not
+  shown.
+- The Today card with its small week bars stays exactly as it was.
+- Guide (How it works): a new line for "This week", next to the Yesterday and Last week lines.
