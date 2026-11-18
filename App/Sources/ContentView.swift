@@ -25,6 +25,8 @@ struct ContentView: View {
     @State private var showSaved = false
     /// 1.12: the Yesterday section starts folded.
     @State private var showYesterday = false
+    /// 1.17: the Last week section starts folded too.
+    @State private var showLastWeek = false
 
     private var autoCurrency: String {
         location.currency ?? CurrencyDefaults.currency(forTimeZone: TimeZone.current.identifier) ?? "SEK"
@@ -127,13 +129,40 @@ struct ContentView: View {
                     .listRowInsets(EdgeInsets(top: 2, leading: 20, bottom: 2, trailing: 16))
                     .accessibilityIdentifier("yesterday-toggle")
                     // 1.16 (his pick): a second quiet line — last week's total and count, just to read.
+                    // 1.17 (his pick): it folds open like Yesterday.
                     if !lastWeeks.isEmpty {
-                        Text("Last week · \(lastWeekTotal) · " + (lastWeeks.count == 1 ? "1 expense" : "\(lastWeeks.count) expenses"))
+                        Button {
+                            withAnimation { showLastWeek.toggle() }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text("Last week · \(lastWeekTotal) · " + (lastWeeks.count == 1 ? "1 expense" : "\(lastWeeks.count) expenses"))
+                                    .accessibilityIdentifier("last-week-summary")
+                                Image(systemName: "chevron.right")
+                                    .font(.caption2.weight(.semibold))
+                                    .rotationEffect(.degrees(showLastWeek ? 90 : 0))
+                                Spacer()
+                            }
                             .font(.footnote)
                             .foregroundStyle(.secondary)
-                            .listRowBackground(Color.clear)
-                            .listRowInsets(EdgeInsets(top: 2, leading: 20, bottom: 2, trailing: 16))
-                            .accessibilityIdentifier("last-week-summary")
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets(top: 2, leading: 20, bottom: 2, trailing: 16))
+                        .accessibilityIdentifier("last-week-toggle")
+                        if showLastWeek {
+                            ForEach(Array(lastWeeks.sorted { $0.date > $1.date }.enumerated()), id: \.element.id) { index, expense in
+                                Button { draft = Draft(editing: expense) } label: { ExpenseRow(expense: expense) }
+                                    .tint(.primary)
+                                    .listRowInsets(EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16))
+                                    .accessibilityIdentifier("last-week-row-\(index)")
+                                    .swipeActions(edge: .trailing) {
+                                        Button(role: .destructive) { context.delete(expense) } label: {
+                                            Label("Delete", systemImage: "trash")
+                                        }
+                                    }
+                            }
+                        }
                     }
                     if showYesterday {
                         if yesterdays.isEmpty {

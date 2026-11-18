@@ -288,6 +288,10 @@ final class AMSExpensesUITests: XCTestCase {
         XCTAssertTrue(first.label.contains("ICA Odenplan"), "the first place reads '\(first.label)'")
         // 1.15: with its distance; 1.16: Nearest first keeps it on top and flips the button.
         XCTAssertTrue(first.label.contains("0 m"), "no distance on the place: '\(first.label)'")
+        // 1.17: the small map is at the bottom.
+        app.swipeUp()
+        XCTAssertTrue(app.descendants(matching: .any)["place-map"].firstMatch.waitForExistence(timeout: 5), "no map on the Place page")
+        app.swipeDown()
         let sort = app.buttons["place-sort"]
         XCTAssertTrue(sort.waitForExistence(timeout: 10), "no Nearest first button")
         sort.tap()

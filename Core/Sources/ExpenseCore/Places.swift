@@ -86,6 +86,18 @@ public enum Places {
         return "\(Int((metres / 1000).rounded())) km"
     }
 
+    /// 1.17 (his pick): where each place sits on the Place page's map — the GPS fix of its
+    /// most recent use that has one, keyed by the lowercased name.
+    public static func spots(history: [Visit]) -> [String: Fix] {
+        var out: [String: (fix: Fix, date: Date)] = [:]
+        for v in history {
+            let key = v.place.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            guard !key.isEmpty, let f = v.fix else { continue }
+            if out[key] == nil || v.date > out[key]!.date { out[key] = (f, v.date) }
+        }
+        return out.mapValues(\.fix)
+    }
+
     /// 1.16 (his pick): "Nearest first" — the names by distance, nearest first; names
     /// without a distance keep their order at the end.
     public static func byDistance(_ names: [String], distances: [String: Double]) -> [String] {

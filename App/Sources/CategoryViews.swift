@@ -313,6 +313,8 @@ struct PlaceChooser: View {
         let c = (near: Places.matching(all.near, search: search), other: Places.matching(all.other, search: search))
         let far = distances
         let sorted = nearestFirst && fix != nil
+        let spots = Places.spots(history: visits)
+        let onMap = (c.near + c.other).compactMap { n in spots[n.lowercased()].map { (name: n, spot: $0) } }
         List {
             Section {
                 HStack {
@@ -353,6 +355,19 @@ struct PlaceChooser: View {
                     ForEach(Array(c.other.enumerated()), id: \.element) { index, name in
                         choice(name, value: name, id: "place-choice-\(c.near.count + index)", metres: far[name.lowercased()])
                     }
+                }
+            }
+            // 1.17 (his pick): a small map of the places still in the list, at the bottom
+            // so the list stays where it was on the half-height sheet.
+            if fix != nil || !onMap.isEmpty {
+                Section {
+                    PlacesMap(fix: fix, places: onMap, selection: selection) { name in
+                        selection = name
+                        dismiss()
+                    }
+                    .id(onMap.map(\.name).joined(separator: "|"))   // re-fits when the search changes
+                    .listRowInsets(EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4))
+                    .accessibilityIdentifier("place-map")
                 }
             }
             if !search.isEmpty, c.near.isEmpty, c.other.isEmpty {

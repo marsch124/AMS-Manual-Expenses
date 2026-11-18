@@ -15,7 +15,7 @@ extension Fix {
 }
 
 /// The teal dot with a white ring, drawn where the expense was logged.
-private struct FixDot: View {
+struct FixDot: View {
     var size: CGFloat = 16
     var body: some View {
         Circle()
@@ -23,6 +23,42 @@ private struct FixDot: View {
             .frame(width: size, height: size)
             .overlay(Circle().stroke(.white, lineWidth: size / 5))
             .shadow(radius: 1)
+    }
+}
+
+/// 1.17 (his pick): the small map at the top of the Place page — a dot with its name for
+/// each place still in the list, the teal dot for this expense. Tapping a name chooses it.
+struct PlacesMap: View {
+    let fix: Fix?
+    let places: [(name: String, spot: Fix)]
+    let selection: String
+    let choose: (String) -> Void
+
+    var body: some View {
+        Map(initialPosition: .automatic) {
+            ForEach(places, id: \.name) { p in
+                Annotation("", coordinate: p.spot.coordinate) {
+                    Button { choose(p.name) } label: {
+                        VStack(spacing: 2) {
+                            Text(p.name)
+                                .font(.caption2.weight(.semibold))
+                                .lineLimit(1)
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 2)
+                                .background(.background, in: Capsule())
+                                .foregroundStyle(p.name == selection ? Color.accentColor : .primary)
+                            Circle().fill(Color.accentColor.opacity(0.8)).frame(width: 8, height: 8)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            if let fix {
+                Annotation("", coordinate: fix.coordinate) { FixDot(size: 14) }
+            }
+        }
+        .frame(height: 150)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 }
 

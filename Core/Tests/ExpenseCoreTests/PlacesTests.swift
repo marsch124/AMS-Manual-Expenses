@@ -86,4 +86,17 @@ final class PlacesTests: XCTestCase {
         let d = ["b": 900.0, "a": 50.0]
         XCTAssertEqual(Places.byDistance(["X", "B", "Y", "A"], distances: d), ["A", "B", "X", "Y"])
     }
+
+    // 1.17: the map dot sits where the place was used last (with a GPS fix).
+    func testTheMapDotIsTheLatestSpotWithAFix() {
+        let history = [
+            Visit(place: "ICA Odenplan", fix: gamlaStan, date: date(1)),
+            Visit(place: "ica odenplan", fix: ica, date: date(2)),
+            Visit(place: "ICA Odenplan", fix: nil, date: date(3)),
+            Visit(place: "Hotel", fix: nil, date: date(4)),
+        ]
+        let s = Places.spots(history: history)
+        XCTAssertEqual(s["ica odenplan"], ica)
+        XCTAssertNil(s["hotel"])
+    }
 }

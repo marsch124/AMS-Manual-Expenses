@@ -366,3 +366,28 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
   It is just a line to read: not a button, it does not open or fold anything. Same small grey look as
   "Yesterday ›". Nothing logged last week: the line is not shown.
 - Guide (How it works): the Place visited and Today lines are updated for both changes.
+
+## 1.17 · Last week folds open, map on the place page
+
+- **Last week is a button** (changes 1.16, §1): the small grey "Last week · SEK 1 234 · 12 expenses" line
+  under "Yesterday ›" is now a button, identifier `last-week-toggle`, with a small arrow like
+  "Yesterday ›". Same small grey look and same text as before.
+- Tap it and last week's expenses fold open under it, the newest first. Rows are numbered
+  `last-week-row-N` in the shown order. Tap it again and they fold away.
+- It starts folded every time the app opens. The open or folded state is not remembered.
+- Tap an expense to change it (the same check sheet as for Today). Swipe it to the left to delete it.
+  Last week = the week before this one, Monday to Sunday, as in 1.16.
+- Nothing logged last week: the button is not shown, as before.
+- **Map on the place page** (adds to §13, §14, 1.15 and 1.16, `PlaceChooser`): at the bottom of the place
+  page, after the place lists, there is a small map, about 150 points high, identifier `place-map`.
+- For each place that has a GPS position the map shows a small dot with the place's name. The dot is at
+  the spot where that place was used most recently. A teal dot shows where this expense was logged.
+- Tap a place's name on the map to choose that place: the same as tapping it in the list (the page
+  closes with that place chosen).
+- The map follows the search ("Search places", 1.15): only the places still in the list are shown on
+  the map. Clear the field and all places with a position are back. The sort order (1.16) does not
+  change the map.
+- No map when no place and no expense has a GPS position (for example location turned off and no
+  place ever used with a position). If only the expense has a position, the map shows just the teal dot;
+  if only places have one, just their dots.
+- Guide (How it works): the Today line (Last week) and the Place visited line (map) are updated.
