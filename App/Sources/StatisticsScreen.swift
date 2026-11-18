@@ -48,6 +48,13 @@ struct StatisticsScreen: View {
 
     var body: some View {
         List {
+            // 1.19 (his picks): search every expense, and the month as a PDF.
+            Section {
+                NavigationLink { ExpenseSearchScreen() } label: { Text("Search expenses") }
+                    .accessibilityIdentifier("stats-search")
+                NavigationLink { ReportScreen() } label: { Text("Monthly report") }
+                    .accessibilityIdentifier("stats-report")
+            }
             Section("Totals") {
                 periodRow("This week", .thisWeek, id: "stats-week")
                 periodRow("This month", .thisMonth, id: "stats-month")

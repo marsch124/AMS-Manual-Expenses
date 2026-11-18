@@ -77,6 +77,30 @@ extension Expense {
     }
 }
 
+/// 1.19: everything a deleted expense had, so Undo can bring it back exactly.
+struct DeletedExpense {
+    let id = UUID()
+    let title: String, amount: Double, currency: String, date: Date, timeZoneID: String
+    let place: String, heard: String, createdAt: Date, category: String, consumer: String
+    let fix: Fix?, visitedPlace: String, photo: Data?, photoThumb: Data?
+
+    init(_ e: Expense) {
+        title = e.title; amount = e.amount; currency = e.currency; date = e.date; timeZoneID = e.timeZoneID
+        place = e.place; heard = e.heard; createdAt = e.createdAt; category = e.category; consumer = e.consumer
+        fix = e.fix; visitedPlace = e.visitedPlace; photo = e.photo; photoThumb = e.photoThumb
+    }
+
+    func restored() -> Expense {
+        let e = Expense(title: title, amount: amount, currency: currency, date: date, place: place, heard: heard,
+                        category: category, consumer: consumer, fix: fix, visitedPlace: visitedPlace)
+        e.timeZoneID = timeZoneID
+        e.createdAt = createdAt
+        e.photo = photo
+        e.photoThumb = photoThumb
+        return e
+    }
+}
+
 /// An expense being reviewed before it is saved.
 struct Draft: Identifiable {
     let id = UUID()

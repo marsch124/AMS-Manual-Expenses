@@ -508,4 +508,50 @@ final class AMSExpensesUITests: XCTestCase {
         expectation(for: NSPredicate(format: "label CONTAINS '170'"), evaluatedWith: week)
         waitForExpectations(timeout: 10)
     }
+
+    /// 1.19: search finds an expense, the monthly report offers its PDF, and a delete can be undone.
+    func testSearchReportAndUndo() {
+        let app = launch()
+        add(app, "Coffee 45 kronor")
+        add(app, "Taxi 300 kronor")
+
+        app.buttons["home-statistics"].tap()
+        XCTAssertTrue(app.buttons["stats-search"].waitForExistence(timeout: 10), "no Search expenses in Statistics")
+        app.buttons["stats-search"].tap()
+        let search = app.searchFields.firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 10), "the Search page has no search field")
+        search.tap()
+        search.typeText("taxi")
+        let found = app.buttons["search-row-0"]
+        XCTAssertTrue(found.waitForExistence(timeout: 10), "the search found nothing")
+        XCTAssertTrue(found.label.contains("Taxi"), "the search found '\(found.label)'")
+        XCTAssertFalse(app.buttons["search-row-1"].exists, "the search found too much")
+        // The search bar's own close button: "Close" on iOS 26+, "Cancel" before.
+        for name in ["Close", "Cancel"] where app.buttons[name].exists { app.buttons[name].tap(); break }
+        XCTAssertTrue(app.buttons["BackButton"].firstMatch.waitForExistence(timeout: 10), "no way back from Search")
+        app.buttons["BackButton"].firstMatch.tap()
+
+        XCTAssertTrue(app.buttons["stats-report"].waitForExistence(timeout: 10), "no Monthly report in Statistics")
+        app.buttons["stats-report"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["report-share"].firstMatch.waitForExistence(timeout: 10),
+                      "the report has no Share PDF button")
+        app.buttons["BackButton"].firstMatch.tap()
+        XCTAssertTrue(app.buttons["stats-search"].waitForExistence(timeout: 10))
+        app.buttons["BackButton"].firstMatch.tap()   // Statistics is pushed from the main screen
+
+        // Undo: swipe the first row away, then bring it back.
+        let row = app.buttons["expense-row-0"]
+        XCTAssertTrue(row.waitForExistence(timeout: 10))
+        row.swipeLeft()
+        app.buttons["Delete"].firstMatch.tap()
+        XCTAssertTrue(app.staticTexts["today-count"].label.contains("1 expense"), "the delete did not delete")
+        let undo = app.buttons["undo-button"]
+        XCTAssertTrue(undo.waitForExistence(timeout: 10), "no Undo after a delete")
+        undo.tap()
+        // The simulator can swallow the first touch after a swipe-delete; a second tap then takes.
+        sleep(1)
+        if undo.exists { undo.tap() }
+        expectation(for: NSPredicate(format: "label == '2 expenses'"), evaluatedWith: app.staticTexts["today-count"])
+        waitForExpectations(timeout: 10)
+    }
 }

@@ -1,3 +1,4 @@
+import ExpenseCore
 import SwiftUI
 
 /// Everything touched only now and then: the export, What's new, How it works and the
@@ -5,6 +6,9 @@ import SwiftUI
 struct SettingsScreen: View {
     @Environment(\.dismiss) private var dismiss
     let csv: String
+    /// 1.19: the weekly budget in kronor; 0 = none.
+    @AppStorage("weeklyBudget") private var weeklyBudget = 0.0
+    @State private var budgetText = ""
 
     var body: some View {
         NavigationStack {
@@ -19,6 +23,20 @@ struct SettingsScreen: View {
                     }
                     .accessibilityIdentifier("settings-export")
                 }
+                Section {
+                    HStack {
+                        Text("Weekly budget")
+                        TextField("None", text: $budgetText)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .accessibilityIdentifier("settings-budget")
+                            .onChange(of: budgetText) { _, text in weeklyBudget = Budget.parse(text) }
+                        Text("kr").foregroundStyle(.secondary)
+                    }
+                } footer: {
+                    Text("In kronor. The “This week” line on the main screen then says how much is left. Leave it empty for no budget.")
+                }
+                .onAppear { budgetText = weeklyBudget > 0 ? Draft.format(weeklyBudget) : "" }
                 Section("About") {
                     NavigationLink { WhatsNewScreen() } label: { Text("What's new") }
                         .accessibilityIdentifier("settings-whatsnew")

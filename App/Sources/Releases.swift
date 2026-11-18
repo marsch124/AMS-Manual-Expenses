@@ -9,6 +9,17 @@ struct Release {
 
 enum Releases {
     static let all: [Release] = [
+        Release(version: "1.19", date: "18 November 2026", lines: [
+            "Order under Today: the small grey “This week” line now sits under “Yesterday ›” and above “Last week”. Before, it was above Yesterday. When Yesterday is open, its expenses now show directly under it; before, they showed below the Last week line.",
+            "Same again on older rows: swipe a row under “Yesterday ›” or “Last week” to the right and tap “Same again”. The same expense is logged again now, today. Before, only Today’s rows had this.",
+            "Weekly budget: in Settings, “Weekly budget”, type an amount in kronor. The small grey “This week” line then ends with “· SEK 766 left”, or with “· SEK 120 over” in orange when this week is above the budget. Leave it empty or 0 for no budget; then the line is as before.",
+            "Search all expenses: in Statistics, tap “Search expenses”. Type one or more words and you see every expense where the description, category, place, town, who it was for, or the sentence you said contains all the words. Capitals and accents do not matter. Above the list: how many and their total, for example “3 expenses · SEK 245”. The newest is first; tap one to change it. Before, there was no search for expenses.",
+            "Place totals: in Settings › Places, each place now shows its total in kronor next to the number of expenses, for example “SEK 1 450 · 12”. Before, it showed only the number.",
+            "Photo zoom: in the big photo, pinch with two fingers to zoom in (up to 5 times) and drag to move around. Double-tap zooms to 2.5 times, and again to go back. Before, the photo could not be zoomed.",
+            "Monthly report: in Statistics, tap “Monthly report”. Choose “This month” or “Last month” and see the total, the number of expenses and the total for each category. Tap the “Share PDF” button to save or send a PDF (A4) with the total, the categories and every expense of the month: date, time, description, category, who for, place and amount. If nothing was logged, it says “Nothing was logged in this month.”",
+            "Favourites row: on the main screen, under the microphone and the typing line, there are up to three small buttons with the descriptions you log most, for example “Coffee”, “Lunch”, “Bus”. One tap opens the check sheet with that expense filled in for now: its latest amount, currency, category, who it was for and place — the same as “Same again”. Check it and tap Save. A description appears only after you logged it at least 3 times. Before, there was no such row.",
+            "Undo after delete: when you delete an expense on the main screen (Today, Yesterday or Last week), a small bar appears at the bottom for 6 seconds, for example “Deleted Coffee”, with an “Undo” button. Undo brings the expense back exactly as it was, with its photo. Before, a delete could not be taken back.",
+        ]),
         Release(version: "1.18", date: "18 November 2026", lines: [
             "Main screen: a new small grey line just above “Yesterday ›”, for example “This week · SEK 1 234 · 12 expenses” — this week’s total in kronor and how many, Monday to today. It is only a line to read. It is hidden when nothing was logged this week. The Today card with its small week bars stays as it is.",
         ]),
@@ -151,11 +162,15 @@ enum Guide {
             "The list shows today’s expenses and their total in kronor.",
             "The card at the top shows today’s total in large numbers and how many expenses, and on the right this week as small bars (today in strong colour).",
             "An amount in euros has its kronor under it (≈ SEK 125), at the bank’s rate of its day.",
-            "Tap an expense to change it. Swipe it to the left to delete it. Swipe it to the right (or open it and tap “Same again, now”) for the same expense again, now, opened for checking.",
+            "Tap an expense to change it. Swipe it to the left to delete it. Swipe it to the right (or open it and tap “Same again, now”) for the same expense again, now, opened for checking. Rows under “Yesterday ›” and “Last week” have it too: swipe to the right and tap “Same again”; the same expense is logged again today, now.",
             "Save gives a short vibration and shows “Saved”.",
+            "Under the microphone and the typing line there are up to three small buttons with the descriptions you log most often, for example “Coffee”, “Lunch”, “Bus”. One tap opens the check sheet with that expense filled in for now: its latest amount, currency, category, who it was for and place — the same as “Same again”. Check it and tap Save. A description is there only after it was logged at least 3 times.",
+            "When you delete an expense here (Today, Yesterday or Last week), a small bar appears at the bottom for 6 seconds: “Deleted Coffee” and “Undo”. Tap Undo and the expense comes back exactly as it was, with its photo.",
+            "Settings › Weekly budget: type an amount in kronor. The “This week” line then ends with “· SEK 766 left”, or “· SEK 120 over” in orange when this week is above the budget. Empty or 0 means no budget, and the line is as before.",
+            "In the big photo, pinch with two fingers to zoom in (up to 5 times) and drag to move around. Double-tap zooms to 2.5 times and back.",
             "A photo with an expense: on the check sheet, in the Photo row, tap the round camera to take one or the round picture to choose one from your photo library. It shows small on the row; open the expense and tap it to see it big. “Remove photo” takes it away. One photo per expense, kept with the expense on this iPhone.",
             "A photo you take with the camera in the app is also saved to Apple Photos (your photo library). The first time, the iPhone asks if the app may add photos. A photo you choose from the library is not saved again. If you say no, the photo still stays with the expense.",
-            "Just above the small grey “Yesterday ›” is a quiet grey line, “This week”, with this week’s total in kronor and how many expenses, for example “This week · SEK 1 234 · 12 expenses”. This week is Monday to today. It is only a line to read, not a button. If nothing was logged this week, it is not shown.",
+            "Just under the small grey “Yesterday ›” and above “Last week” is a quiet grey line, “This week”, with this week’s total in kronor and how many expenses, for example “This week · SEK 1 234 · 12 expenses”. This week is Monday to today. It is only a line to read, not a button. If nothing was logged this week, it is not shown.",
             "Under Today, a small grey “Yesterday ›”: tap it to fold yesterday’s expenses open, tap again to fold them away. Tap one to change it, swipe left to delete it.",
             "When Yesterday is open, the first thing under it is a card like Today’s: yesterday’s total in large numbers and under it how many expenses, for example “3 expenses”. There are no week bars on it. If nothing was logged yesterday, it says “Nothing was logged yesterday.”",
             "Under “Yesterday ›” is a second small grey line, “Last week”, with last week’s total in kronor and how many expenses, for example “Last week · SEK 1 234 · 12 expenses”. Last week is the week before this one, Monday to Sunday. It has a small arrow like Yesterday: tap it and last week’s expenses fold open under it, the newest first; tap again to fold them away. It is folded every time the app opens. Tap an expense to change it, swipe it to the left to delete it. If nothing was logged last week, it is not shown.",
@@ -181,7 +196,7 @@ enum Guide {
             "At the same spot again (within about 150 metres), the place is filled in by itself. You can change it before Save.",
             "Without a position (location turned off, or an expense from before 1.7) there is no Nearby list; the places are all still there.",
             "When the place was filled in by itself, “auto · 12 m away” beside it says how far away you used it before.",
-            "Settings › Places: tap a place to rename it (every expense moves with it; a name that is already there joins the two), swipe it to the left to delete it (its expenses keep no place, the expenses stay).",
+            "Settings › Places: each place shows its total in kronor and the number of expenses, for example “SEK 1 450 · 12”. Tap a place to rename it (every expense moves with it; a name that is already there joins the two), swipe it to the left to delete it (its expenses keep no place, the expenses stay).",
         ]),
         Section(title: "Maps", lines: [
             "Under the place, the check sheet shows a small map of where the expense was logged, the town, and how exact the position is (±8 m). Tap it for the big map.",
@@ -195,6 +210,8 @@ enum Guide {
             "Last 30 days: one bar per day.",
             "By category: a ring in the category colours, then each category with how many and its total, for the week, the month, last month or all time. Tap one to see its expenses.",
             "What you spend most on: the descriptions you use most often, how many times, and their total.",
+            "Search expenses: type one or more words; every expense whose description, category, place, town, who it was for or dictated sentence contains all of them is listed, the newest first, with “3 expenses · SEK 245” above. Capitals and accents do not matter. Tap one to change it.",
+            "Monthly report: choose This month or Last month to see the total, how many expenses and the total for each category. “Share PDF” makes an A4 PDF with the total, the categories and every expense of the month, to save or send.",
             "Earlier days: tap a day to see its expenses; tap one to change it, swipe to delete it.",
         ]),
         Section(title: "Kronor", lines: [

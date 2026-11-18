@@ -426,6 +426,7 @@ struct PlaceChooser: View {
 /// the two); swipe = delete after asking (its expenses keep no place, the expenses stay).
 /// There is no Add here: a place exists as long as an expense has it ("New place").
 struct PlacesScreen: View {
+    @EnvironmentObject private var rates: ExchangeRates
     @Query private var expenses: [Expense]
     @State private var deleting: String?
 
@@ -454,9 +455,12 @@ struct PlacesScreen: View {
                         HStack {
                             Text(name)
                             Spacer()
-                            Text("\(with(name).count)")
+                            // 1.19 (his pick): the place's total in kronor, then how many.
+                            Text(Money.kronor(Statistics.total(with(name).map(\.spend), rates: rates.table, calendar: .current).kronor)
+                                 + " · \(with(name).count)")
                                 .monospacedDigit()
                                 .foregroundStyle(.secondary)
+                                .accessibilityIdentifier("places-total-\(index)")
                         }
                     }
                     .accessibilityIdentifier("places-row-\(index)")

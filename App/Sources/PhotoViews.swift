@@ -128,13 +128,46 @@ struct PhotoSection: View {
 struct PhotoViewer: View {
     let image: UIImage
     @Environment(\.dismiss) private var dismiss
+    /// 1.19 (his pick): pinch to zoom (1× to 5×), drag to move, double-tap for 2.5× and back.
+    @State private var zoom: CGFloat = 1
+    @State private var zoomStart: CGFloat = 1
+    @State private var shift: CGSize = .zero
+    @State private var shiftStart: CGSize = .zero
 
     var body: some View {
         NavigationStack {
             Image(uiImage: image)
                 .resizable()
                 .scaledToFit()
+                .scaleEffect(zoom)
+                .offset(shift)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .contentShape(Rectangle())
+                .clipped()
+                .gesture(
+                    MagnifyGesture()
+                        .onChanged { zoom = min(5, max(1, zoomStart * $0.magnification)) }
+                        .onEnded { _ in
+                            zoomStart = zoom
+                            if zoom == 1 { withAnimation { shift = .zero }; shiftStart = .zero }
+                        }
+                        .simultaneously(with: DragGesture()
+                            .onChanged { v in
+                                guard zoom > 1 else { return }
+                                shift = CGSize(width: shiftStart.width + v.translation.width,
+                                               height: shiftStart.height + v.translation.height)
+                            }
+                            .onEnded { _ in shiftStart = shift })
+                )
+                .onTapGesture(count: 2) {
+                    withAnimation {
+                        zoom = zoom > 1 ? 1 : 2.5
+                        shift = .zero
+                    }
+                    zoomStart = zoom
+                    shiftStart = .zero
+                }
+                .accessibilityValue("zoom \(Int((zoom * 100).rounded()))")
                 .accessibilityLabel("Photo")
                 .accessibilityIdentifier("photo-viewer-image")
                 .navigationTitle("Photo")

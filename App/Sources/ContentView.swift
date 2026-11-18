@@ -27,6 +27,10 @@ struct ContentView: View {
     @State private var showYesterday = false
     /// 1.17: the Last week section starts folded too.
     @State private var showLastWeek = false
+    /// 1.19: the expense just deleted, for the Undo bar.
+    @State private var deleted: DeletedExpense?
+    /// 1.19: the weekly budget in kronor from Settings; 0 = none.
+    @AppStorage("weeklyBudget") private var weeklyBudget = 0.0
 
     private var autoCurrency: String {
         location.currency ?? CurrencyDefaults.currency(forTimeZone: TimeZone.current.identifier) ?? "SEK"
@@ -38,6 +42,35 @@ struct ContentView: View {
     private var todays: [Expense] { expenses.filter { Calendar.current.isDateInToday($0.date) } }
     /// 1.12: yesterday's expenses, newest first, for the folded Yesterday section.
     private var yesterdays: [Expense] { expenses.filter { Calendar.current.isDateInYesterday($0.date) } }
+    /// 1.19: "· SEK 766 left", or "· SEK 120 over" in orange; nothing without a budget.
+    private var budgetNote: Text {
+        let spent: Double = Statistics.total(thisWeeks.map(\.spend), rates: rates.table, calendar: .current).kronor
+        guard let left = Budget.left(budget: weeklyBudget, spent: spent) else { return Text("") }
+        return left >= 0 ? Text(" · \(Money.kronor(left)) left")
+                         : Text(" · \(Money.kronor(-left)) over").foregroundColor(.orange)
+    }
+
+    /// 1.19: up to three descriptions logged at least three times — each one's latest expense.
+    private var favourites: [Expense] {
+        Statistics.favourites(expenses.map(\.spend), limit: 3, rates: rates.table, calendar: .current)
+            .filter { $0.count >= 3 }
+            .compactMap { f in
+                expenses.filter { $0.title.trimmingCharacters(in: .whitespaces).lowercased() == f.title.lowercased() }
+                    .max { $0.date < $1.date }
+            }
+    }
+
+    /// 1.19: delete, and keep what it was for the Undo bar (6 s).
+    private func remove(_ e: Expense) {
+        let gone = DeletedExpense(e)
+        context.delete(e)
+        withAnimation { deleted = gone }
+        Task {
+            try? await Task.sleep(for: .seconds(ExpensesApp.uiTesting ? 20 : 6))
+            if deleted?.id == gone.id { withAnimation { deleted = nil } }
+        }
+    }
+
     /// 1.18: this week's expenses, Monday to now.
     private var thisWeeks: [Expense] {
         let week = Statistics.range(.thisWeek, now: Date(), calendar: .current).interval
@@ -56,7 +89,24 @@ struct ContentView: View {
         NavigationStack {
             List {
                 Section { header }
-                Section { dictation }
+                Section {
+                    dictation
+                    // 1.19 (his pick): the descriptions logged most often, one tap each.
+                    if !favourites.isEmpty {
+                        HStack(spacing: 8) {
+                            ForEach(Array(favourites.enumerated()), id: \.element.id) { index, e in
+                                Button(e.title) { sameAgain(e) }
+                                    .buttonStyle(.bordered)
+                                    .controlSize(.small)
+                                    .lineLimit(1)
+                                    .accessibilityIdentifier("favourite-\(index)")
+                            }
+                            Spacer(minLength: 0)
+                        }
+                        .listRowInsets(EdgeInsets(top: 2, leading: 16, bottom: 6, trailing: 16))
+                        .listRowSeparator(.hidden)
+                    }
+                }
                 Section {
                     if todays.isEmpty {
                         Text("No expenses yet today.").foregroundStyle(.secondary)
@@ -99,14 +149,14 @@ struct ContentView: View {
                             }
                             // A row with its own swipe actions loses the automatic Delete: so it is here too.
                             .swipeActions(edge: .trailing) {
-                                Button(role: .destructive) { context.delete(expense) } label: {
+                                Button(role: .destructive) { remove(expense) } label: {
                                     Label("Delete", systemImage: "trash")
                                 }
                             }
                     }
                     .onDelete { offsets in
                         let items = offsets.map { todays[$0] }
-                        for item in items { context.delete(item) }
+                        for item in items { remove(item) }
                     }
                 } header: {
                     Text("Today")
@@ -114,17 +164,6 @@ struct ContentView: View {
                 // 1.12 (his ask): yesterday, folded under Today — a quick look back to check
                 // that everything was entered. Folded again every time the app starts.
                 Section {
-                    // 1.18 (his pick): this week's total and count, a quiet line to read.
-                    if !thisWeeks.isEmpty {
-                        Text("This week · \(Money.text(Statistics.total(thisWeeks.map(\.spend), rates: rates.table, calendar: .current))) · "
-                             + (thisWeeks.count == 1 ? "1 expense" : "\(thisWeeks.count) expenses"))
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .listRowBackground(Color.clear)
-                            .listRowInsets(EdgeInsets(top: 2, leading: 20, bottom: 2, trailing: 16))
-                            .accessibilityIdentifier("this-week-summary")
-                    }
                     Button {
                         withAnimation { showYesterday.toggle() }
                     } label: {
@@ -144,7 +183,60 @@ struct ContentView: View {
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets(top: 2, leading: 20, bottom: 2, trailing: 16))
                     .accessibilityIdentifier("yesterday-toggle")
+                    if showYesterday {
+                        if yesterdays.isEmpty {
+                            Text("Nothing was logged yesterday.").foregroundStyle(.secondary)
+                                .accessibilityIdentifier("yesterday-empty")
+                        } else {
+                            // 1.15 (his ask): a summary like Today's — the total big, and how many.
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(yesterdayTotal)
+                                    .font(.system(size: 34, weight: .bold, design: .rounded))
+                                    .monospacedDigit()
+                                    .minimumScaleFactor(0.6)
+                                    .lineLimit(1)
+                                    .accessibilityIdentifier("yesterday-total")
+                                Text(yesterdays.count == 1 ? "1 expense" : "\(yesterdays.count) expenses")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                                    .accessibilityIdentifier("yesterday-count")
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                        }
+                        ForEach(Array(yesterdays.enumerated()), id: \.element.id) { index, expense in
+                            Button { draft = Draft(editing: expense) } label: { ExpenseRow(expense: expense) }
+                                .tint(.primary)
+                                .listRowInsets(EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16))
+                                .accessibilityIdentifier("yesterday-row-\(index)")
+                                // 1.19 (his pick): Same again on older rows too.
+                                .swipeActions(edge: .leading) {
+                                    Button { sameAgain(expense) } label: {
+                                        Label("Same again", systemImage: "arrow.clockwise")
+                                    }
+                                    .tint(.accentColor)
+                                }
+                                .swipeActions(edge: .trailing) {
+                                    Button(role: .destructive) { remove(expense) } label: {
+                                        Label("Delete", systemImage: "trash")
+                                    }
+                                }
+                        }
+                    }
                     // 1.16 (his pick): a second quiet line — last week's total and count, just to read.
+                    // 1.18 (his pick): this week's total and count, a quiet line to read.
+                    // 1.19 (his ask): under Yesterday, above Last week.
+                    if !thisWeeks.isEmpty {
+                        (Text("This week · \(Money.text(Statistics.total(thisWeeks.map(\.spend), rates: rates.table, calendar: .current))) · "
+                              + (thisWeeks.count == 1 ? "1 expense" : "\(thisWeeks.count) expenses"))
+                         + budgetNote)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .listRowBackground(Color.clear)
+                            .listRowInsets(EdgeInsets(top: 2, leading: 20, bottom: 2, trailing: 16))
+                            .accessibilityIdentifier("this-week-summary")
+                    }
                     // 1.17 (his pick): it folds open like Yesterday.
                     if !lastWeeks.isEmpty {
                         Button {
@@ -172,45 +264,18 @@ struct ContentView: View {
                                     .tint(.primary)
                                     .listRowInsets(EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16))
                                     .accessibilityIdentifier("last-week-row-\(index)")
+                                    .swipeActions(edge: .leading) {
+                                        Button { sameAgain(expense) } label: {
+                                            Label("Same again", systemImage: "arrow.clockwise")
+                                        }
+                                        .tint(.accentColor)
+                                    }
                                     .swipeActions(edge: .trailing) {
-                                        Button(role: .destructive) { context.delete(expense) } label: {
+                                        Button(role: .destructive) { remove(expense) } label: {
                                             Label("Delete", systemImage: "trash")
                                         }
                                     }
                             }
-                        }
-                    }
-                    if showYesterday {
-                        if yesterdays.isEmpty {
-                            Text("Nothing was logged yesterday.").foregroundStyle(.secondary)
-                                .accessibilityIdentifier("yesterday-empty")
-                        } else {
-                            // 1.15 (his ask): a summary like Today's — the total big, and how many.
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(yesterdayTotal)
-                                    .font(.system(size: 34, weight: .bold, design: .rounded))
-                                    .monospacedDigit()
-                                    .minimumScaleFactor(0.6)
-                                    .lineLimit(1)
-                                    .accessibilityIdentifier("yesterday-total")
-                                Text(yesterdays.count == 1 ? "1 expense" : "\(yesterdays.count) expenses")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-                                    .accessibilityIdentifier("yesterday-count")
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-                        }
-                        ForEach(Array(yesterdays.enumerated()), id: \.element.id) { index, expense in
-                            Button { draft = Draft(editing: expense) } label: { ExpenseRow(expense: expense) }
-                                .tint(.primary)
-                                .listRowInsets(EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16))
-                                .accessibilityIdentifier("yesterday-row-\(index)")
-                                .swipeActions(edge: .trailing) {
-                                    Button(role: .destructive) { context.delete(expense) } label: {
-                                        Label("Delete", systemImage: "trash")
-                                    }
-                                }
                         }
                     }
                 }
@@ -261,9 +326,45 @@ struct ContentView: View {
                     currencies: currencyOptions,
                     visits: expenses.map(\.visit),
                     onSave: save,
-                    onDelete: d.expense.map { e in { context.delete(e) } },
+                    onDelete: d.expense.map { e in { remove(e) } },
                     onSameAgain: d.expense.map { e in { sameAgain(e) } }
                 )
+            }
+        }
+        // 1.19 (his pick): Undo after a delete, a small bar at the bottom.
+        .overlay(alignment: .bottom) {
+            if let gone = deleted {
+                HStack(spacing: 12) {
+                    Text("Deleted \(gone.title)")
+                        .lineLimit(1)
+                        .accessibilityIdentifier("undo-text")
+                    Spacer(minLength: 8)
+                    Button {
+                        context.insert(gone.restored())
+                        withAnimation { deleted = nil }
+                    } label: {
+                        Text("Undo")
+                            .fontWeight(.semibold)
+                            .padding(.horizontal, 14)
+                            .frame(minHeight: 44)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .highPriorityGesture(TapGesture().onEnded {
+                        context.insert(gone.restored())
+                        withAnimation { deleted = nil }
+                    })
+                    .accessibilityIdentifier("undo-button")
+                }
+                .font(.subheadline)
+                .foregroundStyle(.white)
+                .padding(.leading, 16)
+                .padding(.trailing, 2)
+                .background(RoundedRectangle(cornerRadius: 12).fill(Color.accentColor))
+                .shadow(radius: 4)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 8)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
         // 1.9: a short vibration and a check mark when an expense is saved.

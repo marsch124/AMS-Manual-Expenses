@@ -405,3 +405,51 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
   shown.
 - The Today card with its small week bars stays exactly as it was.
 - Guide (How it works): a new line for "This week", next to the Yesterday and Last week lines.
+
+## 1.19 · Eight helpers: same again, budget, search, report, favourites, undo
+
+- **Same again on older rows** (adds to 1.12, 1.14, 1.17): rows under "Yesterday ›" and "Last week" get the
+  same right-swipe action "Same again" as Today's rows. It logs the same expense again with the time
+  now (today), the same description, amount, currency, category, who for and place as Today's "Same again".
+  Before, only Today's rows had it. Swipe to the left still deletes.
+- **Weekly budget** (adds to 1.18): Settings › "Weekly budget", a field for an amount in kronor, identifier
+  `settings-budget`. Empty or 0 = no budget. With a budget, the "This week · SEK 1 234 · 12 expenses" line
+  ends with "· SEK 766 left" (budget minus this week's total). If the total is above the budget it ends
+  with "· SEK 120 over", in orange. Without a budget the line is as in 1.18. The budget is kept on the
+  iPhone. The line is still hidden when nothing was logged this week.
+- **Search expenses**: Statistics › "Search expenses", identifier `stats-search`, opens a Search page with
+  a search field "Search expenses". The text is split into words; an expense is found when its
+  description, category, place visited, town, who it was for or dictated sentence contains every word.
+  Capitals and accents do not matter. Above the results: the count and the total in kronor, for example
+  "3 expenses · SEK 245" (`search-summary`). Results are newest first, rows `search-row-N`; tap one to
+  change it (the check sheet). Empty field: a hint line (`search-hint`). No match: "Nothing found."
+  (`search-empty`).
+- **Place totals** (adds to Settings › Places, 1.9): each place shows its total in kronor beside the number
+  of expenses, for example "SEK 1 450 · 12" (expenses in other currencies at the bank's rate of their
+  day, as everywhere). Identifier `places-total-N`. Before, only the number.
+- **Photo zoom** (adds to 1.13): in the big photo view, pinch with two fingers to zoom in, up to 5 times, and
+  drag to move around. Double-tap zooms to 2.5 times; double-tap again goes back to normal size. Before,
+  the photo could not be zoomed.
+- **Monthly report**: Statistics › "Monthly report", identifier `stats-report`, opens a page. A choice
+  "This month" / "Last month" (`report-month`) shows the month's total in kronor, the number of expenses
+  and the total for each category. The full-colour button "Share PDF" (`report-share`) makes an A4 PDF with
+  the total, the categories and every expense of the month (date, time, description, category, who for,
+  place, amount) and opens the share sheet to save or send it. An empty month shows "Nothing was logged in
+  this month." (`report-empty`).
+- **Favourites row**: on the main screen, under the microphone and the typing line, up to three small
+  buttons with the descriptions you log most often (for example "Coffee", "Lunch", "Bus"), identifiers
+  `favourite-0` to `favourite-2`. A description counts only when it was logged at least 3 times. One tap
+  opens the check sheet exactly like "Same again" on that description's latest expense (amount, currency,
+  category, who for, place visited; date = now); Save logs it. Nothing is logged without the check sheet. Before, no such row.
+- **Undo after delete**: after a delete on the main screen (Today, Yesterday or Last week) a small bar
+  (text `undo-text`) shows at the bottom for 6 seconds: "Deleted Coffee" and an "Undo" button (`undo-button`).
+  Undo brings the expense back exactly as it was, photo included. After 6 seconds, or when another
+  delete replaces it, the bar goes and the delete is final. Before, a delete could not be taken back.
+- Guide (How it works): the Today lines (Same again on older rows, favourites, undo, budget, photo zoom),
+  Place visited (place totals) and Statistics (search, report) are updated.
+- What's new: a 1.19 entry with one line per feature.
+- **Order under Today (1.19, his ask)**: "Yesterday ›" and, when open, its card and rows directly under
+  it; then the "This week" line; then "Last week" and, when open, its rows. (1.18 had This week above
+  Yesterday; 1.16–1.18 showed Yesterday's opened rows below the Last week line — a slip, fixed.)
+- **Undo button**: at least 44 points high. The UI test taps it a second time when the simulator
+  swallows the first touch after a swipe-delete.
