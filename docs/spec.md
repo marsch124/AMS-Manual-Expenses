@@ -507,3 +507,25 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
 - Guide: the This week and Last week texts now mention the weekday on each row and the whole "+ €8"; the
   "Signs in this app" entry about whole amounts adds the "+ €8" part.
 - What's new: a 1.21 entry with one line per change.
+
+## 1.22 · Total card with week bars inside This week and Last week
+
+- **This week card** (changes 1.20 "This week folds open"): when the This week button (`this-week-toggle`)
+  is open, the first thing under it is a summary card like Today's, before the rows `this-week-row-N`:
+  this week's total in large numbers in whole kronor ("901 kr", identifier `this-week-total`), under it the
+  count ("13 expenses", 1 = "1 expense", identifier `this-week-count`), and on the right seven small bars
+  (`this-week-bars`, same `WeekBars` as Today's): Monday to Sunday of this week (from the iPhone's first
+  weekday). Today full accent teal and its letter bold, earlier days light teal, days to come (and days with
+  nothing) a 4 pt grey stub; each bar's height = that day's kronor over the week's highest day.
+- **Last week card** (changes 1.17 "Last week folds open"): same card under the open Last week button:
+  `last-week-total` (last week's total, whole kronor), `last-week-count`, `last-week-bars`: the seven days
+  Monday to Sunday of last week, all light teal (none full teal, today is not in last week); a day with nothing
+  is a grey stub.
+- **Before** (1.17 to 1.21): opening them showed only the list of expenses, no total card, no bars.
+- **Unchanged**: Today's card (`today-week-bars` keeps its identifier), Yesterday's card (no bars), the grey
+  line texts, the weekly budget note (stays on the This week line, not in the card), the order under Today,
+  the folded start, rows and swipes, the whole amounts.
+- Guide: the This week and Last week texts describe the card; the "Signs in this app" week-bars entry says the
+  bars also appear in the opened This week and Last week cards (full teal = today; light teal = a day that has
+  passed; grey stub = nothing spent or still to come).
+- What's new: a 1.22 entry with one line per change.

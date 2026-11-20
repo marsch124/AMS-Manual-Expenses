@@ -417,6 +417,11 @@ final class AMSExpensesUITests: XCTestCase {
         let row = app.buttons["this-week-row-0"]
         XCTAssertTrue(row.waitForExistence(timeout: 10), "a tap did not open this week")
         XCTAssertTrue(row.label.contains("Coffee"), "the row reads '\(row.label)'")
+        // 1.22 (his ask): opened, it starts with the Today card for the week — total, count, day bars.
+        XCTAssertTrue(app.staticTexts["this-week-total"].exists, "no week total card")
+        XCTAssertEqual(app.staticTexts["this-week-count"].label, "1 expense")
+        XCTAssertTrue(app.otherElements["this-week-bars"].exists || app.descendants(matching: .any)["this-week-bars"].exists,
+                      "no day bars in the week card")
         XCTAssertTrue(row.label.contains("8") && !row.label.contains("7.5") && !row.label.contains("7,5"),
                       "not a whole euro: '\(row.label)'")
         // 1.21 (his yes): the row says which day, e.g. "Fri 11:49".

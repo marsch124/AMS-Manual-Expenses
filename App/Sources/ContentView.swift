@@ -252,6 +252,9 @@ struct ContentView: View {
                         .listRowInsets(EdgeInsets(top: 2, leading: 20, bottom: 2, trailing: 16))
                         .accessibilityIdentifier("this-week-toggle")
                         if showThisWeek {
+                            // 1.22 (his ask): the Today card for the whole week — total, count, the day bars.
+                            WeekCard(total: Money.text(Statistics.total(thisWeeks.map(\.spend), rates: rates.table, calendar: .current), whole: true),
+                                     count: thisWeeks.count, days: weekDays, name: "this-week")
                             ForEach(Array(thisWeeks.sorted { $0.date > $1.date }.enumerated()), id: \.element.id) { index, expense in
                                 Button { draft = Draft(editing: expense) } label: { ExpenseRow(expense: expense, wholeAmount: true, showsWeekday: true) }
                                     .tint(.primary)
@@ -293,6 +296,10 @@ struct ContentView: View {
                         .listRowInsets(EdgeInsets(top: 2, leading: 20, bottom: 2, trailing: 16))
                         .accessibilityIdentifier("last-week-toggle")
                         if showLastWeek {
+                            // 1.22 (his ask): the same card for last week.
+                            WeekCard(total: lastWeekTotal, count: lastWeeks.count,
+                                     days: weekDays(containing: Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()),
+                                     name: "last-week")
                             ForEach(Array(lastWeeks.sorted { $0.date > $1.date }.enumerated()), id: \.element.id) { index, expense in
                                 Button { draft = Draft(editing: expense) } label: { ExpenseRow(expense: expense, wholeAmount: true, showsWeekday: true) }
                                     .tint(.primary)
@@ -527,9 +534,12 @@ struct ContentView: View {
     }
 
     /// 1.10: this week, Monday (the iPhone's first weekday) to Sunday, in kronor per day.
-    private var weekDays: [WeekBars.Day] {
+    private var weekDays: [WeekBars.Day] { weekDays(containing: Date()) }
+
+    /// 1.22: the seven days of the week that holds `date` (this week or last week).
+    private func weekDays(containing date: Date) -> [WeekBars.Day] {
         let calendar = Calendar.current
-        guard let week = calendar.dateInterval(of: .weekOfYear, for: Date()) else { return [] }
+        guard let week = calendar.dateInterval(of: .weekOfYear, for: date) else { return [] }
         let spends = expenses.map(\.spend)
         return (0..<7).compactMap { offset -> WeekBars.Day? in
             guard let day = calendar.date(byAdding: .day, value: offset, to: week.start) else { return nil }
@@ -931,6 +941,37 @@ extension String {
     func ifEmpty(_ fallback: String) -> String { isEmpty ? fallback : self }
 }
 
+/// 1.22 (his ask): the Today card's look for an opened week — the total big, how many,
+/// and the week's seven bars on the right. `name` is "this-week" or "last-week".
+struct WeekCard: View {
+    let total: String
+    let count: Int
+    let days: [WeekBars.Day]
+    let name: String
+
+    var body: some View {
+        HStack(alignment: .center) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(total)
+                    .font(.system(size: 34, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                    .minimumScaleFactor(0.6)
+                    .lineLimit(1)
+                    .accessibilityIdentifier("\(name)-total")
+                Text(count == 1 ? "1 expense" : "\(count) expenses")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("\(name)-count")
+            }
+            Spacer(minLength: 12)
+            WeekBars(days: days,
+                     label: name == "last-week" ? "Last week by day" : "This week by day",
+                     identifier: "\(name)-bars")
+        }
+        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+    }
+}
+
 /// 1.10: the week's seven small bars on the Today card — today in full colour, earlier days
 /// lighter, days still to come a grey stub; each bar's height is its day's share of the
 /// week's highest day.
@@ -944,6 +985,8 @@ struct WeekBars: View {
     }
 
     let days: [Day]
+    var label = "This week by day"
+    var identifier = "today-week-bars"
     private let barHeight: CGFloat = 52
 
     var body: some View {
@@ -962,10 +1005,10 @@ struct WeekBars: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("This week by day")
+        .accessibilityLabel(label)
         .accessibilityValue(days.map { "\($0.date.formatted(.dateTime.weekday(.abbreviated))) \(Money.kronor($0.kronor))" }
             .joined(separator: ", "))
-        .accessibilityIdentifier("today-week-bars")
+        .accessibilityIdentifier(identifier)
     }
 
     private func height(_ day: Day, top: Double) -> CGFloat {
