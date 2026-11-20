@@ -277,8 +277,9 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
 - **Saved**: every Save (new or changed) gives the success vibration and shows "Saved"
   (`home-saved`) at the top for 2.5 s (15 s under `-uiTesting`, so the slow CI simulator sees it).
 - **Statistics**: above By category's rows a ring (`stats-category-ring`) of the span's
-  categories in their colours, the total and the span in the middle. Last 30 days: today's bar
-  full colour, the others lighter.
+  categories in their colours, the total and the span in the middle. Last 30 days: one bar per day; since 1.24
+  all bars, today's too, are light accent (0.35 opacity) and today has a bold accent "Today" above its
+  bar (before 1.24 today's bar was full colour, the others lighter at 0.4).
 - **App icon**: dark (light teal microphone on near-black) and tinted (white on black, the
   iPhone tints it) versions, both opaque like the main one.
 
@@ -482,7 +483,7 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
   with every mark and colour that means something and its meaning: the arrow › (folds open), the consumer
   tags (Martin blue, AMS yellow, Anna green, Others grey), the orange "over", the category round icon, the
   photo square on a row, "≈ … kr", whole amounts, the week bars (1.10 to 1.22: today strong teal, earlier days pale
-  teal, empty or future days grey; since 1.23 today's bar is pale too, only its letter is bold), "EUR · auto", "auto · 12 m away", the teal dot with white ring and the
+  teal, empty or future days grey; since 1.23 today's bar is pale too, only its letter is bold; the Last 30 days chart follows in 1.24: pale bars, bold "Today" word above today's), "EUR · auto", "auto · 12 m away", the teal dot with white ring and the
   small named dots on the place map, the numbered circles and grey "–" on the day map, the red microphone,
   the Undo bar, full vs light teal buttons.
 - Guide: the This week line, the Last week line (whole amounts) and the photo row text are updated.
@@ -547,7 +548,32 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
   This week and Last week cards): today's bar is the same light accent colour as the days that have passed.
   Only today's weekday letter under the bars stays bold accent colour. Days to come: grey stub; heights and
   the accessibility value ("Mon SEK 0, Tue SEK 125, …") unchanged. Before (1.10 to 1.22): today's bar was
-  full accent colour. (Statistics' Last 30 days chart is a different chart and is unchanged.)
+  full accent colour. (Statistics' Last 30 days chart is a different chart and was unchanged in 1.23; 1.24 brings it in line.)
 - Guide (How it works): the Today line, the This week and Last week texts, and "Signs in this app" (week-bars
   sign changed; new sign: light teal row = one of the week's five highest) are updated.
 - What's new: a 1.23 entry with one line per change.
+
+## 1.24 · "Today" word on the 30-day chart, note under the tinted week rows (his yes, 20 Nov 2026)
+
+- **Last 30 days chart** (`stats-chart`, Statistics §10; changes 1.9 and 1.23): today's bar is no longer full
+  accent colour. All bars, today's included, are the accent colour at 0.35 opacity (was 0.4 for the days other
+  than today, same value as the `WeekBars` since 1.23). Instead, today's bar carries a small bold accent-colour
+  "Today" above it (an annotation on today's bar mark, shown even when today's value is 0, so the stub is
+  still marked). Before (1.9 to 1.23): today's bar full accent colour, the others 0.4, no word. Day count (30,
+  today the last), bar heights, 0 for a day with nothing, and the identifier `stats-chart` are unchanged.
+- **One rule for today** (whole app): light bar, accent-colour marker text. Week bars (Today card, This week,
+  Last week): bold accent day letter (1.23). Last 30 days: bold accent word "Today" (1.24). No bar is full
+  colour any more.
+- **Note under the tinted rows** (adds to 1.23): in the opened This week and Last week cards, directly under
+  the count ("N expenses", `this-week-count` / `last-week-count`), when the week has MORE than five expenses
+  (the same condition as the tint in 1.23) a small line: a light teal swatch (small rounded square, accent at
+  the same opacity as the row tint) followed by "= the 5 highest" (caption size, secondary text colour).
+  Identifiers `this-week-top-note` and `last-week-top-note`. With five or fewer expenses (or none) the line is
+  not in the view at all, because no row is tinted then. Before (1.23): the tint had no explanation on the
+  screen, only in How it works. Today's and Yesterday's cards are unchanged.
+- Guide (How it works): Statistics (Last 30 days), This week and Last week texts; "Signs in this app": the
+  week-bars sign now also covers the "Today" word of the 30-day chart (a light bar there too, never full
+  teal), the tinted-row sign mentions the swatch line. No sign says a today bar is full teal any more.
+- What's new: a 1.24 entry with one line per change (before / now for both, plus the guide line).
+- Tests: one screen test finds `this-week-top-note` by its identifier (a week with more than five expenses)
+  and checks that it is absent with five or fewer.

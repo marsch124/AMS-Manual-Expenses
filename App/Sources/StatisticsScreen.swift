@@ -92,9 +92,19 @@ struct StatisticsScreen: View {
             }
             Section("Last 30 days") {
                 Chart(daily) { d in
-                    // 1.9: today's bar stronger than the others.
+                    // 1.24 (his yes): every bar light, like the week bars; today is marked by a
+                    // teal "Today" above its bar (1.9–1.23: today's bar was full colour).
                     BarMark(x: .value("Day", d.day, unit: .day), y: .value("Kronor", d.kronor))
-                        .foregroundStyle(calendar.isDateInToday(d.day) ? Color.accentColor : Color.accentColor.opacity(0.4))
+                        .foregroundStyle(Color.accentColor.opacity(0.35))
+                        .annotation(position: .top, spacing: 2,
+                                    overflowResolution: .init(x: .fit(to: .chart), y: .disabled)) {
+                            if calendar.isDateInToday(d.day) {
+                                Text("Today")
+                                    .font(.caption2.bold())
+                                    .foregroundStyle(Color.accentColor)
+                                    .accessibilityIdentifier("stats-chart-today")
+                            }
+                        }
                 }
                 .chartXAxis {
                     AxisMarks(values: .stride(by: .day, count: 7)) { _ in

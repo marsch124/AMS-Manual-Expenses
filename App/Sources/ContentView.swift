@@ -981,6 +981,20 @@ struct WeekCard: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .accessibilityIdentifier("\(name)-count")
+                // 1.24 (his yes): the screen says what the tinted rows are.
+                if count > 5 {
+                    HStack(spacing: 4) {
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(Color.accentColor.opacity(0.14))
+                            .overlay(RoundedRectangle(cornerRadius: 3).stroke(Color.accentColor.opacity(0.4), lineWidth: 0.5))
+                            .frame(width: 16, height: 10)
+                        Text("= the 5 highest")
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityIdentifier("\(name)-top-note")
+                }
             }
             Spacer(minLength: 12)
             WeekBars(days: days,

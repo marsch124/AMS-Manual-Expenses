@@ -420,6 +420,7 @@ final class AMSExpensesUITests: XCTestCase {
         // 1.22 (his ask): opened, it starts with the Today card for the week — total, count, day bars.
         XCTAssertTrue(app.staticTexts["this-week-total"].exists, "no week total card")
         XCTAssertEqual(app.staticTexts["this-week-count"].label, "1 expense")
+        XCTAssertFalse(app.descendants(matching: .any)["this-week-top-note"].exists, "a top-five line with one expense")
         XCTAssertTrue(app.otherElements["this-week-bars"].exists || app.descendants(matching: .any)["this-week-bars"].exists,
                       "no day bars in the week card")
         XCTAssertTrue(row.label.contains("8") && !row.label.contains("7.5") && !row.label.contains("7,5"),
@@ -444,6 +445,8 @@ final class AMSExpensesUITests: XCTestCase {
         let top = app.buttons["this-week-row-0"]       // Bus, newest
         XCTAssertTrue(top.waitForExistence(timeout: 10), "a tap did not open this week")
         XCTAssertEqual(top.value as? String, "Top five", "Bus 40 kr is one of the five highest")
+        // 1.24 (his yes): the card says what the tint means.
+        XCTAssertTrue(app.descendants(matching: .any)["this-week-top-note"].exists, "no '= the 5 highest' line")
         let tea = app.buttons["this-week-row-5"]       // Tea, oldest and smallest
         app.swipeUp()
         XCTAssertTrue(tea.waitForExistence(timeout: 10), "no sixth row")
