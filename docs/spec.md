@@ -231,7 +231,7 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
   amount, When, Place, Area, Position (`map-position`, six decimals), Accuracy (`map-accuracy`,
   when known); **Open in Maps** (`map-open`) opens `https://maps.apple.com/?ll=<lat>,<lon>&q=<place>`.
   Footer: "The position stays on this iPhone."
-- **B · Today on the map** (`TodayMapScreen`; since 1.25 titled "On the map" with a span switch `map-span`, see §1.25): today's expenses, oldest first, numbered 1, 2 …
+- **B · Today on the map** (`TodayMapScreen`; since 1.25 titled "On the map" with a span switch `map-span`, see §1.25) (since 1.26 pins coloured by day in the week spans, see §1.26): today's expenses, oldest first, numbered 1, 2 …
   only those with a fix; all on one map (fitted to them), then the list (`todaymap-row-0` …:
   number or a grey "–", description, time · place or "no position", amount) with Today's total
   in the header. A row with a fix opens C. Footer `todaymap-count`: "N of M have a position".
@@ -619,3 +619,24 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
 - Tests: one screen test finds the three `day-tile-*` buttons, opens This week, checks switching and the
   empty card; one test for the map switch `map-span`. Older tests that used `*-toggle` identifiers move to the
   tiles.
+
+## 1.26 · Map pins coloured by day (his ask, 20 Nov 2026)
+
+- **Day colours** (changes §14 B and 1.25): in the spans This week and Last week of `TodayMapScreen`
+  (`map-span`), each numbered pin has the colour of its weekday: Monday blue, Tuesday green, Wednesday orange,
+  Thursday purple, Friday pink, Saturday red, Sunday brown. Before (1.25) every pin was teal. Rule in Core:
+  `DayColours` (Core/Sources/ExpenseCore/DayColours.swift): `names` = ["blue","green","orange","purple","pink",
+  "red","brown"], Monday first; `name(for:calendar:)` gives a date's colour by its weekday, whatever the first
+  day of the week is.
+- **List numbers**: the round number at the left of each row (`todaymap-row-N`) has the same day colour as its
+  pin. A row without a position keeps the grey "-". Numbers still count oldest first across the whole span.
+- **Colour line** `todaymap-legend`, directly under the map: a small coloured dot and the short day name
+  ("● Mon ● Tue ..."), only for the days that have a pin, Monday first. Not shown in Today and Month.
+- **Today and Month unchanged**: pins and numbers teal, oldest first, no legend.
+- Guide (How it works): the map sentence mentions the day colours and the colour line; "Signs in this app": the
+  numbered circle takes the colour of its day in This week and Last week, the line under the map shows which
+  colour is which day.
+- What's new: a 1.26 entry (before / now for pins, list numbers, colour line, Today and Month, guide).
+- Tests: data test `testEachWeekdayHasItsOwnColour` (DayColoursTests.swift); screen test
+  `testTodayIsShownOnTheMap` also switches to This week and finds `todaymap-legend` with today's short weekday
+  in it.

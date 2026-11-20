@@ -406,6 +406,12 @@ final class AMSExpensesUITests: XCTestCase {
         // 1.25 (his ask): the map switches to This week, Last week and Month.
         let span = app.segmentedControls["map-span"]
         XCTAssertTrue(span.exists, "no Today / This week / Last week / Month switch on the map")
+        // 1.26 (his ask): This week colours the pins by day and says which colour is which day.
+        span.buttons["This week"].tap()
+        let legend = app.descendants(matching: .any)["todaymap-legend"]
+        XCTAssertTrue(legend.waitForExistence(timeout: 10), "no colour line under the week map")
+        let today = Date().formatted(.dateTime.weekday(.abbreviated))
+        XCTAssertTrue(legend.label.contains(today), "the colour line reads '\(legend.label)'")
         span.buttons["Last week"].tap()
         XCTAssertTrue(app.staticTexts["todaymap-empty"].waitForExistence(timeout: 10), "today's coffee shows under Last week")
         span.buttons["Month"].tap()

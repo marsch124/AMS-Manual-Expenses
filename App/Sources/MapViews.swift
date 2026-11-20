@@ -197,7 +197,7 @@ struct TodayMapScreen: View {
                                     .font(.footnote.bold())
                                     .foregroundStyle(.white)
                                     .frame(width: 28, height: 28)
-                                    .background(Circle().fill(Color.accentColor))
+                                    .background(Circle().fill(pinColour(row.expense)))
                                     .overlay(Circle().stroke(.white, lineWidth: 2))
                             }
                             .annotationTitles(.hidden)
@@ -207,6 +207,7 @@ struct TodayMapScreen: View {
                     .frame(height: 380)
                     .listRowInsets(EdgeInsets())
                     .accessibilityHidden(true)
+                    if byDay { legend(onMap.map(\.expense)) }
                 }
             } footer: {
                 Text("\(onMap.count) of \(rows.count) have a position")
@@ -238,6 +239,40 @@ struct TodayMapScreen: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
+    /// 1.26 (his ask): This week and Last week colour each pin, and its row's number, by its
+    /// weekday (`DayColours`: Monday blue … Sunday brown). Today and Month stay teal.
+    private var byDay: Bool { span == .thisWeek || span == .lastWeek }
+
+    private func pinColour(_ e: Expense) -> Color {
+        byDay ? Looks.color(DayColours.name(for: e.date, calendar: .current)) : Color.accentColor
+    }
+
+    /// The line under the map: a coloured dot and the short day name for each day with a pin,
+    /// Monday first.
+    private func legend(_ pinned: [Expense]) -> some View {
+        let calendar = Calendar.current
+        var firstOfDay: [Int: Date] = [:]
+        for e in pinned {
+            let i = DayColours.index(of: e.date, calendar: calendar)
+            if firstOfDay[i] == nil { firstOfDay[i] = e.date }
+        }
+        let days = firstOfDay.keys.sorted().map { (name: firstOfDay[$0]!.formatted(.dateTime.weekday(.abbreviated)),
+                                                   colour: DayColours.names[$0]) }
+        return HStack(spacing: 10) {
+            ForEach(days, id: \.name) { day in
+                HStack(spacing: 4) {
+                    Circle().fill(Looks.color(day.colour)).frame(width: 9, height: 9)
+                    Text(day.name).font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .lineLimit(1)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Pin colours: " + days.map { "\($0.name) \($0.colour)" }.joined(separator: ", "))
+        .accessibilityIdentifier("todaymap-legend")
+    }
+
     private func amountText(_ e: Expense) -> String {
         e.amount.formatted(.currency(code: e.currency))
     }
@@ -248,7 +283,7 @@ struct TodayMapScreen: View {
                 .font(.caption.bold())
                 .foregroundStyle(row.number == nil ? Color.secondary : Color.white)
                 .frame(width: 24, height: 24)
-                .background(Circle().fill(row.number == nil ? Color.secondary.opacity(0.2) : Color.accentColor))
+                .background(Circle().fill(row.number == nil ? Color.secondary.opacity(0.2) : pinColour(row.expense)))
             VStack(alignment: .leading, spacing: 2) {
                 Text(row.expense.title)
                 Text(subtitle(row.expense))

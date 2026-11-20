@@ -9,6 +9,13 @@ struct Release {
 
 enum Releases {
     static let all: [Release] = [
+        Release(version: "1.26", date: "20 November 2026", lines: [
+            "Map pins by day: in “This week” and “Last week” on the “On the map” screen, every numbered pin now has the colour of its weekday: Monday blue, Tuesday green, Wednesday orange, Thursday purple, Friday pink, Saturday red, Sunday brown. Before (1.25) all pins were teal, so you could not see which day a pin belonged to. Now you see at a glance where you were on which day.",
+            "Matching numbers in the list: the round number at the left of each row below the map has the same day colour as its pin, so a row and its pin match. Before, all the numbers were teal. A row without a position still has the grey “–”. The numbers still count oldest first across the whole week.",
+            "A colour line under the map: new, directly under the map, a small line explains the colours: a small coloured dot and the short day name (“● Mon ● Tue …”), Monday first, and only for the days that have a pin. Before, there was no such line. In Today and Month it is not shown.",
+            "Today and Month are unchanged: pins and numbers stay teal, numbered oldest first, and there is no colour line.",
+            "Guide: How it works (the map) now tells about the day colours and the colour line, and “Signs in this app” says that the numbered circle takes the colour of its day in This week and Last week.",
+        ]),
         Release(version: "1.25", date: "20 November 2026", lines: [
             "Three small cards under Today: before, “Yesterday ›”, “This week · 901 kr · 13 expenses ›” and “Last week · … ›” were three quiet grey lines, one under the other. Now they are three small cards on one line. Each card has its name in its own colour (Yesterday amber, This week teal, Last week indigo), the total in large, bold whole kronor (“901 kr”) and, underneath, for Yesterday how many expenses (“3 expenses”), for This week and Last week seven tiny bars, Monday to Sunday.",
             "Tap a card: it turns full colour with white writing and its expenses open right below it. Tap it again and it closes. Only one is open at a time: tap another card and it switches. All three are closed when the app opens. Before, each line folded open on its own and several could be open together. A card with no expenses shows “0 kr” and does nothing when you tap it; before, an empty line was simply not there.",
@@ -235,7 +242,7 @@ enum Guide {
         Section(title: "Maps", lines: [
             "Under the place, the check sheet shows a small map of where the expense was logged, the town, and how exact the position is (±8 m). Tap it for the big map.",
             "The big map shows the time, the place, the town, the position in numbers and how exact it is. Open in Maps opens Apple Maps at that spot.",
-            "The map button at the top of the main screen opens “On the map”. It starts on Today, and a switch at the top chooses Today, This week, Last week or Month (this calendar month). The pins (numbered in the order you paid, oldest first), the line “N of M have a position” and the list below follow the choice; the list header shows the choice’s name and its total. In This week and Last week a row shows the weekday and time (“Fri 10:24”); in Month the date and time (“20 Nov · 10:24”). One without a position has a grey “–” and is not on the map.",
+            "The map button at the top of the main screen opens “On the map”. It starts on Today, and a switch at the top chooses Today, This week, Last week or Month (this calendar month). The pins (numbered in the order you paid, oldest first), the line “N of M have a position” and the list below follow the choice; the list header shows the choice’s name and its total. In This week and Last week a row shows the weekday and time (“Fri 10:24”); in Month the date and time (“20 Nov · 10:24”). One without a position has a grey “–” and is not on the map. In This week and Last week each pin and its number in the list have the colour of their weekday (Monday blue, Tuesday green, Wednesday orange, Thursday purple, Friday pink, Saturday red, Sunday brown), and a small line under the map shows which colour is which day; Today and Month stay teal without that line.",
             "An expense without a position (location turned off, or from before 1.7) has no map.",
         ]),
         Section(title: "Statistics", lines: [
@@ -266,7 +273,7 @@ enum Guide {
             "A button like “EUR · auto”: the currency is chosen by itself. When you fix one by hand, “auto” is gone.",
             "“auto · 12 m away” beside a place: the place was filled in by itself, because you used it that far from here before.",
             "A small teal dot with a white ring on the place map: where this expense was logged. A small dot with a name: a place you used before. Tap the name to choose the place.",
-            "A numbered teal circle on the map: the order you paid in. A grey “–” means that expense has no position and is not on the map.",
+            "A numbered teal circle on the map: the order you paid in. In This week and Last week the circle has the colour of its day (Monday blue … Sunday brown); the line under the map shows which colour is which day. A grey “–” means that expense has no position and is not on the map.",
             "A red microphone or stop square: the app is listening now. Red text under the microphone: something went wrong, for example no microphone permission.",
             "The bar at the bottom with “Undo”: you just deleted an expense; tap Undo within 6 seconds to bring it back.",
             "A full teal button is the main action (for example Save, Take photo). A light teal button is the second choice (for example Choose photo).",
