@@ -84,7 +84,7 @@ struct ContentView: View {
         return expenses.filter { $0.date >= week.start && $0.date < week.end }
     }
     private var lastWeekTotal: String {
-        Money.text(Statistics.total(lastWeeks.map(\.spend), rates: rates.table, calendar: .current))
+        Money.text(Statistics.total(lastWeeks.map(\.spend), rates: rates.table, calendar: .current), whole: true)
     }
 
     var body: some View {
@@ -234,7 +234,7 @@ struct ContentView: View {
                             withAnimation { showThisWeek.toggle() }
                         } label: {
                             HStack(spacing: 4) {
-                                (Text("This week · \(Money.text(Statistics.total(thisWeeks.map(\.spend), rates: rates.table, calendar: .current))) · "
+                                (Text("This week · \(Money.text(Statistics.total(thisWeeks.map(\.spend), rates: rates.table, calendar: .current), whole: true)) · "
                                       + (thisWeeks.count == 1 ? "1 expense" : "\(thisWeeks.count) expenses"))
                                  + budgetNote)
                                     .accessibilityIdentifier("this-week-summary")
@@ -253,7 +253,7 @@ struct ContentView: View {
                         .accessibilityIdentifier("this-week-toggle")
                         if showThisWeek {
                             ForEach(Array(thisWeeks.sorted { $0.date > $1.date }.enumerated()), id: \.element.id) { index, expense in
-                                Button { draft = Draft(editing: expense) } label: { ExpenseRow(expense: expense, wholeAmount: true) }
+                                Button { draft = Draft(editing: expense) } label: { ExpenseRow(expense: expense, wholeAmount: true, showsWeekday: true) }
                                     .tint(.primary)
                                     .listRowInsets(EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16))
                                     .accessibilityIdentifier("this-week-row-\(index)")
@@ -294,7 +294,7 @@ struct ContentView: View {
                         .accessibilityIdentifier("last-week-toggle")
                         if showLastWeek {
                             ForEach(Array(lastWeeks.sorted { $0.date > $1.date }.enumerated()), id: \.element.id) { index, expense in
-                                Button { draft = Draft(editing: expense) } label: { ExpenseRow(expense: expense, wholeAmount: true) }
+                                Button { draft = Draft(editing: expense) } label: { ExpenseRow(expense: expense, wholeAmount: true, showsWeekday: true) }
                                     .tint(.primary)
                                     .listRowInsets(EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16))
                                     .accessibilityIdentifier("last-week-row-\(index)")
@@ -639,6 +639,8 @@ struct ExpenseRow: View {
     var showsDate = false
     /// 1.20 (his ask): the This week and Last week lists show €10, not €10,00.
     var wholeAmount = false
+    /// 1.21 (his yes): the week lists say which day — "Wed 10:24".
+    var showsWeekday = false
     @EnvironmentObject private var rates: ExchangeRates
 
     /// 1.9: "≈ SEK 125" under an amount in another currency, at its day's rate.
@@ -649,9 +651,11 @@ struct ExpenseRow: View {
     }
 
     private var when: String {
-        showsDate
-            ? expense.date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated).hour().minute())
-            : expense.date.formatted(.dateTime.hour().minute())
+        if showsDate { return expense.date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated).hour().minute()) }
+        if showsWeekday {
+            return expense.date.formatted(.dateTime.weekday(.abbreviated)) + " " + expense.date.formatted(.dateTime.hour().minute())
+        }
+        return expense.date.formatted(.dateTime.hour().minute())
     }
 
     var body: some View {

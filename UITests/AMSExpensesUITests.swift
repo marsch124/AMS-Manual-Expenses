@@ -419,6 +419,9 @@ final class AMSExpensesUITests: XCTestCase {
         XCTAssertTrue(row.label.contains("Coffee"), "the row reads '\(row.label)'")
         XCTAssertTrue(row.label.contains("8") && !row.label.contains("7.5") && !row.label.contains("7,5"),
                       "not a whole euro: '\(row.label)'")
+        // 1.21 (his yes): the row says which day, e.g. "Fri 11:49".
+        let day = Date().formatted(.dateTime.weekday(.abbreviated))
+        XCTAssertTrue(row.label.contains(day), "no weekday '\(day)' in '\(row.label)'")
         toggle.tap()
         expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: row)
         waitForExpectations(timeout: 10)

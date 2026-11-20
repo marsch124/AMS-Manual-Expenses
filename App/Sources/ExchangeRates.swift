@@ -62,10 +62,13 @@ enum Money {
         value.formatted(.currency(code: homeCurrency).precision(.fractionLength(0)))
     }
 
-    static func text(_ total: KronorTotal) -> String {
+    /// 1.21 (his yes): `whole` writes the part without a rate in whole units too, "+ €8" — for the week lines.
+    static func text(_ total: KronorTotal, whole: Bool = false) -> String {
         var parts = [kronor(total.kronor)]
         for (code, amount) in total.unconverted.sorted(by: { $0.key < $1.key }) {
-            parts.append("+ " + amount.formatted(.currency(code: code)))
+            parts.append("+ " + (whole
+                ? WholeAmount.rounded(amount).formatted(.currency(code: code).precision(.fractionLength(0)))
+                : amount.formatted(.currency(code: code))))
         }
         return parts.joined(separator: " ")
     }

@@ -486,3 +486,24 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
   the Undo bar, full vs light teal buttons.
 - Guide: the This week line, the Last week line (whole amounts) and the photo row text are updated.
 - What's new: a 1.20 entry with one line per change.
+
+## 1.21 · Day on week rows, whole extra amounts on the week lines
+
+- **Day on week rows** (changes 1.20 "This week folds open" and 1.18 "Last week folds open"): a row in the
+  opened This week and Last week lists now shows the short weekday, then the time, then the description, for
+  example "Wed 10:24 · Café". Before: "10:24 · Café". Code: `ExpenseRow(showsWeekday: true)` on the
+  `this-week-row-N` rows and on the Last week rows. Today's and Yesterday's rows keep `showsWeekday: false`
+  (the default) and show only the time, because the day is clear there. Nothing else on the row changes
+  (amount, tags, photo square, "≈ … kr", swipes, identifiers).
+- **Whole extra amounts on the week lines** (extends 1.20 "Whole amounts"): the grey "This week · …" and
+  "Last week · …" lines already showed the kronor total in whole kronor ("SEK 901"). When an expense has no
+  exchange rate yet (no internet, so it cannot be turned into kronor), the line adds that amount separately,
+  for example "+ €7.50". That part is now whole too: "+ €8". Code: `Money.text(_, whole: true)` in
+  `App/Sources/ExchangeRates.swift`, which uses `WholeAmount.rounded(_:)` (half away from zero, so €7.50 becomes
+  €8). Before: "+ €7.50". Everywhere else (Statistics, Monthly report, Search, the check sheet) this part keeps
+  its cents, because `whole` is false there by default.
+- **Unchanged**: the kronor total and count on the lines, the budget note ("· SEK 766 left" / "· SEK 120 over"),
+  the order under Today, the folded start, the whole amounts on the rows from 1.20, the stored amounts.
+- Guide: the This week and Last week texts now mention the weekday on each row and the whole "+ €8"; the
+  "Signs in this app" entry about whole amounts adds the "+ €8" part.
+- What's new: a 1.21 entry with one line per change.
