@@ -139,9 +139,29 @@ struct ExpenseMapScreen: View {
 
 /// B: today's expenses on one map, numbered in the order they were paid, with the list below.
 /// An expense without a position has a grey "–" and is not on the map.
+/// 1.25 (his ask): it opens on Today; a row at the top switches to This week, Last week or
+/// this Month — the map, the numbers and the list follow.
 struct TodayMapScreen: View {
-    let expenses: [Expense]
+    enum Span: String, CaseIterable, Identifiable {
+        case today = "Today", thisWeek = "This week", lastWeek = "Last week", month = "Month"
+        var id: String { rawValue }
+    }
+
+    /// Every expense; the screen picks the span's own.
+    let all: [Expense]
+    @State private var span: Span = .today
     @EnvironmentObject private var rates: ExchangeRates
+
+    private var expenses: [Expense] {
+        let calendar = Calendar.current
+        let now = Date()
+        switch span {
+        case .today: return all.filter { calendar.isDateInToday($0.date) }
+        case .thisWeek: return all.filter { Statistics.range(.thisWeek, now: now, calendar: calendar).interval.contains($0.date) }
+        case .lastWeek: return all.filter { Statistics.range(.lastWeek, now: now, calendar: calendar).interval.contains($0.date) }
+        case .month: return all.filter { Statistics.range(.thisMonth, now: now, calendar: calendar).interval.contains($0.date) }
+        }
+    }
 
     /// Oldest first; the number is only for those with a position.
     private var rows: [(expense: Expense, number: Int?)] {
@@ -157,9 +177,16 @@ struct TodayMapScreen: View {
         let rows = self.rows
         let onMap = rows.filter { $0.number != nil }
         List {
+            Picker("Show", selection: $span) {
+                ForEach(Span.allCases) { Text($0.rawValue).tag($0) }
+            }
+            .pickerStyle(.segmented)
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 4, trailing: 0))
+            .accessibilityIdentifier("map-span")
             Section {
                 if onMap.isEmpty {
-                    Text("No expense today has a position yet.")
+                    Text(span == .today ? "No expense today has a position yet." : "No expense in this time has a position yet.")
                         .foregroundStyle(.secondary)
                         .accessibilityIdentifier("todaymap-empty")
                 } else {
@@ -176,6 +203,7 @@ struct TodayMapScreen: View {
                             .annotationTitles(.hidden)
                         }
                     }
+                    .id(span)   // a new span = the map fits its own pins
                     .frame(height: 380)
                     .listRowInsets(EdgeInsets())
                     .accessibilityHidden(true)
@@ -200,13 +228,13 @@ struct TodayMapScreen: View {
                 }
             } header: {
                 HStack {
-                    Text("Today")
+                    Text(span.rawValue)
                     Spacer()
                     Text(Money.text(Statistics.total(expenses.map(\.spend), rates: rates.table, calendar: .current)))
                 }
             }
         }
-        .navigationTitle("Today on the map")
+        .navigationTitle("On the map")
         .navigationBarTitleDisplayMode(.inline)
     }
 
@@ -233,7 +261,12 @@ struct TodayMapScreen: View {
     }
 
     private func subtitle(_ e: Expense) -> String {
-        let time = e.date.formatted(.dateTime.hour().minute())
+        let time: String
+        switch span {
+        case .today: time = e.date.formatted(.dateTime.hour().minute())
+        case .thisWeek, .lastWeek: time = e.date.formatted(.dateTime.weekday(.abbreviated)) + " " + e.date.formatted(.dateTime.hour().minute())
+        case .month: time = e.date.formatted(.dateTime.day().month(.abbreviated)) + " · " + e.date.formatted(.dateTime.hour().minute())
+        }
         if e.fix == nil { return time + " · no position" }
         return e.visitedPlace.isEmpty ? time : time + " · " + e.visitedPlace
     }

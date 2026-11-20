@@ -26,8 +26,9 @@ One list, three parts:
    (plain view state, not remembered). Open: yesterday's expenses newest first (`yesterday-row-0` …,
    the same `ExpenseRow` as Today); a tap opens the editor, swipe left deletes. Open with none:
    "Nothing was logged yesterday." (`yesterday-empty`). Test: `testYesterdayFoldsOpenUnderToday`.
+   **Since 1.25 the Yesterday, This week and Last week lines are three small cards on one line (see §1.25); `yesterday-toggle`, `this-week-toggle`, `last-week-toggle` and the summary/week cards of 1.15, 1.17, 1.20 and 1.22 are replaced by `day-tile-*`.**
 
-Toolbar: the map (`home-map`, 1.8) opens Today on the map (§14). The globe (`home-language`) picks the dictation language — English (en-US),
+Toolbar: the map (`home-map`, 1.8) opens the map on Today (§14; since 1.25 it has a Today / This week / Last week / Month switch). The globe (`home-language`) picks the dictation language — English (en-US),
 Svenska (sv-SE), Deutsch (de-DE); stored as `dictationLanguage`. The chart
 (`home-statistics`) opens Statistics (§10). The gear (`home-settings`) opens Settings.
 
@@ -230,7 +231,7 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
   amount, When, Place, Area, Position (`map-position`, six decimals), Accuracy (`map-accuracy`,
   when known); **Open in Maps** (`map-open`) opens `https://maps.apple.com/?ll=<lat>,<lon>&q=<place>`.
   Footer: "The position stays on this iPhone."
-- **B · Today on the map** (`TodayMapScreen`): today's expenses, oldest first, numbered 1, 2 …
+- **B · Today on the map** (`TodayMapScreen`; since 1.25 titled "On the map" with a span switch `map-span`, see §1.25): today's expenses, oldest first, numbered 1, 2 …
   only those with a fix; all on one map (fitted to them), then the list (`todaymap-row-0` …:
   number or a grey "–", description, time · place or "no position", amount) with Today's total
   in the header. A row with a fix opens C. Footer `todaymap-count`: "N of M have a position".
@@ -577,3 +578,44 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
 - What's new: a 1.24 entry with one line per change (before / now for both, plus the guide line).
 - Tests: one screen test finds `this-week-top-note` by its identifier (a week with more than five expenses)
   and checks that it is absent with five or fewer.
+
+## 1.25 · Three small day cards, map by span (his asks, 20 Nov 2026; he picked the cards from a picture of 3 options)
+
+- **Three cards on one line** (replace the 1.12/1.14 Yesterday line, the 1.16-1.18 Last week and This week
+  lines and their 1.20 fold-open; §1 item 4, 1.15, 1.17, 1.18, 1.20, 1.22): under the Today card, three small
+  cards in one row, in the order Yesterday, This week, Last week. Each is a button: `day-tile-yesterday`,
+  `day-tile-this-week`, `day-tile-last-week`; its accessibility label reads e.g. "This week, 901 kr". Content:
+  its name in its own colour (Yesterday amber/orange, This week teal, Last week indigo), the total in whole
+  kronor, large and bold (§9 rates; an amount with no rate yet is added separately, whole, "+ €8"), and under
+  it: Yesterday "N expenses" (1: "1 expense"); This week and Last week seven tiny day bars Monday to Sunday (same
+  `WeekBars` look as 1.23: light, bold accent letter only for today, short grey stub for an empty or future day;
+  Last week has no today).
+- **Open and close**: tap a card = it turns full colour (its colour as background, white writing) and its
+  expenses open below it; tap again = closed. Only one is open at a time (tapping another switches). All closed on
+  launch (plain view state). A card with no expenses shows "0 kr" and a tap does nothing (it never opens).
+  Before: three grey lines with a chevron "›", each folding open on its own, hidden when empty.
+- **Rows** keep their identifiers `yesterday-row-N`, `this-week-row-N`, `last-week-row-N` and behaviour (tap to
+  edit; swipe left Delete with the 1.19 Undo bar; swipe right Same again; whole amounts and weekday + time on the
+  week rows, 1.20/1.21).
+- **Below an opened week** (This week / Last week): a small line with `this-week-count` / `last-week-count`
+  ("N expenses") and, with more than five expenses, `this-week-top-note` / `last-week-top-note` (swatch + "= the
+  5 highest", 1.24); the five highest rows keep the light teal tint (1.23). The big total + bars card of 1.22
+  (`this-week-total`, `last-week-total`, `this-week-bars`, `last-week-bars`) is gone: the tile carries total and
+  bars. Below an opened Yesterday: only yesterday's rows; the 1.15 summary card (`yesterday-total`,
+  `yesterday-count`) is gone (the tile shows total and count).
+- **Weekly budget** (changes 1.19): the "· SEK 766 left" / "· SEK 120 over" (orange) note no longer ends a grey
+  line; it shows in the opened This week's line with the number of expenses. Empty or 0 = no budget, as before.
+- **Map by span** (changes §14 B and 1.8): the map button (`home-map`) still opens on Today; a switch at the top
+  (`map-span`, segmented) chooses Today / This week / Last week / Month (this calendar month, from the 1st).
+  Pins, numbers (oldest first, only those with a fix), the count footer `todaymap-count` ("N of M have a
+  position") and the list (`todaymap-row-N`) follow the choice; the list header shows the choice's name and its
+  total. Row time text: Today "10:24 · place"; This week / Last week weekday + time ("Fri 10:24"); Month date +
+  time ("20 Nov · 10:24"). Navigation title "On the map" (was "Today on the map"). Empty span:
+  `todaymap-empty` with the span's wording. A row with a fix still opens C.
+- Guide (How it works): the Today section describes the three cards, the budget and the map; "Signs in this
+  app": the chevron sign is replaced by the card colours (amber = Yesterday, teal = This week, indigo = Last
+  week; full colour = the open one); week-bars, tinted-row, budget and map signs adjusted.
+- What's new: a 1.25 entry (before / now for the cards, open/close, week line, Yesterday, budget, map, guide).
+- Tests: one screen test finds the three `day-tile-*` buttons, opens This week, checks switching and the
+  empty card; one test for the map switch `map-span`. Older tests that used `*-toggle` identifiers move to the
+  tiles.

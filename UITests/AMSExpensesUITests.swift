@@ -403,6 +403,13 @@ final class AMSExpensesUITests: XCTestCase {
         let first = app.buttons["todaymap-row-0"]
         XCTAssertTrue(first.waitForExistence(timeout: 10), "the expense is not listed under the map")
         XCTAssertTrue(first.label.contains("Coffee"), "the row reads '\(first.label)'")
+        // 1.25 (his ask): the map switches to This week, Last week and Month.
+        let span = app.segmentedControls["map-span"]
+        XCTAssertTrue(span.exists, "no Today / This week / Last week / Month switch on the map")
+        span.buttons["Last week"].tap()
+        XCTAssertTrue(app.staticTexts["todaymap-empty"].waitForExistence(timeout: 10), "today's coffee shows under Last week")
+        span.buttons["Month"].tap()
+        XCTAssertTrue(app.buttons["todaymap-row-0"].waitForExistence(timeout: 10), "today's coffee is missing from Month")
     }
 
     /// 1.20 (his ask): This week folds open with all of this week's expenses, in whole euros.
@@ -410,19 +417,18 @@ final class AMSExpensesUITests: XCTestCase {
         let app = launch()
         add(app, "Coffee 7 euros 50")
 
-        let toggle = app.buttons["this-week-toggle"]
-        XCTAssertTrue(toggle.waitForExistence(timeout: 10), "there is no This week line")
+        // 1.25 (his pick): a small card instead of the line.
+        let toggle = app.buttons["day-tile-this-week"]
+        XCTAssertTrue(toggle.waitForExistence(timeout: 10), "there is no This week card")
         XCTAssertFalse(app.buttons["this-week-row-0"].exists, "this week is not folded at the start")
         toggle.tap()
         let row = app.buttons["this-week-row-0"]
         XCTAssertTrue(row.waitForExistence(timeout: 10), "a tap did not open this week")
         XCTAssertTrue(row.label.contains("Coffee"), "the row reads '\(row.label)'")
-        // 1.22 (his ask): opened, it starts with the Today card for the week — total, count, day bars.
-        XCTAssertTrue(app.staticTexts["this-week-total"].exists, "no week total card")
+        // 1.25: the card carries the total; opened, a line says how many.
+        XCTAssertTrue(toggle.label.hasPrefix("This week, ") && toggle.label.contains("75"), "the card reads '\(toggle.label)'")
         XCTAssertEqual(app.staticTexts["this-week-count"].label, "1 expense")
         XCTAssertFalse(app.descendants(matching: .any)["this-week-top-note"].exists, "a top-five line with one expense")
-        XCTAssertTrue(app.otherElements["this-week-bars"].exists || app.descendants(matching: .any)["this-week-bars"].exists,
-                      "no day bars in the week card")
         XCTAssertTrue(row.label.contains("8") && !row.label.contains("7.5") && !row.label.contains("7,5"),
                       "not a whole euro: '\(row.label)'")
         // 1.21 (his yes): the row says which day, e.g. "Fri 11:49".
@@ -439,8 +445,9 @@ final class AMSExpensesUITests: XCTestCase {
         for line in ["Tea 5 kronor", "Lunch 120 kronor", "Taxi 90 kronor", "Book 80 kronor", "Cake 60 kronor", "Bus 40 kronor"] {
             add(app, line)
         }
-        let toggle = app.buttons["this-week-toggle"]
-        XCTAssertTrue(toggle.waitForExistence(timeout: 10), "there is no This week line")
+        // 1.25 (his pick): a small card instead of the line.
+        let toggle = app.buttons["day-tile-this-week"]
+        XCTAssertTrue(toggle.waitForExistence(timeout: 10), "there is no This week card")
         toggle.tap()
         let top = app.buttons["this-week-row-0"]       // Bus, newest
         XCTAssertTrue(top.waitForExistence(timeout: 10), "a tap did not open this week")
@@ -458,14 +465,15 @@ final class AMSExpensesUITests: XCTestCase {
         let app = launch()
         add(app, "Taxi 300 kronor yesterday")
 
-        let toggle = app.buttons["yesterday-toggle"]
-        XCTAssertTrue(toggle.waitForExistence(timeout: 10), "there is no Yesterday line")
-        // 1.14 (his ask): almost invisible — no count, no sum.
-        XCTAssertFalse(toggle.label.contains("expense") || toggle.label.contains("SEK"), "the Yesterday line reads '\(toggle.label)'")
+        // 1.25 (his pick): a small card with yesterday's total and count.
+        let toggle = app.buttons["day-tile-yesterday"]
+        XCTAssertTrue(toggle.waitForExistence(timeout: 10), "there is no Yesterday card")
+        XCTAssertTrue(toggle.label.contains("300"), "the Yesterday card reads '\(toggle.label)'")
+        XCTAssertEqual(toggle.value as? String, "1 expense")
         XCTAssertFalse(app.buttons["yesterday-row-0"].exists, "yesterday is not folded at the start")
         // 1.18: the quiet This week line (yesterday's taxi counts unless today is a Monday).
         if Calendar.current.component(.weekday, from: Date()) != Calendar.current.firstWeekday {
-            XCTAssertTrue(app.buttons["this-week-toggle"].label.contains("1 expense"), "no This week line")
+            XCTAssertEqual(app.buttons["day-tile-this-week"].value as? String, "1 expense", "no This week card")
         }
         XCTAssertTrue(app.staticTexts["today-empty"].exists, "yesterday's taxi was counted as today")
 
@@ -473,10 +481,8 @@ final class AMSExpensesUITests: XCTestCase {
         let row = app.buttons["yesterday-row-0"]
         XCTAssertTrue(row.waitForExistence(timeout: 10), "a tap did not open yesterday")
         XCTAssertTrue(row.label.contains("Taxi"), "the row reads '\(row.label)'")
-        // 1.15: the summary card, like Today's.
-        XCTAssertTrue(app.staticTexts["yesterday-total"].label.contains("300"), "no yesterday total")
-        XCTAssertEqual(app.staticTexts["yesterday-count"].label, "1 expense")
-
+        // 1.25: one card open at a time — Last week (empty) does nothing, a second tap closes.
+        XCTAssertFalse(app.buttons["day-tile-last-week"].isEnabled, "an empty Last week card can be tapped")
         toggle.tap()
         expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: row)
         waitForExpectations(timeout: 10)

@@ -23,12 +23,8 @@ struct ContentView: View {
     /// 1.9: counts saves, for the little vibration and the "Saved" check mark.
     @State private var saves = 0
     @State private var showSaved = false
-    /// 1.12: the Yesterday section starts folded.
-    @State private var showYesterday = false
-    /// 1.17: the Last week section starts folded too.
-    @State private var showLastWeek = false
-    /// 1.20 (his ask): This week folds open too, folded at start.
-    @State private var showThisWeek = false
+    /// 1.25: which small card is open below (one at a time); all closed when the app starts.
+    @State private var openTile: DayTile.Kind?
     /// 1.19: the expense just deleted, for the Undo bar.
     @State private var deleted: DeletedExpense?
     /// 1.19: the weekly budget in kronor from Settings; 0 = none.
@@ -163,54 +159,49 @@ struct ContentView: View {
                 } header: {
                     Text("Today")
                 }
-                // 1.12 (his ask): yesterday, folded under Today — a quick look back to check
-                // that everything was entered. Folded again every time the app starts.
+                // 1.25 (his pick 2 of 3, and "keep them under today's expenses"): three small cards on
+                // one line — Yesterday, This week, Last week. A tap opens that one's expenses below it,
+                // one at a time; a second tap closes. (1.12–1.24: three quiet fold-open lines.)
                 Section {
-                    Button {
-                        withAnimation { showYesterday.toggle() }
-                    } label: {
-                        // 1.14 (his ask): almost invisible — a small grey word and arrow, no card, no count, no sum.
-                        HStack(spacing: 4) {
-                            Text("Yesterday")
-                            Image(systemName: "chevron.right")
-                                .font(.caption2.weight(.semibold))
-                                .rotationEffect(.degrees(showYesterday ? 90 : 0))
-                            Spacer()
-                        }
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                        .contentShape(Rectangle())
+                    HStack(spacing: 8) {
+                        DayTile(kind: .yesterday, total: Money.text(Statistics.total(yesterdays.map(\.spend), rates: rates.table, calendar: .current), whole: true),
+                                count: yesterdays.count, days: nil, isOpen: openTile == .yesterday) { toggle(.yesterday) }
+                        DayTile(kind: .thisWeek, total: Money.text(Statistics.total(thisWeeks.map(\.spend), rates: rates.table, calendar: .current), whole: true),
+                                count: thisWeeks.count, days: weekDays, isOpen: openTile == .thisWeek) { toggle(.thisWeek) }
+                        DayTile(kind: .lastWeek, total: lastWeekTotal, count: lastWeeks.count,
+                                days: weekDays(containing: Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()),
+                                isOpen: openTile == .lastWeek) { toggle(.lastWeek) }
                     }
-                    .buttonStyle(.plain)
                     .listRowBackground(Color.clear)
-                    .listRowInsets(EdgeInsets(top: 2, leading: 20, bottom: 2, trailing: 16))
-                    .accessibilityIdentifier("yesterday-toggle")
-                    if showYesterday {
-                        if yesterdays.isEmpty {
-                            Text("Nothing was logged yesterday.").foregroundStyle(.secondary)
-                                .accessibilityIdentifier("yesterday-empty")
-                        } else {
-                            // 1.15 (his ask): a summary like Today's — the total big, and how many.
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(yesterdayTotal)
-                                    .font(.system(size: 34, weight: .bold, design: .rounded))
-                                    .monospacedDigit()
-                                    .minimumScaleFactor(0.6)
-                                    .lineLimit(1)
-                                    .accessibilityIdentifier("yesterday-total")
-                                Text(yesterdays.count == 1 ? "1 expense" : "\(yesterdays.count) expenses")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-                                    .accessibilityIdentifier("yesterday-count")
+                    .listRowInsets(EdgeInsets(top: 2, leading: 0, bottom: 2, trailing: 0))
+                }
+                if let open = openTile {
+                    Section {
+                        if open != .yesterday {
+                            let items = open == .thisWeek ? thisWeeks : lastWeeks
+                            // 1.24: the swatch explains the tinted top five; 1.19: the budget on this week.
+                            HStack(spacing: 6) {
+                                (Text(items.count == 1 ? "1 expense" : "\(items.count) expenses") + (open == .thisWeek ? budgetNote : Text("")))
+                                    .accessibilityIdentifier("\(open.id)-count")
+                                Spacer(minLength: 4)
+                                if items.count > 5 { TopFiveNote(name: open.id) }
                             }
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
                             .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                         }
-                        ForEach(Array(yesterdays.enumerated()), id: \.element.id) { index, expense in
-                            Button { draft = Draft(editing: expense) } label: { ExpenseRow(expense: expense) }
+                        let rows = open == .yesterday ? yesterdays : (open == .thisWeek ? thisWeeks : lastWeeks).sorted { $0.date > $1.date }
+                        // 1.23 (his ask): a week's five highest get a light teal row.
+                        let top = open == .yesterday ? Set<Int>() : Statistics.highest(rows.map(\.spend), rates: rates.table, calendar: .current)
+                        ForEach(Array(rows.enumerated()), id: \.element.id) { index, expense in
+                            Button { draft = Draft(editing: expense) } label: {
+                                // 1.20/1.21: the week lists show whole amounts and the weekday.
+                                ExpenseRow(expense: expense, wholeAmount: open != .yesterday, showsWeekday: open != .yesterday)
+                            }
                                 .tint(.primary)
                                 .listRowInsets(EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16))
-                                .accessibilityIdentifier("yesterday-row-\(index)")
+                                .topFiveTint(top.contains(index))
+                                .accessibilityIdentifier("\(open.id)-row-\(index)")
                                 // 1.19 (his pick): Same again on older rows too.
                                 .swipeActions(edge: .leading) {
                                     Button { sameAgain(expense) } label: {
@@ -223,106 +214,6 @@ struct ContentView: View {
                                         Label("Delete", systemImage: "trash")
                                     }
                                 }
-                        }
-                    }
-                    // 1.16 (his pick): a second quiet line — last week's total and count, just to read.
-                    // 1.18 (his pick): this week's total and count, a quiet line to read.
-                    // 1.19 (his ask): under Yesterday, above Last week.
-                    // 1.20 (his ask): it folds open like Last week — all of this week's expenses.
-                    if !thisWeeks.isEmpty {
-                        Button {
-                            withAnimation { showThisWeek.toggle() }
-                        } label: {
-                            HStack(spacing: 4) {
-                                (Text("This week · \(Money.text(Statistics.total(thisWeeks.map(\.spend), rates: rates.table, calendar: .current), whole: true)) · "
-                                      + (thisWeeks.count == 1 ? "1 expense" : "\(thisWeeks.count) expenses"))
-                                 + budgetNote)
-                                    .accessibilityIdentifier("this-week-summary")
-                                Image(systemName: "chevron.right")
-                                    .font(.caption2.weight(.semibold))
-                                    .rotationEffect(.degrees(showThisWeek ? 90 : 0))
-                                Spacer()
-                            }
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .listRowBackground(Color.clear)
-                        .listRowInsets(EdgeInsets(top: 2, leading: 20, bottom: 2, trailing: 16))
-                        .accessibilityIdentifier("this-week-toggle")
-                        if showThisWeek {
-                            // 1.22 (his ask): the Today card for the whole week — total, count, the day bars.
-                            WeekCard(total: Money.text(Statistics.total(thisWeeks.map(\.spend), rates: rates.table, calendar: .current), whole: true),
-                                     count: thisWeeks.count, days: weekDays, name: "this-week")
-                            let thisWeekRows = thisWeeks.sorted { $0.date > $1.date }
-                            let thisWeekTop = Statistics.highest(thisWeekRows.map(\.spend), rates: rates.table, calendar: .current)
-                            ForEach(Array(thisWeekRows.enumerated()), id: \.element.id) { index, expense in
-                                Button { draft = Draft(editing: expense) } label: { ExpenseRow(expense: expense, wholeAmount: true, showsWeekday: true) }
-                                    .tint(.primary)
-                                    .listRowInsets(EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16))
-                                    .topFiveTint(thisWeekTop.contains(index))
-                                    .accessibilityIdentifier("this-week-row-\(index)")
-                                    .swipeActions(edge: .leading) {
-                                        Button { sameAgain(expense) } label: {
-                                            Label("Same again", systemImage: "arrow.clockwise")
-                                        }
-                                        .tint(.accentColor)
-                                    }
-                                    .swipeActions(edge: .trailing) {
-                                        Button(role: .destructive) { remove(expense) } label: {
-                                            Label("Delete", systemImage: "trash")
-                                        }
-                                    }
-                            }
-                        }
-                    }
-                    // 1.17 (his pick): it folds open like Yesterday.
-                    if !lastWeeks.isEmpty {
-                        Button {
-                            withAnimation { showLastWeek.toggle() }
-                        } label: {
-                            HStack(spacing: 4) {
-                                Text("Last week · \(lastWeekTotal) · " + (lastWeeks.count == 1 ? "1 expense" : "\(lastWeeks.count) expenses"))
-                                    .accessibilityIdentifier("last-week-summary")
-                                Image(systemName: "chevron.right")
-                                    .font(.caption2.weight(.semibold))
-                                    .rotationEffect(.degrees(showLastWeek ? 90 : 0))
-                                Spacer()
-                            }
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .listRowBackground(Color.clear)
-                        .listRowInsets(EdgeInsets(top: 2, leading: 20, bottom: 2, trailing: 16))
-                        .accessibilityIdentifier("last-week-toggle")
-                        if showLastWeek {
-                            // 1.22 (his ask): the same card for last week.
-                            WeekCard(total: lastWeekTotal, count: lastWeeks.count,
-                                     days: weekDays(containing: Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()),
-                                     name: "last-week")
-                            let lastWeekRows = lastWeeks.sorted { $0.date > $1.date }
-                            let lastWeekTop = Statistics.highest(lastWeekRows.map(\.spend), rates: rates.table, calendar: .current)
-                            ForEach(Array(lastWeekRows.enumerated()), id: \.element.id) { index, expense in
-                                Button { draft = Draft(editing: expense) } label: { ExpenseRow(expense: expense, wholeAmount: true, showsWeekday: true) }
-                                    .tint(.primary)
-                                    .listRowInsets(EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16))
-                                    .topFiveTint(lastWeekTop.contains(index))
-                                    .accessibilityIdentifier("last-week-row-\(index)")
-                                    .swipeActions(edge: .leading) {
-                                        Button { sameAgain(expense) } label: {
-                                            Label("Same again", systemImage: "arrow.clockwise")
-                                        }
-                                        .tint(.accentColor)
-                                    }
-                                    .swipeActions(edge: .trailing) {
-                                        Button(role: .destructive) { remove(expense) } label: {
-                                            Label("Delete", systemImage: "trash")
-                                        }
-                                    }
-                            }
                         }
                     }
                 }
@@ -347,10 +238,10 @@ struct ContentView: View {
                 }
                 ToolbarItemGroup(placement: .topBarTrailing) {
                     // 1.8: today's expenses on a map (concept B).
-                    NavigationLink { TodayMapScreen(expenses: todays) } label: {
+                    NavigationLink { TodayMapScreen(all: expenses) } label: {
                         Image(systemName: "map")
                     }
-                    .accessibilityLabel("Today on the map")
+                    .accessibilityLabel("On the map")
                     .accessibilityIdentifier("home-map")
                     NavigationLink { StatisticsScreen() } label: {
                         Image(systemName: "chart.bar")
@@ -556,9 +447,9 @@ struct ContentView: View {
         }
     }
 
-    /// 1.15: yesterday's total in kronor, the same way.
-    private var yesterdayTotal: String {
-        yesterdays.isEmpty ? "" : Money.text(Statistics.total(yesterdays.map(\.spend), rates: rates.table, calendar: .current))
+    /// 1.25: a tap on a small card opens it (closing another); a tap on the open one closes it.
+    private func toggle(_ kind: DayTile.Kind) {
+        withAnimation { openTile = openTile == kind ? nil : kind }
     }
 
     /// Today's total in kronor (1.2: other currencies at the bank's rate of their day).
@@ -960,48 +851,107 @@ extension View {
     }
 }
 
-/// 1.22 (his ask): the Today card's look for an opened week — the total big, how many,
-/// and the week's seven bars on the right. `name` is "this-week" or "last-week".
-struct WeekCard: View {
+/// 1.25 (his pick 2 of 3): one of the three small cards under today's expenses — its name in
+/// its own colour, the total in whole kronor, and the count (Yesterday) or seven tiny day bars
+/// (the weeks). The open one is full colour with white writing; an empty one does nothing.
+struct DayTile: View {
+    enum Kind: String {
+        case yesterday = "Yesterday", thisWeek = "This week", lastWeek = "Last week"
+        var id: String {
+            switch self {
+            case .yesterday: "yesterday"
+            case .thisWeek: "this-week"
+            case .lastWeek: "last-week"
+            }
+        }
+        var color: Color {
+            switch self {
+            case .yesterday: .orange
+            case .thisWeek: .accentColor
+            case .lastWeek: .indigo
+            }
+        }
+    }
+
+    let kind: Kind
     let total: String
     let count: Int
-    let days: [WeekBars.Day]
-    let name: String
+    let days: [WeekBars.Day]?
+    let isOpen: Bool
+    let action: () -> Void
 
     var body: some View {
-        HStack(alignment: .center) {
-            VStack(alignment: .leading, spacing: 2) {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 1) {
+                Text(kind.rawValue)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(isOpen ? Color.white : kind.color)
                 Text(total)
-                    .font(.system(size: 34, weight: .bold, design: .rounded))
+                    .font(.system(.title3, design: .rounded).weight(.bold))
                     .monospacedDigit()
                     .minimumScaleFactor(0.6)
                     .lineLimit(1)
-                    .accessibilityIdentifier("\(name)-total")
-                Text(count == 1 ? "1 expense" : "\(count) expenses")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .accessibilityIdentifier("\(name)-count")
-                // 1.24 (his yes): the screen says what the tinted rows are.
-                if count > 5 {
-                    HStack(spacing: 4) {
-                        RoundedRectangle(cornerRadius: 3)
-                            .fill(Color.accentColor.opacity(0.14))
-                            .overlay(RoundedRectangle(cornerRadius: 3).stroke(Color.accentColor.opacity(0.4), lineWidth: 0.5))
-                            .frame(width: 16, height: 10)
-                        Text("= the 5 highest")
-                    }
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .accessibilityElement(children: .combine)
-                    .accessibilityIdentifier("\(name)-top-note")
+                    .foregroundStyle(isOpen ? Color.white : Color.primary)
+                if let days {
+                    MiniBars(days: days, color: isOpen ? .white : kind.color)
+                } else {
+                    Text(count == 1 ? "1 expense" : "\(count) expenses")
+                        .font(.caption)
+                        .foregroundStyle(isOpen ? Color.white.opacity(0.85) : Color.secondary)
+                        .frame(height: 16, alignment: .bottomLeading)
                 }
             }
-            Spacer(minLength: 12)
-            WeekBars(days: days,
-                     label: name == "last-week" ? "Last week by day" : "This week by day",
-                     identifier: "\(name)-bars")
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 9)
+            .padding(.vertical, 7)
+            .background(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(isOpen ? kind.color : Color(.secondarySystemGroupedBackground)))
+            .contentShape(Rectangle())
         }
-        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+        .buttonStyle(.plain)
+        .disabled(count == 0)
+        .opacity(count == 0 ? 0.5 : 1)
+        .accessibilityLabel("\(kind.rawValue), \(total)")
+        .accessibilityValue(count == 1 ? "1 expense" : "\(count) expenses")
+        .accessibilityAddTraits(isOpen ? .isSelected : [])
+        .accessibilityIdentifier("day-tile-\(kind.id)")
+    }
+}
+
+/// 1.25: the week's seven days as tiny bars inside a small card (Monday first).
+struct MiniBars: View {
+    let days: [WeekBars.Day]
+    let color: Color
+
+    var body: some View {
+        let top: Double = max(days.map(\.kronor).max() ?? 0, 1)
+        HStack(alignment: .bottom, spacing: 3) {
+            ForEach(days) { day in
+                RoundedRectangle(cornerRadius: 1.5)
+                    .fill(color.opacity(day.isFuture || day.kronor == 0 ? 0.25 : 0.55))
+                    .frame(width: 6, height: day.kronor > 0 ? max(3, CGFloat(day.kronor / top) * 16) : 2)
+            }
+        }
+        .frame(height: 16, alignment: .bottom)
+    }
+}
+
+/// 1.24 (his yes): "▭ = the 5 highest" — the screen says what the tinted rows are.
+struct TopFiveNote: View {
+    let name: String
+
+    var body: some View {
+        HStack(spacing: 4) {
+            RoundedRectangle(cornerRadius: 3)
+                .fill(Color.accentColor.opacity(0.14))
+                .overlay(RoundedRectangle(cornerRadius: 3).stroke(Color.accentColor.opacity(0.4), lineWidth: 0.5))
+                .frame(width: 16, height: 10)
+            Text("= the 5 highest")
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("\(name)-top-note")
     }
 }
 
