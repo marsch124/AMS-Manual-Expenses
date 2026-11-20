@@ -43,8 +43,12 @@ jobs:
 
       # GitHub rotates its simulators: take the highest-numbered iPhone it really has
       # (never a hard-coded name; the last line of `simctl list` is often an iPhone SE).
+      # 20 Nov 2026: the runner's newest Xcode (26.6) came without any iPhone simulator —
+      # then try the next-newest Xcode, until one has an iPhone.
       - name: Pick a simulator the runner actually has
         run: |
+          for XC in $(ls -d /Applications/Xcode*.app | sort -V -r); do
+          sudo xcode-select -s "$XC"
           PICK=$(xcodebuild -showdestinations -project AMSExpenses.xcodeproj -scheme AMSExpenses 2>/dev/null | python3 -c '
           import re, sys
           best = None
@@ -56,6 +60,9 @@ jobs:
                       best = (key, m.group(1), "iPhone " + m.group(3) + (m.group(4) or "") + ", iOS " + m.group(2))
           if best: print(best[1], best[2])
           ')
+          if [ -n "$PICK" ]; then echo "Using $XC"; break; fi
+          echo "No iPhone simulator with $XC, trying an older Xcode"
+          done
           UDID=$(echo "$PICK" | cut -d" " -f1)
           if [ -z "$UDID" ]; then
             echo "::error::no iPhone simulator on this runner"
