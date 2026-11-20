@@ -27,6 +27,8 @@ struct ContentView: View {
     @State private var showYesterday = false
     /// 1.17: the Last week section starts folded too.
     @State private var showLastWeek = false
+    /// 1.20 (his ask): This week folds open too, folded at start.
+    @State private var showThisWeek = false
     /// 1.19: the expense just deleted, for the Undo bar.
     @State private var deleted: DeletedExpense?
     /// 1.19: the weekly budget in kronor from Settings; 0 = none.
@@ -226,16 +228,48 @@ struct ContentView: View {
                     // 1.16 (his pick): a second quiet line — last week's total and count, just to read.
                     // 1.18 (his pick): this week's total and count, a quiet line to read.
                     // 1.19 (his ask): under Yesterday, above Last week.
+                    // 1.20 (his ask): it folds open like Last week — all of this week's expenses.
                     if !thisWeeks.isEmpty {
-                        (Text("This week · \(Money.text(Statistics.total(thisWeeks.map(\.spend), rates: rates.table, calendar: .current))) · "
-                              + (thisWeeks.count == 1 ? "1 expense" : "\(thisWeeks.count) expenses"))
-                         + budgetNote)
+                        Button {
+                            withAnimation { showThisWeek.toggle() }
+                        } label: {
+                            HStack(spacing: 4) {
+                                (Text("This week · \(Money.text(Statistics.total(thisWeeks.map(\.spend), rates: rates.table, calendar: .current))) · "
+                                      + (thisWeeks.count == 1 ? "1 expense" : "\(thisWeeks.count) expenses"))
+                                 + budgetNote)
+                                    .accessibilityIdentifier("this-week-summary")
+                                Image(systemName: "chevron.right")
+                                    .font(.caption2.weight(.semibold))
+                                    .rotationEffect(.degrees(showThisWeek ? 90 : 0))
+                                Spacer()
+                            }
                             .font(.footnote)
                             .foregroundStyle(.secondary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .listRowBackground(Color.clear)
-                            .listRowInsets(EdgeInsets(top: 2, leading: 20, bottom: 2, trailing: 16))
-                            .accessibilityIdentifier("this-week-summary")
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets(top: 2, leading: 20, bottom: 2, trailing: 16))
+                        .accessibilityIdentifier("this-week-toggle")
+                        if showThisWeek {
+                            ForEach(Array(thisWeeks.sorted { $0.date > $1.date }.enumerated()), id: \.element.id) { index, expense in
+                                Button { draft = Draft(editing: expense) } label: { ExpenseRow(expense: expense, wholeAmount: true) }
+                                    .tint(.primary)
+                                    .listRowInsets(EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16))
+                                    .accessibilityIdentifier("this-week-row-\(index)")
+                                    .swipeActions(edge: .leading) {
+                                        Button { sameAgain(expense) } label: {
+                                            Label("Same again", systemImage: "arrow.clockwise")
+                                        }
+                                        .tint(.accentColor)
+                                    }
+                                    .swipeActions(edge: .trailing) {
+                                        Button(role: .destructive) { remove(expense) } label: {
+                                            Label("Delete", systemImage: "trash")
+                                        }
+                                    }
+                            }
+                        }
                     }
                     // 1.17 (his pick): it folds open like Yesterday.
                     if !lastWeeks.isEmpty {
@@ -260,7 +294,7 @@ struct ContentView: View {
                         .accessibilityIdentifier("last-week-toggle")
                         if showLastWeek {
                             ForEach(Array(lastWeeks.sorted { $0.date > $1.date }.enumerated()), id: \.element.id) { index, expense in
-                                Button { draft = Draft(editing: expense) } label: { ExpenseRow(expense: expense) }
+                                Button { draft = Draft(editing: expense) } label: { ExpenseRow(expense: expense, wholeAmount: true) }
                                     .tint(.primary)
                                     .listRowInsets(EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16))
                                     .accessibilityIdentifier("last-week-row-\(index)")
@@ -603,6 +637,8 @@ struct ContentView: View {
 struct ExpenseRow: View {
     let expense: Expense
     var showsDate = false
+    /// 1.20 (his ask): the This week and Last week lists show €10, not €10,00.
+    var wholeAmount = false
     @EnvironmentObject private var rates: ExchangeRates
 
     /// 1.9: "≈ SEK 125" under an amount in another currency, at its day's rate.
@@ -641,7 +677,13 @@ struct ExpenseRow: View {
                     .accessibilityLabel("Photo")
             }
             VStack(alignment: .trailing, spacing: 0) {
-                Text(expense.amount, format: .currency(code: expense.currency))
+                Group {
+                    if wholeAmount {
+                        Text(WholeAmount.rounded(expense.amount), format: .currency(code: expense.currency).precision(.fractionLength(0)))
+                    } else {
+                        Text(expense.amount, format: .currency(code: expense.currency))
+                    }
+                }
                     .bold()
                     .monospacedDigit()
                 if let kronorText {

@@ -9,6 +9,12 @@ struct Release {
 
 enum Releases {
     static let all: [Release] = [
+        Release(version: "1.20", date: "20 November 2026", lines: [
+            "“This week” now folds open: the small grey line “This week · SEK 901 · 13 expenses” (with “· SEK 766 left” or “· SEK 120 over” when you have a weekly budget) has a small arrow ›, like “Yesterday” and “Last week”. Tap it and all of this week’s expenses, Monday to now, show under it, newest first — today’s and yesterday’s too. Tap again to fold them away. It starts folded every time you open the app. Tap an expense to change it, swipe it to the left to delete it (the Undo bar comes), swipe it to the right for “Same again”. Before (1.18 and 1.19), the line was only something to read, not a button.",
+            "Whole amounts in the “This week” and “Last week” lists: a row there now shows its amount rounded to whole units, for example “€10” instead of “€10,00”, “€6” instead of “€6,45”, “€53” instead of “€53,15”; half rounds up (“€7,50” becomes “€8”). Only the display in these two folded lists changes. The saved amount, Today’s rows, Yesterday’s rows, the totals and the check sheet keep their cents. The grey “≈ 111 kr” under an amount stays as it was. Before, these rows showed the cents too.",
+            "Photo buttons with words: in the new or changed expense, the Photo row now has two small buttons with a picture and a word: “Take photo” (camera, full teal) and “Choose photo” (picture, light teal). Before (1.14 to 1.19), they were two small round icons with no words.",
+            "How it works has a new section, “Signs in this app”: every mark and colour that means something — the small arrow ›, the blue, yellow, green and grey tags for who it was for, the orange “over”, the teal dot on the place map, the round category icons, the small photo square, the grey “≈ … kr” line, the week bars, the “EUR · auto” button, the Undo bar and more — each with its meaning in a few plain words. Before, there was no such list.",
+        ]),
         Release(version: "1.19", date: "18 November 2026", lines: [
             "Order under Today: the small grey “This week” line now sits under “Yesterday ›” and above “Last week”. Before, it was above Yesterday. When Yesterday is open, its expenses now show directly under it; before, they showed below the Last week line.",
             "Same again on older rows: swipe a row under “Yesterday ›” or “Last week” to the right and tap “Same again”. The same expense is logged again now, today. Before, only Today’s rows had this.",
@@ -168,12 +174,12 @@ enum Guide {
             "When you delete an expense here (Today, Yesterday or Last week), a small bar appears at the bottom for 6 seconds: “Deleted Coffee” and “Undo”. Tap Undo and the expense comes back exactly as it was, with its photo.",
             "Settings › Weekly budget: type an amount in kronor. The “This week” line then ends with “· SEK 766 left”, or “· SEK 120 over” in orange when this week is above the budget. Empty or 0 means no budget, and the line is as before.",
             "In the big photo, pinch with two fingers to zoom in (up to 5 times) and drag to move around. Double-tap zooms to 2.5 times and back.",
-            "A photo with an expense: on the check sheet, in the Photo row, tap the round camera to take one or the round picture to choose one from your photo library. It shows small on the row; open the expense and tap it to see it big. “Remove photo” takes it away. One photo per expense, kept with the expense on this iPhone.",
+            "A photo with an expense: on the check sheet, in the Photo row, tap “Take photo” (camera) to take one or “Choose photo” (picture) to choose one from your photo library. It shows small on the row; open the expense and tap it to see it big. “Remove photo” takes it away. One photo per expense, kept with the expense on this iPhone.",
             "A photo you take with the camera in the app is also saved to Apple Photos (your photo library). The first time, the iPhone asks if the app may add photos. A photo you choose from the library is not saved again. If you say no, the photo still stays with the expense.",
-            "Just under the small grey “Yesterday ›” and above “Last week” is a quiet grey line, “This week”, with this week’s total in kronor and how many expenses, for example “This week · SEK 1 234 · 12 expenses”. This week is Monday to today. It is only a line to read, not a button. If nothing was logged this week, it is not shown.",
+            "Just under the small grey “Yesterday ›” and above “Last week” is a quiet grey line, “This week”, with this week’s total in kronor and how many expenses, for example “This week · SEK 1 234 · 12 expenses”. This week is Monday to today. It has a small arrow like Yesterday and Last week: tap it and all of this week’s expenses fold open under it, the newest first (today’s and yesterday’s too); tap again to fold them away. It is folded every time the app opens. Tap an expense to change it, swipe it to the left to delete it, swipe it to the right for “Same again”. The amounts in this list are rounded to whole units (€10 instead of €10,00). If nothing was logged this week, the line is not shown.",
             "Under Today, a small grey “Yesterday ›”: tap it to fold yesterday’s expenses open, tap again to fold them away. Tap one to change it, swipe left to delete it.",
             "When Yesterday is open, the first thing under it is a card like Today’s: yesterday’s total in large numbers and under it how many expenses, for example “3 expenses”. There are no week bars on it. If nothing was logged yesterday, it says “Nothing was logged yesterday.”",
-            "Under “Yesterday ›” is a second small grey line, “Last week”, with last week’s total in kronor and how many expenses, for example “Last week · SEK 1 234 · 12 expenses”. Last week is the week before this one, Monday to Sunday. It has a small arrow like Yesterday: tap it and last week’s expenses fold open under it, the newest first; tap again to fold them away. It is folded every time the app opens. Tap an expense to change it, swipe it to the left to delete it. If nothing was logged last week, it is not shown.",
+            "Under “Yesterday ›” is a second small grey line, “Last week”, with last week’s total in kronor and how many expenses, for example “Last week · SEK 1 234 · 12 expenses”. Last week is the week before this one, Monday to Sunday. It has a small arrow like Yesterday: tap it and last week’s expenses fold open under it, the newest first; tap again to fold them away. It is folded every time the app opens. Tap an expense to change it, swipe it to the left to delete it. The amounts in this list are rounded to whole units (€10 instead of €10,00; half rounds up). If nothing was logged last week, it is not shown.",
         ]),
         Section(title: "Categories", lines: [
             "The last line of the check sheet is the category: tap it and choose one, or “New category…” to add one.",
@@ -218,6 +224,23 @@ enum Guide {
             "Every total is in kronor. An amount in euros is counted at the European Central Bank’s rate of its day; on a weekend or a holiday, the last rate before it.",
             "The rates are fetched over the internet and kept on the iPhone. Only dates and currency names are sent, never an expense.",
             "Without a rate yet (offline), that amount is shown apart, for example “+ €12.50”, until the iPhone is online.",
+        ]),
+        Section(title: "Signs in this app", lines: [
+            "A small arrow › after “Yesterday”, “This week” or “Last week”: tap it and the expenses of that time fold open under the line; tap again to fold them away. They start folded.",
+            "Blue tag “Martin”, yellow tag “AMS”, green tag “Anna”, grey tag “Others”: who the expense was for. The tag is on every row.",
+            "Orange “· SEK 120 over” at the end of the “This week” line: this week is above your weekly budget. Without orange, “· SEK 766 left” is what is left of it.",
+            "A round coloured icon at the left of a row: the category. Each category has its own icon and colour; a new one starts grey.",
+            "A small square picture on the right of a row: the expense has a photo. Open the expense and tap it to see it big.",
+            "A grey “≈ SEK 125” under an amount: what an amount in another currency is in kronor, at the bank’s rate of that day.",
+            "Amounts like “€10” in the “This week” and “Last week” lists: rounded to whole units, only there. Everywhere else the amount shows its cents.",
+            "The small bars on the Today card: one per day of this week. The strong teal bar and the bold letter are today; paler teal bars are earlier days with expenses; a short grey bar is a day with nothing logged or a day to come.",
+            "A button like “EUR · auto”: the currency is chosen by itself. When you fix one by hand, “auto” is gone.",
+            "“auto · 12 m away” beside a place: the place was filled in by itself, because you used it that far from here before.",
+            "A small teal dot with a white ring on the place map: where this expense was logged. A small dot with a name: a place you used before. Tap the name to choose the place.",
+            "A numbered teal circle on the day map: the order you paid in. A grey “–” means that expense has no position and is not on the map.",
+            "A red microphone or stop square: the app is listening now. Red text under the microphone: something went wrong, for example no microphone permission.",
+            "The bar at the bottom with “Undo”: you just deleted an expense; tap Undo within 6 seconds to bring it back.",
+            "A full teal button is the main action (for example Save, Take photo). A light teal button is the second choice (for example Choose photo).",
         ]),
         Section(title: "Your data", lines: [
             "Your expenses stay on this iPhone.",

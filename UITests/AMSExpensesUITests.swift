@@ -405,6 +405,25 @@ final class AMSExpensesUITests: XCTestCase {
         XCTAssertTrue(first.label.contains("Coffee"), "the row reads '\(first.label)'")
     }
 
+    /// 1.20 (his ask): This week folds open with all of this week's expenses, in whole euros.
+    func testThisWeekFoldsOpenInWholeEuros() {
+        let app = launch()
+        add(app, "Coffee 7 euros 50")
+
+        let toggle = app.buttons["this-week-toggle"]
+        XCTAssertTrue(toggle.waitForExistence(timeout: 10), "there is no This week line")
+        XCTAssertFalse(app.buttons["this-week-row-0"].exists, "this week is not folded at the start")
+        toggle.tap()
+        let row = app.buttons["this-week-row-0"]
+        XCTAssertTrue(row.waitForExistence(timeout: 10), "a tap did not open this week")
+        XCTAssertTrue(row.label.contains("Coffee"), "the row reads '\(row.label)'")
+        XCTAssertTrue(row.label.contains("8") && !row.label.contains("7.5") && !row.label.contains("7,5"),
+                      "not a whole euro: '\(row.label)'")
+        toggle.tap()
+        expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: row)
+        waitForExpectations(timeout: 10)
+    }
+
     /// 1.12 (his ask): yesterday's expenses sit folded under Today; a tap opens them, another folds them.
     func testYesterdayFoldsOpenUnderToday() {
         let app = launch()
@@ -417,7 +436,7 @@ final class AMSExpensesUITests: XCTestCase {
         XCTAssertFalse(app.buttons["yesterday-row-0"].exists, "yesterday is not folded at the start")
         // 1.18: the quiet This week line (yesterday's taxi counts unless today is a Monday).
         if Calendar.current.component(.weekday, from: Date()) != Calendar.current.firstWeekday {
-            XCTAssertTrue(app.staticTexts["this-week-summary"].label.contains("1 expense"), "no This week line")
+            XCTAssertTrue(app.buttons["this-week-toggle"].label.contains("1 expense"), "no This week line")
         }
         XCTAssertTrue(app.staticTexts["today-empty"].exists, "yesterday's taxi was counted as today")
 

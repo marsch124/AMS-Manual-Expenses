@@ -453,3 +453,36 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
   Yesterday; 1.16–1.18 showed Yesterday's opened rows below the Last week line — a slip, fixed.)
 - **Undo button**: at least 44 points high. The UI test taps it a second time when the simulator
   swallows the first touch after a swipe-delete.
+
+## 1.20 · This week folds open, whole amounts, photo button words, Signs
+
+- **This week folds open** (changes 1.18 "This week line", which was only a line to read; the 1.19 order
+  stays): the small grey line "This week · SEK 901 · 13 expenses" (with the budget note "· SEK 766 left" or
+  "· SEK 120 over" in orange when a weekly budget is set) is now a button with a small arrow ›, like
+  "Yesterday ›" and "Last week ›". Identifier of the button `this-week-toggle`; the line's text keeps
+  `this-week-summary`. Tap: all expenses of this week (Monday to now, including today and yesterday)
+  fold open under it, newest first; tap again: they fold away. It starts folded every time the app
+  opens (not remembered). Rows `this-week-row-N` (N from 0, newest first). Tap a row: the check sheet; swipe
+  left: delete with the Undo bar; swipe right: "Same again" (as on Yesterday and Last week rows).
+  Still hidden when nothing was logged this week. Before (1.18, 1.19): a line only, not a button.
+- **Order under Today** (unchanged since 1.19): Yesterday › (and its card and rows when open) → This week ›
+  (and its rows when open) → Last week › (and its rows when open).
+- **Whole amounts** (Core: `Money rounding` = `WholeAmount.rounded(_:)` in
+  `Core/Sources/ExpenseCore/WholeAmount.swift`, half away from zero; test `WholeAmountTests.swift`): a row in
+  the This week and Last week lists shows its amount rounded to whole units, for example €10,00 → "€10",
+  €6,45 → "€6", €53,15 → "€53", €7,50 → "€8". Only the display in those two folded lists. Kept with cents:
+  the stored amount, Today's rows, Yesterday's rows, all totals and the check sheet. The grey
+  "≈ 111 kr" line under an amount is unchanged. Before: the cents were shown there too.
+- **Photo row words** (changes 1.14 "icon photo buttons"): in the new/edit expense sheet the two 40-point
+  round icon buttons are now small capsule buttons with icon and word: "Take photo" (camera, full teal) and
+  "Choose photo" (picture, light teal). Behaviour is unchanged (camera, library, Remove photo, one photo
+  per expense). From his mark check of 19 Nov: a button that is only a symbol gets a word.
+- **Signs in this app**: Guide (How it works) has a new section "Signs in this app", before "Your data",
+  with every mark and colour that means something and its meaning: the arrow › (folds open), the consumer
+  tags (Martin blue, AMS yellow, Anna green, Others grey), the orange "over", the category round icon, the
+  photo square on a row, "≈ … kr", whole amounts, the week bars (today strong teal, earlier days pale
+  teal, empty or future days grey), "EUR · auto", "auto · 12 m away", the teal dot with white ring and the
+  small named dots on the place map, the numbered circles and grey "–" on the day map, the red microphone,
+  the Undo bar, full vs light teal buttons.
+- Guide: the This week line, the Last week line (whole amounts) and the photo row text are updated.
+- What's new: a 1.20 entry with one line per change.

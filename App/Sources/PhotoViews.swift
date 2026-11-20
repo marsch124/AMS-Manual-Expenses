@@ -66,31 +66,38 @@ struct PhotoSection: View {
                 }
                 .accessibilityIdentifier("entry-photo-remove")
             } else {
-                // 1.14 (his ask): small round buttons, no words — hand-drawn icons (AMS Icon Library style).
-                HStack(spacing: 12) {
+                // 1.14 (his ask): small buttons with hand-drawn icons (AMS Icon Library style).
+                // 1.20 (his mark check, 19 Nov): each with its word — a symbol alone is not enough.
+                HStack(spacing: 8) {
                     Text("Photo").foregroundStyle(.secondary)
                     Spacer()
                     if hasCamera {
                         Button { showCamera = true } label: {
-                            LineIcon(shape: CameraGlyph(), size: 22)
-                                .foregroundStyle(.white)
-                                .frame(width: 40, height: 40)
-                                .background(Circle().fill(Color.accentColor))
+                            HStack(spacing: 5) {
+                                LineIcon(shape: CameraGlyph(), size: 18)
+                                Text("Take photo").font(.subheadline.weight(.semibold))
+                            }
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 10)
+                            .frame(height: 32)
+                            .background(Capsule().fill(Color.accentColor))
                         }
                         .buttonStyle(.borderless)
-                        .accessibilityLabel("Take photo")
                         .accessibilityIdentifier("entry-photo-camera")
                     }
                     Button {
                         if ExpensesApp.uiTesting { set(Photos.testImage) } else { showLibrary = true }
                     } label: {
-                        LineIcon(shape: PictureGlyph(), size: 22)
-                            .foregroundStyle(Color.accentColor)
-                            .frame(width: 40, height: 40)
-                            .background(Circle().fill(Color.accentColor.opacity(0.15)))
+                        HStack(spacing: 5) {
+                            LineIcon(shape: PictureGlyph(), size: 18)
+                            Text("Choose photo").font(.subheadline.weight(.semibold))
+                        }
+                        .foregroundStyle(Color.accentColor)
+                        .padding(.horizontal, 10)
+                        .frame(height: 32)
+                        .background(Capsule().fill(Color.accentColor.opacity(0.15)))
                     }
                     .buttonStyle(.borderless)
-                    .accessibilityLabel("Choose photo")
                     .accessibilityIdentifier("entry-photo-choose")
                 }
                 .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
