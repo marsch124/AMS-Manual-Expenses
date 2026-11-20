@@ -255,10 +255,13 @@ struct ContentView: View {
                             // 1.22 (his ask): the Today card for the whole week — total, count, the day bars.
                             WeekCard(total: Money.text(Statistics.total(thisWeeks.map(\.spend), rates: rates.table, calendar: .current), whole: true),
                                      count: thisWeeks.count, days: weekDays, name: "this-week")
-                            ForEach(Array(thisWeeks.sorted { $0.date > $1.date }.enumerated()), id: \.element.id) { index, expense in
+                            let thisWeekRows = thisWeeks.sorted { $0.date > $1.date }
+                            let thisWeekTop = Statistics.highest(thisWeekRows.map(\.spend), rates: rates.table, calendar: .current)
+                            ForEach(Array(thisWeekRows.enumerated()), id: \.element.id) { index, expense in
                                 Button { draft = Draft(editing: expense) } label: { ExpenseRow(expense: expense, wholeAmount: true, showsWeekday: true) }
                                     .tint(.primary)
                                     .listRowInsets(EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16))
+                                    .topFiveTint(thisWeekTop.contains(index))
                                     .accessibilityIdentifier("this-week-row-\(index)")
                                     .swipeActions(edge: .leading) {
                                         Button { sameAgain(expense) } label: {
@@ -300,10 +303,13 @@ struct ContentView: View {
                             WeekCard(total: lastWeekTotal, count: lastWeeks.count,
                                      days: weekDays(containing: Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()),
                                      name: "last-week")
-                            ForEach(Array(lastWeeks.sorted { $0.date > $1.date }.enumerated()), id: \.element.id) { index, expense in
+                            let lastWeekRows = lastWeeks.sorted { $0.date > $1.date }
+                            let lastWeekTop = Statistics.highest(lastWeekRows.map(\.spend), rates: rates.table, calendar: .current)
+                            ForEach(Array(lastWeekRows.enumerated()), id: \.element.id) { index, expense in
                                 Button { draft = Draft(editing: expense) } label: { ExpenseRow(expense: expense, wholeAmount: true, showsWeekday: true) }
                                     .tint(.primary)
                                     .listRowInsets(EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16))
+                                    .topFiveTint(lastWeekTop.contains(index))
                                     .accessibilityIdentifier("last-week-row-\(index)")
                                     .swipeActions(edge: .leading) {
                                         Button { sameAgain(expense) } label: {
@@ -941,6 +947,19 @@ extension String {
     func ifEmpty(_ fallback: String) -> String { isEmpty ? fallback : self }
 }
 
+extension View {
+    /// 1.23 (his ask): a week's five highest expenses get a light teal row, like a highlighter.
+    /// The value says "Top five" so the screen tests (and VoiceOver) can find them.
+    @ViewBuilder func topFiveTint(_ on: Bool) -> some View {
+        if on {
+            self.listRowBackground(Color.accentColor.opacity(0.14))
+                .accessibilityValue("Top five")
+        } else {
+            self
+        }
+    }
+}
+
 /// 1.22 (his ask): the Today card's look for an opened week — the total big, how many,
 /// and the week's seven bars on the right. `name` is "this-week" or "last-week".
 struct WeekCard: View {
@@ -1017,8 +1036,8 @@ struct WeekBars: View {
         return max(6, CGFloat(share) * barHeight)
     }
 
+    /// 1.23 (his ask): today's bar is as light as the other days — only its letter is marked.
     private func color(_ day: Day) -> Color {
-        if day.isToday { return .accentColor }
         if day.isFuture || day.kronor == 0 { return Color.secondary.opacity(0.2) }
         return Color.accentColor.opacity(0.35)
     }

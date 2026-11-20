@@ -259,8 +259,9 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
   34 pt bold) and "1 expense" / "N expenses" (`today-count`). The section header is just "Today".
   1.10 (his pick B of the 27 Oct concept): on its right `WeekBars` (`today-week-bars`; value
   "Mon SEK 0, Tue SEK 125, …"): this week from the iPhone's first weekday, one bar per day,
-  height = its kronor over the week's highest day (4 pt stub for none), today full accent colour,
-  earlier days lighter, days to come grey; narrow weekday letters under them, today's bold. (1.10
+  height = its kronor over the week's highest day (4 pt stub for none), today full accent colour
+  (changed in 1.23: today's bar is now the same light accent as earlier days; only today's letter stays
+  bold accent), earlier days lighter, days to come grey; narrow weekday letters under them, today's bold. (1.10
   also had a "This week" sum under the card; 1.11 removed it, his ask: only the small bars.)
   1.11 (his ask "take away all extra space"): the main list has compact section spacing and a
   34 pt minimum row height; the card's row insets are 4 pt top and bottom, each expense row's 3 pt;
@@ -480,8 +481,8 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
 - **Signs in this app**: Guide (How it works) has a new section "Signs in this app", before "Your data",
   with every mark and colour that means something and its meaning: the arrow › (folds open), the consumer
   tags (Martin blue, AMS yellow, Anna green, Others grey), the orange "over", the category round icon, the
-  photo square on a row, "≈ … kr", whole amounts, the week bars (today strong teal, earlier days pale
-  teal, empty or future days grey), "EUR · auto", "auto · 12 m away", the teal dot with white ring and the
+  photo square on a row, "≈ … kr", whole amounts, the week bars (1.10 to 1.22: today strong teal, earlier days pale
+  teal, empty or future days grey; since 1.23 today's bar is pale too, only its letter is bold), "EUR · auto", "auto · 12 m away", the teal dot with white ring and the
   small named dots on the place map, the numbered circles and grey "–" on the day map, the red microphone,
   the Undo bar, full vs light teal buttons.
 - Guide: the This week line, the Last week line (whole amounts) and the photo row text are updated.
@@ -529,3 +530,24 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
   bars also appear in the opened This week and Last week cards (full teal = today; light teal = a day that has
   passed; grey stub = nothing spent or still to come).
 - What's new: a 1.22 entry with one line per change.
+
+## 1.23 · Highest five highlighted in the week lists, today's bar no longer strong
+
+- **Top five highlighted** (adds to 1.20 "This week folds open" and 1.17/1.18 "Last week folds open"): in
+  the opened This week list (`this-week-row-N`) and the opened Last week list, the five highest expenses of
+  that week get a tinted row background, like a highlighter. Rule: rank the week's expenses by their amount
+  in kronor, each at the rate of its own day (the same conversion as the totals; an expense with no rate yet
+  counts as 0 and is never tinted); the five highest are tinted. Only when the week has MORE than five
+  expenses; with five or fewer nothing is tinted (all would be). Ties: the one listed earlier (higher in the
+  list, newest first) wins. Tint = the accent colour (teal) at low opacity, applied with
+  `.listRowBackground` on those rows; the other rows keep the normal background. Today's and Yesterday's
+  lists are not tinted. Code: `Statistics.highest(_:count:rates:calendar:)` in Core returns which rows;
+  tested by one data test. Before (1.17 to 1.22): no row in these lists was tinted.
+- **Today's bar no longer strong** (changes 1.10 and 1.22, the `WeekBars` on the Today card and in the opened
+  This week and Last week cards): today's bar is the same light accent colour as the days that have passed.
+  Only today's weekday letter under the bars stays bold accent colour. Days to come: grey stub; heights and
+  the accessibility value ("Mon SEK 0, Tue SEK 125, …") unchanged. Before (1.10 to 1.22): today's bar was
+  full accent colour. (Statistics' Last 30 days chart is a different chart and is unchanged.)
+- Guide (How it works): the Today line, the This week and Last week texts, and "Signs in this app" (week-bars
+  sign changed; new sign: light teal row = one of the week's five highest) are updated.
+- What's new: a 1.23 entry with one line per change.

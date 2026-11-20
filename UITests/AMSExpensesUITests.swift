@@ -432,6 +432,24 @@ final class AMSExpensesUITests: XCTestCase {
         waitForExpectations(timeout: 10)
     }
 
+    /// 1.23 (his ask): an opened week tints its five highest expenses; the sixth stays plain.
+    func testTheWeeksFiveHighestAreTinted() {
+        let app = launch()
+        for line in ["Tea 5 kronor", "Lunch 120 kronor", "Taxi 90 kronor", "Book 80 kronor", "Cake 60 kronor", "Bus 40 kronor"] {
+            add(app, line)
+        }
+        let toggle = app.buttons["this-week-toggle"]
+        XCTAssertTrue(toggle.waitForExistence(timeout: 10), "there is no This week line")
+        toggle.tap()
+        let top = app.buttons["this-week-row-0"]       // Bus, newest
+        XCTAssertTrue(top.waitForExistence(timeout: 10), "a tap did not open this week")
+        XCTAssertEqual(top.value as? String, "Top five", "Bus 40 kr is one of the five highest")
+        let tea = app.buttons["this-week-row-5"]       // Tea, oldest and smallest
+        app.swipeUp()
+        XCTAssertTrue(tea.waitForExistence(timeout: 10), "no sixth row")
+        XCTAssertNotEqual(tea.value as? String, "Top five", "Tea 5 kr is not one of the five highest")
+    }
+
     /// 1.12 (his ask): yesterday's expenses sit folded under Today; a tap opens them, another folds them.
     func testYesterdayFoldsOpenUnderToday() {
         let app = launch()
