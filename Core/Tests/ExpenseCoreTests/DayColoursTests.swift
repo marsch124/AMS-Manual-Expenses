@@ -17,4 +17,19 @@ final class DayColoursTests: XCTestCase {
             XCTAssertEqual(week, DayColours.names)
         }
     }
+
+    /// 1.27: grouped by weekday, Monday first, each day oldest first (the day buttons and routes).
+    func testThingsAreGroupedByDayOldestFirst() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "Europe/Stockholm")!
+        calendar.firstWeekday = 1
+        func at(_ day: Int, _ hour: Int) -> Date {
+            calendar.date(from: DateComponents(year: 2026, month: 11, day: day, hour: hour))!
+        }
+        // Fri 20 late, Mon 16, Fri 20 early, Sun 22.
+        let items = [at(20, 18), at(16, 9), at(20, 8), at(22, 12)]
+        let days = DayColours.byDay(items, date: { $0 }, calendar: calendar)
+        XCTAssertEqual(days.map(\.index), [0, 4, 6])
+        XCTAssertEqual(days[1].items, [at(20, 8), at(20, 18)])
+    }
 }

@@ -231,7 +231,7 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
   amount, When, Place, Area, Position (`map-position`, six decimals), Accuracy (`map-accuracy`,
   when known); **Open in Maps** (`map-open`) opens `https://maps.apple.com/?ll=<lat>,<lon>&q=<place>`.
   Footer: "The position stays on this iPhone."
-- **B · Today on the map** (`TodayMapScreen`; since 1.25 titled "On the map" with a span switch `map-span`, see §1.25) (since 1.26 pins coloured by day in the week spans, see §1.26): today's expenses, oldest first, numbered 1, 2 …
+- **B · Today on the map** (`TodayMapScreen`; since 1.25 titled "On the map" with a span switch `map-span`, see §1.25) (since 1.26 pins coloured by day in the week spans, see §1.26) (1.27: day buttons and routes, see §1.27): today's expenses, oldest first, numbered 1, 2 …
   only those with a fix; all on one map (fitted to them), then the list (`todaymap-row-0` …:
   number or a grey "–", description, time · place or "no position", amount) with Today's total
   in the header. A row with a fix opens C. Footer `todaymap-count`: "N of M have a position".
@@ -640,3 +640,29 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
 - Tests: data test `testEachWeekdayHasItsOwnColour` (DayColoursTests.swift); screen test
   `testTodayIsShownOnTheMap` also switches to This week and finds `todaymap-legend` with today's short weekday
   in it.
+
+## 1.27 · Day buttons and routes on the week map (his yes, 20 Nov 2026)
+
+- **Day buttons** (change §14 B and 1.26): in This week and Last week of `TodayMapScreen`, the colour line
+  `todaymap-legend` under the map is now a row of small capsule buttons `todaymap-day-<short day name>` (e.g.
+  `todaymap-day-Fri`), one per day that has a pin, Monday first. Each shows the short day name in its day colour
+  on a light background of that colour; the dots of 1.26 are gone. Today and Month: no buttons.
+- **Choosing a day**: tap a day and the map shows only that day's pins and its route and zooms to them; the
+  list shows only that day's expenses; the button turns full colour with white writing; the footer
+  `todaymap-count` ("N of M have a position") counts that day; the list header shows the day ("This week · Fri")
+  and that day's total. Tapping the same day again, or switching `map-span`, shows the whole week again.
+- **Numbers**: the pin and list numbers stay the week's numbers (pin 5 stays 5 when only Friday shows).
+- **Hint** `todaymap-day-hint`, a small grey line under the map's footer: "Tap a day to show only that day."; with a
+  day chosen: "Only Fri · tap it again for the whole week."
+- **Route lines**: for each day with two or more pins, a thin line in that day's colour joins its pins in the
+  order paid (oldest first). Days with one pin: no line. Today and Month: no lines.
+- **Core rule**: `DayColours.byDay(_:date:calendar:)` groups things by weekday, Monday first, each day's things
+  oldest first; used for the buttons and the routes.
+- Guide (How it works): the map sentence describes the day buttons and the route lines; "Signs in this app":
+  the numbered circle line mentions the day buttons (full colour = the day shown alone), and a new line: a thin
+  coloured line between pins = the way you went that day, in the order you paid.
+- What's new: a 1.27 entry (before / now for the buttons, choosing a day, numbers, hint, routes, Today and
+  Month, guide).
+- Tests: data test `testThingsAreGroupedByDayOldestFirst` (DayColoursTests.swift); screen test
+  `testTodayIsShownOnTheMap` now taps today's day button in This week, finds the hint (`todaymap-day-hint`)
+  saying "Only", and taps the button again.

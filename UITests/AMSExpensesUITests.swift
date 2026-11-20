@@ -408,10 +408,17 @@ final class AMSExpensesUITests: XCTestCase {
         XCTAssertTrue(span.exists, "no Today / This week / Last week / Month switch on the map")
         // 1.26 (his ask): This week colours the pins by day and says which colour is which day.
         span.buttons["This week"].tap()
-        let legend = app.descendants(matching: .any)["todaymap-legend"]
-        XCTAssertTrue(legend.waitForExistence(timeout: 10), "no colour line under the week map")
         let today = Date().formatted(.dateTime.weekday(.abbreviated))
-        XCTAssertTrue(legend.label.contains(today), "the colour line reads '\(legend.label)'")
+        let dayButton = app.buttons["todaymap-day-\(today)"]
+        XCTAssertTrue(dayButton.waitForExistence(timeout: 10), "no \(today) button under the week map")
+        // 1.27 (his yes): tap a day = only that day; tap again = the whole week.
+        let hint = app.staticTexts["todaymap-day-hint"]
+        XCTAssertTrue(hint.exists, "the screen does not say what the day buttons do")
+        dayButton.tap()
+        XCTAssertTrue(hint.label.hasPrefix("Only"), "after the tap the hint reads '\(hint.label)'")
+        XCTAssertTrue(app.buttons["todaymap-row-0"].exists, "today's coffee is gone when only today shows")
+        dayButton.tap()
+        XCTAssertTrue(hint.label.hasPrefix("Tap"), "the whole week did not come back: '\(hint.label)'")
         span.buttons["Last week"].tap()
         XCTAssertTrue(app.staticTexts["todaymap-empty"].waitForExistence(timeout: 10), "today's coffee shows under Last week")
         span.buttons["Month"].tap()

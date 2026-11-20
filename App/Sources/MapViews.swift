@@ -150,6 +150,8 @@ struct TodayMapScreen: View {
     /// Every expense; the screen picks the span's own.
     let all: [Expense]
     @State private var span: Span = .today
+    /// 1.27 (his yes): in This week / Last week, the one day shown alone (0 = Monday), or nil.
+    @State private var day: Int?
     @EnvironmentObject private var rates: ExchangeRates
 
     private var expenses: [Expense] {
@@ -174,8 +176,14 @@ struct TodayMapScreen: View {
     }
 
     var body: some View {
-        let rows = self.rows
+        let weekRows = self.rows
+        let weekOnMap = weekRows.filter { $0.number != nil }
+        // 1.27: a chosen day shows alone; its numbers stay the week's.
+        let chosen = byDay ? day : nil
+        let rows = chosen.map { d in weekRows.filter { DayColours.index(of: $0.expense.date, calendar: .current) == d } } ?? weekRows
         let onMap = rows.filter { $0.number != nil }
+        let routes = byDay ? DayColours.byDay(onMap, date: { $0.expense.date }, calendar: .current).filter { $0.items.count > 1 } : []
+        let shown = rows.map(\.expense)
         List {
             Picker("Show", selection: $span) {
                 ForEach(Span.allCases) { Text($0.rawValue).tag($0) }
@@ -191,6 +199,11 @@ struct TodayMapScreen: View {
                         .accessibilityIdentifier("todaymap-empty")
                 } else {
                     Map(initialPosition: .automatic) {
+                        // 1.27 (his yes): the way he went each day, in the order paid.
+                        ForEach(routes, id: \.index) { route in
+                            MapPolyline(coordinates: route.items.map { $0.expense.fix!.coordinate })
+                                .stroke(Looks.color(DayColours.names[route.index]).opacity(0.8), lineWidth: 3)
+                        }
                         ForEach(onMap, id: \.expense.id) { row in
                             Annotation(row.expense.title, coordinate: row.expense.fix!.coordinate) {
                                 Text("\(row.number!)")
@@ -203,15 +216,21 @@ struct TodayMapScreen: View {
                             .annotationTitles(.hidden)
                         }
                     }
-                    .id(span)   // a new span = the map fits its own pins
+                    .id("\(span.rawValue)-\(chosen ?? -1)")   // a new span or day = the map fits its own pins
                     .frame(height: 380)
                     .listRowInsets(EdgeInsets())
                     .accessibilityHidden(true)
-                    if byDay { legend(onMap.map(\.expense)) }
+                    if byDay { dayButtons(weekOnMap.map(\.expense)) }
                 }
             } footer: {
-                Text("\(onMap.count) of \(rows.count) have a position")
-                    .accessibilityIdentifier("todaymap-count")
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("\(onMap.count) of \(rows.count) have a position")
+                        .accessibilityIdentifier("todaymap-count")
+                    if byDay && !weekOnMap.isEmpty {
+                        Text(chosen.map { "Only \(dayName($0, in: weekRows)) · tap it again for the whole week." } ?? "Tap a day to show only that day.")
+                            .accessibilityIdentifier("todaymap-day-hint")
+                    }
+                }
             }
             Section {
                 ForEach(Array(rows.enumerated()), id: \.element.expense.id) { index, row in
@@ -229,12 +248,13 @@ struct TodayMapScreen: View {
                 }
             } header: {
                 HStack {
-                    Text(span.rawValue)
+                    Text(chosen.map { "\(span.rawValue) · \(dayName($0, in: weekRows))" } ?? span.rawValue)
                     Spacer()
-                    Text(Money.text(Statistics.total(expenses.map(\.spend), rates: rates.table, calendar: .current)))
+                    Text(Money.text(Statistics.total(shown.map(\.spend), rates: rates.table, calendar: .current)))
                 }
             }
         }
+        .onChange(of: span) { day = nil }
         .navigationTitle("On the map")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -247,29 +267,40 @@ struct TodayMapScreen: View {
         byDay ? Looks.color(DayColours.name(for: e.date, calendar: .current)) : Color.accentColor
     }
 
-    /// The line under the map: a coloured dot and the short day name for each day with a pin,
-    /// Monday first.
-    private func legend(_ pinned: [Expense]) -> some View {
-        let calendar = Calendar.current
-        var firstOfDay: [Int: Date] = [:]
-        for e in pinned {
-            let i = DayColours.index(of: e.date, calendar: calendar)
-            if firstOfDay[i] == nil { firstOfDay[i] = e.date }
+    /// "Fri" — the short name of a weekday (0 = Monday) that has rows.
+    private func dayName(_ index: Int, in rows: [(expense: Expense, number: Int?)]) -> String {
+        rows.first { DayColours.index(of: $0.expense.date, calendar: .current) == index }?
+            .expense.date.formatted(.dateTime.weekday(.abbreviated)) ?? ""
+    }
+
+    /// The line under the map (1.26 colours, 1.27 buttons): one small button per day with a pin,
+    /// Monday first, in the day's colour. Tap = only that day; tap again = the whole week.
+    private func dayButtons(_ pinned: [Expense]) -> some View {
+        let days = DayColours.byDay(pinned, date: \.date, calendar: .current).map {
+            (index: $0.index, name: $0.items[0].date.formatted(.dateTime.weekday(.abbreviated)),
+             colour: Looks.color(DayColours.names[$0.index]))
         }
-        let days = firstOfDay.keys.sorted().map { (name: firstOfDay[$0]!.formatted(.dateTime.weekday(.abbreviated)),
-                                                   colour: DayColours.names[$0]) }
-        return HStack(spacing: 10) {
-            ForEach(days, id: \.name) { day in
-                HStack(spacing: 4) {
-                    Circle().fill(Looks.color(day.colour)).frame(width: 9, height: 9)
-                    Text(day.name).font(.caption).foregroundStyle(.secondary)
+        return HStack(spacing: 6) {
+            ForEach(days, id: \.index) { d in
+                let on = day == d.index
+                Button {
+                    day = on ? nil : d.index
+                } label: {
+                    Text(d.name)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(on ? Color.white : d.colour)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 3)
+                        .background(Capsule().fill(on ? d.colour : d.colour.opacity(0.18)))
                 }
+                .buttonStyle(.borderless)
+                .accessibilityValue(on ? "Shown alone" : "")
+                .accessibilityIdentifier("todaymap-day-\(d.name)")
             }
             Spacer(minLength: 0)
         }
         .lineLimit(1)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Pin colours: " + days.map { "\($0.name) \($0.colour)" }.joined(separator: ", "))
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("todaymap-legend")
     }
 
