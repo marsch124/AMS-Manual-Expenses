@@ -4,6 +4,73 @@ import MapKit
 import SwiftUI
 
 /// The GPS fix on a map (1.8, his choice of the 26 Oct 2026 concept: A, B and C).
+extension MKMultiPoint {
+    /// All the points of a line from Apple Maps.
+    var allCoordinates: [CLLocationCoordinate2D] {
+        var points = [CLLocationCoordinate2D](repeating: kCLLocationCoordinate2DInvalid, count: pointCount)
+        getCoordinates(&points, range: NSRange(location: 0, length: pointCount))
+        return points
+    }
+}
+
+/// 1.29 (his ask): the way on foot between two close pins, asked from Apple Maps one pair at a
+/// time and kept while the map screen is open. Empty = no sensible way (the bow is drawn).
+@MainActor
+final class RoadWays: ObservableObject {
+    @Published private(set) var found: [String: [CLLocationCoordinate2D]] = [:]
+    private var asked: Set<String> = []
+    private var waiting: [(key: String, a: Fix, b: Fix)] = []
+    private var running = false
+
+    static func key(_ a: Fix, _ b: Fix) -> String {
+        String(format: "%.5f,%.5f>%.5f,%.5f", a.latitude, a.longitude, b.latitude, b.longitude)
+    }
+
+    func ask(_ pairs: [(Fix, Fix)]) {
+        guard !ExpensesApp.uiTesting else { return }
+        for (a, b) in pairs where RouteShape.asksForRoad(straight: a.distance(to: b)) {
+            let key = Self.key(a, b)
+            if asked.insert(key).inserted { waiting.append((key, a, b)) }
+        }
+        guard !running, !waiting.isEmpty else { return }
+        running = true
+        Task { await work() }
+    }
+
+    private func work() async {
+        while !waiting.isEmpty {
+            let next = waiting.removeFirst()
+            let request = MKDirections.Request()
+            request.source = MKMapItem(placemark: MKPlacemark(coordinate: next.a.coordinate))
+            request.destination = MKMapItem(placemark: MKPlacemark(coordinate: next.b.coordinate))
+            request.transportType = .walking
+            var way: [CLLocationCoordinate2D] = []
+            if let route = try? await MKDirections(request: request).calculate().routes.first,
+               RouteShape.usesRoad(straight: next.a.distance(to: next.b), road: route.distance) {
+                way = route.polyline.allCoordinates
+            }
+            found[next.key] = way
+        }
+        running = false
+    }
+
+    /// The whole dotted route through the pins, oldest first: streets where known, bows elsewhere.
+    func path(through fixes: [Fix]) -> [CLLocationCoordinate2D] {
+        guard let first = fixes.first else { return [] }
+        var out = [first.coordinate]
+        for i in fixes.indices.dropFirst() {
+            let a = fixes[i - 1], b = fixes[i]
+            if let way = found[Self.key(a, b)], !way.isEmpty {
+                out += way
+                out.append(b.coordinate)
+            } else {
+                out += RouteShape.bow(from: a, to: b, side: i % 2 == 0 ? -1 : 1).dropFirst().map(\.coordinate)
+            }
+        }
+        return out
+    }
+}
+
 extension Fix {
     var coordinate: CLLocationCoordinate2D { CLLocationCoordinate2D(latitude: latitude, longitude: longitude) }
 
@@ -153,6 +220,7 @@ struct TodayMapScreen: View {
     /// 1.27 (his yes): in This week / Last week, the one day shown alone (0 = Monday), or nil.
     @State private var day: Int?
     @EnvironmentObject private var rates: ExchangeRates
+    @StateObject private var roads = RoadWays()
 
     private var expenses: [Expense] {
         let calendar = Calendar.current
@@ -202,9 +270,11 @@ struct TodayMapScreen: View {
                 } else {
                     Map(initialPosition: .automatic) {
                         // 1.27 (his yes): the way he went each day, in the order paid.
+                        // 1.29 (his ask): dotted, along streets when close, else a hand-drawn bow.
                         ForEach(routes, id: \.index) { route in
-                            MapPolyline(coordinates: route.items.map { $0.expense.fix!.coordinate })
-                                .stroke((route.index < 0 ? Color.accentColor : Looks.color(DayColours.names[route.index])).opacity(0.8), lineWidth: 3)
+                            MapPolyline(coordinates: roads.path(through: route.items.map { $0.expense.fix! }))
+                                .stroke((route.index < 0 ? Color.accentColor : Looks.color(DayColours.names[route.index])).opacity(0.85),
+                                        style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round, dash: [0.1, 8]))
                         }
                         ForEach(onMap, id: \.expense.id) { row in
                             Annotation(row.expense.title, coordinate: row.expense.fix!.coordinate) {
@@ -219,6 +289,11 @@ struct TodayMapScreen: View {
                         }
                     }
                     .id("\(span.rawValue)-\(chosen ?? -1)")   // a new span or day = the map fits its own pins
+                    .task(id: "\(span.rawValue)-\(chosen ?? -1)-\(onMap.count)") {
+                        roads.ask(routes.flatMap { route in
+                            zip(route.items.dropLast(), route.items.dropFirst()).map { ($0.expense.fix!, $1.expense.fix!) }
+                        })
+                    }
                     .frame(height: 380)
                     .listRowInsets(EdgeInsets())
                     .accessibilityHidden(true)

@@ -231,7 +231,7 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
   amount, When, Place, Area, Position (`map-position`, six decimals), Accuracy (`map-accuracy`,
   when known); **Open in Maps** (`map-open`) opens `https://maps.apple.com/?ll=<lat>,<lon>&q=<place>`.
   Footer: "The position stays on this iPhone."
-- **B · Today on the map** (`TodayMapScreen`; since 1.25 titled "On the map" with a span switch `map-span`, see §1.25) (since 1.26 pins coloured by day in the week spans, see §1.26) (1.27: day buttons and routes, see §1.27) (1.28: route on Today, see §1.28): today's expenses, oldest first, numbered 1, 2 …
+- **B · Today on the map** (`TodayMapScreen`; since 1.25 titled "On the map" with a span switch `map-span`, see §1.25) (since 1.26 pins coloured by day in the week spans, see §1.26) (1.27: day buttons and routes, see §1.27) (1.28: route on Today, see §1.28) (1.29: dotted routes along streets, see §1.29): today's expenses, oldest first, numbered 1, 2 …
   only those with a fix; all on one map (fitted to them), then the list (`todaymap-row-0` …:
   number or a grey "–", description, time · place or "no position", amount) with Today's total
   in the header. A row with a fix opens C. Footer `todaymap-count`: "N of M have a position".
@@ -679,3 +679,34 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
 - What's new: a 1.28 entry (before / now for the Today route, week and Month unchanged, guide).
 - Tests: no new test (the route is drawn on the map, which screen tests cannot see); the existing screen test
   `testTodayIsShownOnTheMap` still passes.
+
+## 1.29 · Dotted, hand-drawn routes that follow streets (his ask, 21 Nov 2026)
+
+His ask: "Make the lines a bit more organic and hand written. Maybe dotted? Maybe follow some roads, if not too far."
+
+- **Dotted** (change §14 B, 1.27, 1.28): the route lines on `TodayMapScreen` are a row of small round dots, 4 points
+  wide, same colours as before (Today teal; This week / Last week one line per day in the day's colour; Month still
+  no line). Before (1.28): a thin solid line, 3 points, straight from pin to pin.
+- **Along streets when close**: between two pins at most 2 km apart (straight line) the dots follow the way on
+  foot that Apple Maps finds between the two places. Used only when Apple Maps finds one and it is not more than
+  three times as long as the straight line (no strange detours). Pins closer than 30 m get no street way.
+- **Bow elsewhere**: farther than 2 km, no way found, no internet, or very close pins: the dots go in a gentle
+  hand-drawn bow from pin to pin instead of a ruler-straight line. Consecutive bows bend to alternate sides, with a
+  small natural wobble.
+- **Timing**: street ways need the internet; looked up when the map opens and remembered while the screen stays
+  open. Until they arrive (or without internet) the bows show, then the street ways replace them. Order is still
+  oldest first, pin 1 → 2 → 3. Lines still need two or more pins with a position that day. Pins, numbers, colours
+  and day buttons unchanged.
+- **Data**: the app sends only the two pin positions to Apple Maps to ask for the way; nothing else.
+- **Core `RouteShape`** (`Core/Sources/ExpenseCore/RouteShape.swift`): `roadReach = 2000` m, `nearest = 30` m;
+  `asksForRoad(straight:)` is true when 30 < straight <= 2000; `usesRoad(straight:road:)` is true when it asks and
+  the road length is <= 3 x straight; `bow(from:to:side:steps:)` = quadratic bow whose middle is bent sideways by
+  15 % of the distance to `side` (+1 left / -1 right), plus a small sine wobble of 2 %; first point = start, last
+  point = end. Data test: `RouteShapeTests`.
+- **App**: `RoadWays` (in `MapViews.swift`) asks `MKDirections` for a walking route per pin pair, one at a time,
+  keeps the results while the screen is open, and is skipped in UI tests (`-uiTesting`). Stroke =
+  `StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round, dash: [0.1, 8])`, opacity 0.85.
+- Guide (How it works): the map sentence and the "Signs in this app" line sign describe the dotted line, along
+  streets when close, otherwise a gentle bow.
+- What's new: a 1.29 entry (before / now for dots, streets, bows, internet, data, guide).
+- Tests: data test `RouteShapeTests` only; the drawing itself is not visible to screen tests.
