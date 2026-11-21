@@ -231,7 +231,7 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
   amount, When, Place, Area, Position (`map-position`, six decimals), Accuracy (`map-accuracy`,
   when known); **Open in Maps** (`map-open`) opens `https://maps.apple.com/?ll=<lat>,<lon>&q=<place>`.
   Footer: "The position stays on this iPhone."
-- **B · Today on the map** (`TodayMapScreen`; since 1.25 titled "On the map" with a span switch `map-span`, see §1.25) (since 1.26 pins coloured by day in the week spans, see §1.26) (1.27: day buttons and routes, see §1.27) (1.28: route on Today, see §1.28) (1.29: dotted routes along streets, see §1.29): today's expenses, oldest first, numbered 1, 2 …
+- **B · Today on the map** (`TodayMapScreen`; since 1.25 titled "On the map" with a span switch `map-span`, see §1.25) (since 1.26 pins coloured by day in the week spans, see §1.26) (1.27: day buttons and routes, see §1.27) (1.28: route on Today, see §1.28) (1.29: dotted routes along streets, see §1.29) (1.30: route length and arrows, see §1.30): today's expenses, oldest first, numbered 1, 2 …
   only those with a fix; all on one map (fitted to them), then the list (`todaymap-row-0` …:
   number or a grey "–", description, time · place or "no position", amount) with Today's total
   in the header. A row with a fix opens C. Footer `todaymap-count`: "N of M have a position".
@@ -710,3 +710,32 @@ His ask: "Make the lines a bit more organic and hand written. Maybe dotted? Mayb
   streets when close, otherwise a gentle bow.
 - What's new: a 1.29 entry (before / now for dots, streets, bows, internet, data, guide).
 - Tests: data test `RouteShapeTests` only; the drawing itself is not visible to screen tests.
+
+## 1.30 · Route length and direction arrows (his yes, 21 Nov 2026)
+
+His yes to two ideas.
+
+- **Route length**: on "On the map", in the small grey lines under the map (with "N of M have a position"), a new line
+  tells how long the drawn route is: "Route: about 850 m" / "Route: about 2.4 km". Rounded like the place distances
+  (whole 10 m below 1 km, one decimal below 10 km, whole km above). Very short: "Route: under 50 m". When This week /
+  Last week shows several days' routes the line adds them up: "Routes: about 5.3 km in all". With one day chosen by
+  the day buttons only that day's route counts. It measures the dotted line as drawn (along the street way where it
+  follows one, along the bow elsewhere): the way drawn, not a measured walk (no GPS track). Shown only when a route is
+  drawn (two or more pins with a position); Month has no route, so no line. While the street ways are still being
+  looked up the number can change a little when they arrive. Before (1.29): no length.
+- **Direction arrows**: on each dotted route a small hand-drawn arrowhead (a chevron, stroked with round ends, in the
+  route's colour with a thin white edge so it shows on any map) sits halfway along every stretch from one pin to the
+  next and points the way you went (older pin to newer pin). Before: only the numbers told the order.
+- **Map interaction**: to keep the arrows pointing right the map no longer turns (two-finger rotate) or tilts; move
+  and zoom still work. Before 1.30 the map could be turned.
+- **Core `RouteShape`**: `length(_:)` = sum of the distances along a `[Fix]`; `lengthText(_:)` = "under 50 m" below
+  50 m, else "about " + `Places.distanceText`; `halfway(of:)` returns the point halfway along a leg by length and its
+  bearing in degrees clockwise from north (flat, longitude x cos latitude); nil for a leg shorter than 1 m.
+  Data test `testRouteLengthAndHalfway` in `RouteShapeTests`.
+- **App**: `RoadWays.legs(through:)` returns one `[Fix]` list per pin-to-pin stretch (street way or bow); `path`
+  joins them. Arrows are `RouteArrow` annotations rotated by the bearing. Map is
+  `Map(initialPosition:interactionModes: [.pan, .zoom])`. Footer text id `todaymap-route-length`.
+- Guide (How it works): the map text tells about the length line, the arrows and the map that no longer turns;
+  "Signs in this app" has the arrowhead sign.
+- What's new: a 1.30 entry (before / now for length, several days, how measured, arrows, no turning, guide).
+- Tests: data test `testRouteLengthAndHalfway`; screen test `testTheRouteSaysHowLong` (finds `todaymap-route-length`).

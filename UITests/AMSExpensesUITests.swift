@@ -425,6 +425,18 @@ final class AMSExpensesUITests: XCTestCase {
         XCTAssertTrue(app.buttons["todaymap-row-0"].waitForExistence(timeout: 10), "today's coffee is missing from Month")
     }
 
+    /// 1.30 (his yes): with two pins on the map, a line under it says how long the route is.
+    func testTheRouteSaysHowLong() {
+        let app = launch(fix: "59.3430,18.0490,8")
+        add(app, "Coffee 45 kronor")
+        add(app, "Bread 30 kronor")
+
+        app.buttons["home-map"].tap()
+        let length = app.staticTexts["todaymap-route-length"]
+        XCTAssertTrue(length.waitForExistence(timeout: 10), "no route length under the map")
+        XCTAssertTrue(length.label.hasPrefix("Route: "), "the length line reads '\(length.label)'")
+    }
+
     /// 1.20 (his ask): This week folds open with all of this week's expenses, in whole euros.
     func testThisWeekFoldsOpenInWholeEuros() {
         let app = launch()

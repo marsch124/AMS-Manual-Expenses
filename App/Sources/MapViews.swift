@@ -54,20 +54,40 @@ final class RoadWays: ObservableObject {
         running = false
     }
 
-    /// The whole dotted route through the pins, oldest first: streets where known, bows elsewhere.
-    func path(through fixes: [Fix]) -> [CLLocationCoordinate2D] {
-        guard let first = fixes.first else { return [] }
-        var out = [first.coordinate]
-        for i in fixes.indices.dropFirst() {
+    /// 1.30: one stretch per pair of pins, oldest first: the street way where known, a bow elsewhere.
+    func legs(through fixes: [Fix]) -> [[Fix]] {
+        fixes.indices.dropFirst().map { i in
             let a = fixes[i - 1], b = fixes[i]
             if let way = found[Self.key(a, b)], !way.isEmpty {
-                out += way
-                out.append(b.coordinate)
-            } else {
-                out += RouteShape.bow(from: a, to: b, side: i % 2 == 0 ? -1 : 1).dropFirst().map(\.coordinate)
+                return [a] + way.map { Fix(latitude: $0.latitude, longitude: $0.longitude) } + [b]
             }
+            return RouteShape.bow(from: a, to: b, side: i % 2 == 0 ? -1 : 1)
         }
-        return out
+    }
+
+    /// The whole dotted route through the pins.
+    static func path(_ legs: [[Fix]]) -> [CLLocationCoordinate2D] {
+        legs.enumerated().flatMap { i, leg in (i == 0 ? leg[...] : leg.dropFirst()).map(\.coordinate) }
+    }
+}
+
+/// 1.30 (his yes): the small hand-drawn arrowhead halfway along a stretch — the way he went.
+struct RouteArrow: View {
+    let colour: Color
+    let bearing: Double
+
+    var body: some View {
+        let chevron = Path { p in
+            p.move(to: CGPoint(x: 2, y: 10))
+            p.addLine(to: CGPoint(x: 8, y: 3))
+            p.addLine(to: CGPoint(x: 14, y: 10))
+        }
+        ZStack {
+            chevron.stroke(.white, style: StrokeStyle(lineWidth: 5.5, lineCap: .round, lineJoin: .round))
+            chevron.stroke(colour, style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
+        }
+        .frame(width: 16, height: 13)
+        .rotationEffect(.degrees(bearing))
     }
 }
 
@@ -253,6 +273,13 @@ struct TodayMapScreen: View {
         // 1.28 (his yes): Today gets one teal route (index -1); Month none.
         let routes = (byDay ? DayColours.byDay(onMap, date: { $0.expense.date }, calendar: .current)
                       : span == .today ? [(index: -1, items: onMap)] : []).filter { $0.items.count > 1 }
+        // 1.30: each route's stretches (streets or bows) and colour, drawn and measured the same.
+        let drawn = routes.map { route in
+            (index: route.index,
+             legs: roads.legs(through: route.items.map { $0.expense.fix! }),
+             colour: route.index < 0 ? Color.accentColor : Looks.color(DayColours.names[route.index]))
+        }
+        let routeLength = drawn.flatMap(\.legs).reduce(0) { $0 + RouteShape.length($1) }
         let shown = rows.map(\.expense)
         List {
             Picker("Show", selection: $span) {
@@ -268,13 +295,25 @@ struct TodayMapScreen: View {
                         .foregroundStyle(.secondary)
                         .accessibilityIdentifier("todaymap-empty")
                 } else {
-                    Map(initialPosition: .automatic) {
+                    // 1.30: no turning or tilting, so the arrows always point the right way.
+                    Map(initialPosition: .automatic, interactionModes: [.pan, .zoom]) {
                         // 1.27 (his yes): the way he went each day, in the order paid.
                         // 1.29 (his ask): dotted, along streets when close, else a hand-drawn bow.
-                        ForEach(routes, id: \.index) { route in
-                            MapPolyline(coordinates: roads.path(through: route.items.map { $0.expense.fix! }))
-                                .stroke((route.index < 0 ? Color.accentColor : Looks.color(DayColours.names[route.index])).opacity(0.85),
+                        ForEach(drawn, id: \.index) { route in
+                            MapPolyline(coordinates: RoadWays.path(route.legs))
+                                .stroke(route.colour.opacity(0.85),
                                         style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round, dash: [0.1, 8]))
+                        }
+                        // 1.30 (his yes): an arrow halfway along each stretch, older pin to newer.
+                        ForEach(drawn, id: \.index) { route in
+                            ForEach(Array(route.legs.enumerated()), id: \.offset) { _, leg in
+                                if let arrow = RouteShape.halfway(of: leg) {
+                                    Annotation("", coordinate: arrow.point.coordinate) {
+                                        RouteArrow(colour: route.colour, bearing: arrow.bearing)
+                                    }
+                                    .annotationTitles(.hidden)
+                                }
+                            }
                         }
                         ForEach(onMap, id: \.expense.id) { row in
                             Annotation(row.expense.title, coordinate: row.expense.fix!.coordinate) {
@@ -303,6 +342,11 @@ struct TodayMapScreen: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("\(onMap.count) of \(rows.count) have a position")
                         .accessibilityIdentifier("todaymap-count")
+                    if !drawn.isEmpty {
+                        Text(drawn.count == 1 ? "Route: \(RouteShape.lengthText(routeLength))"
+                                              : "Routes: \(RouteShape.lengthText(routeLength)) in all")
+                            .accessibilityIdentifier("todaymap-route-length")
+                    }
                     if byDay && !weekOnMap.isEmpty {
                         Text(chosen.map { "Only \(dayName($0, in: weekRows)) · tap it again for the whole week." } ?? "Tap a day to show only that day.")
                             .accessibilityIdentifier("todaymap-day-hint")

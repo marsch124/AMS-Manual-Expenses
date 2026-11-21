@@ -22,6 +22,38 @@ public enum RouteShape {
         return road <= straight * longestDetour
     }
 
+    /// 1.30 (his yes): how long a drawn route is, in metres, point to point.
+    public static func length(_ points: [Fix]) -> Double {
+        zip(points, points.dropFirst()).reduce(0) { $0 + $1.0.distance(to: $1.1) }
+    }
+
+    /// 1.30: "under 50 m", "about 850 m", "about 2.4 km".
+    public static func lengthText(_ metres: Double) -> String {
+        metres < 50 ? "under 50 m" : "about " + Places.distanceText(metres)
+    }
+
+    /// 1.30 (his yes): where the direction arrow of one pin-to-pin stretch sits — halfway along it
+    /// by length — and which way it points, in degrees clockwise from north. Nil below 1 m.
+    public static func halfway(of leg: [Fix]) -> (point: Fix, bearing: Double)? {
+        let total = length(leg)
+        guard total >= 1 else { return nil }
+        var walked = 0.0
+        for (a, b) in zip(leg, leg.dropFirst()) {
+            let step = a.distance(to: b)
+            if step > 0, walked + step >= total / 2 {
+                let t = (total / 2 - walked) / step
+                let point = Fix(latitude: a.latitude + (b.latitude - a.latitude) * t,
+                                longitude: a.longitude + (b.longitude - a.longitude) * t)
+                let k = cos((a.latitude + b.latitude) / 2 * .pi / 180)
+                let east = (b.longitude - a.longitude) * k, north = b.latitude - a.latitude
+                let degrees = atan2(east, north) * 180 / .pi
+                return (point, degrees < 0 ? degrees + 360 : degrees)
+            }
+            walked += step
+        }
+        return nil
+    }
+
     /// A gentle hand-drawn bow from `a` to `b`: its middle bends 15 % of the distance to `side`
     /// (+1 left, −1 right, seen from `a`), with a small wobble so it is not a perfect arc.
     /// First point = `a`, last = `b`.

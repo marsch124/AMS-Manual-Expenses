@@ -28,4 +28,26 @@ final class RouteShapeTests: XCTestCase {
         XCTAssertGreaterThan(bend, distance * 0.10)
         XCTAssertLessThan(bend, distance * 0.20)
     }
+
+    /// 1.30: the length line and where the arrow sits and points.
+    func testRouteLengthAndHalfway() {
+        let a = Fix(latitude: 58.5900, longitude: 16.1800)
+        let b = Fix(latitude: 58.5990, longitude: 16.1800)   // ~1 km due north
+        let c = Fix(latitude: 58.5990, longitude: 16.1974)   // then ~1 km due east
+        XCTAssertEqual(RouteShape.length([a, b, c]), a.distance(to: b) + b.distance(to: c), accuracy: 0.001)
+        XCTAssertEqual(RouteShape.lengthText(30), "under 50 m")
+        XCTAssertEqual(RouteShape.lengthText(848), "about 850 m")
+        XCTAssertEqual(RouteShape.lengthText(2_420), "about 2.4 km")
+
+        let north = RouteShape.halfway(of: [a, b])!
+        XCTAssertEqual(north.bearing, 0, accuracy: 0.5)
+        XCTAssertEqual(north.point.latitude, 58.5945, accuracy: 0.0001)
+        let south = RouteShape.halfway(of: [b, a])!
+        XCTAssertEqual(south.bearing, 180, accuracy: 0.5)
+        // North then east: halfway is the corner b, pointing along the second step (east).
+        let corner = RouteShape.halfway(of: [a, b, c])!
+        XCTAssertEqual(corner.point.latitude, b.latitude, accuracy: 0.0002)
+        XCTAssertEqual(corner.bearing, 90, accuracy: 3)
+        XCTAssertNil(RouteShape.halfway(of: [a, a]))
+    }
 }
