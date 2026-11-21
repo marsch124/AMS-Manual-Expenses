@@ -182,7 +182,9 @@ struct TodayMapScreen: View {
         let chosen = byDay ? day : nil
         let rows = chosen.map { d in weekRows.filter { DayColours.index(of: $0.expense.date, calendar: .current) == d } } ?? weekRows
         let onMap = rows.filter { $0.number != nil }
-        let routes = byDay ? DayColours.byDay(onMap, date: { $0.expense.date }, calendar: .current).filter { $0.items.count > 1 } : []
+        // 1.28 (his yes): Today gets one teal route (index -1); Month none.
+        let routes = (byDay ? DayColours.byDay(onMap, date: { $0.expense.date }, calendar: .current)
+                      : span == .today ? [(index: -1, items: onMap)] : []).filter { $0.items.count > 1 }
         let shown = rows.map(\.expense)
         List {
             Picker("Show", selection: $span) {
@@ -202,7 +204,7 @@ struct TodayMapScreen: View {
                         // 1.27 (his yes): the way he went each day, in the order paid.
                         ForEach(routes, id: \.index) { route in
                             MapPolyline(coordinates: route.items.map { $0.expense.fix!.coordinate })
-                                .stroke(Looks.color(DayColours.names[route.index]).opacity(0.8), lineWidth: 3)
+                                .stroke((route.index < 0 ? Color.accentColor : Looks.color(DayColours.names[route.index])).opacity(0.8), lineWidth: 3)
                         }
                         ForEach(onMap, id: \.expense.id) { row in
                             Annotation(row.expense.title, coordinate: row.expense.fix!.coordinate) {

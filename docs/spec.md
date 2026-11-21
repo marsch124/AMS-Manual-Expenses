@@ -231,7 +231,7 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
   amount, When, Place, Area, Position (`map-position`, six decimals), Accuracy (`map-accuracy`,
   when known); **Open in Maps** (`map-open`) opens `https://maps.apple.com/?ll=<lat>,<lon>&q=<place>`.
   Footer: "The position stays on this iPhone."
-- **B · Today on the map** (`TodayMapScreen`; since 1.25 titled "On the map" with a span switch `map-span`, see §1.25) (since 1.26 pins coloured by day in the week spans, see §1.26) (1.27: day buttons and routes, see §1.27): today's expenses, oldest first, numbered 1, 2 …
+- **B · Today on the map** (`TodayMapScreen`; since 1.25 titled "On the map" with a span switch `map-span`, see §1.25) (since 1.26 pins coloured by day in the week spans, see §1.26) (1.27: day buttons and routes, see §1.27) (1.28: route on Today, see §1.28): today's expenses, oldest first, numbered 1, 2 …
   only those with a fix; all on one map (fitted to them), then the list (`todaymap-row-0` …:
   number or a grey "–", description, time · place or "no position", amount) with Today's total
   in the header. A row with a fix opens C. Footer `todaymap-count`: "N of M have a position".
@@ -666,3 +666,16 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
 - Tests: data test `testThingsAreGroupedByDayOldestFirst` (DayColoursTests.swift); screen test
   `testTodayIsShownOnTheMap` now taps today's day button in This week, finds the hint (`todaymap-day-hint`)
   saying "Only", and taps the button again.
+
+## 1.28 · A route on Today too (his yes, 21 Nov 2026)
+
+- **Today route** (change §14 B and 1.27): in Today of `TodayMapScreen`, when two or more of today's expenses
+  have a position, a thin teal line joins today's pins in the order paid (oldest first, pin 1 → 2 → 3), so you
+  see the way you went today. Same thickness as the week routes (3 points). One pin or none: no line.
+- **Unchanged**: This week and Last week keep one line per day in the day's colour (two or more pins);
+  Month still has no line (too many days for one line). No new data rule.
+- Guide (How it works): the map sentence says Today has a teal route too and Month none; "Signs in this app":
+  the thin line sign says teal in Today, the day's colour in This week and Last week.
+- What's new: a 1.28 entry (before / now for the Today route, week and Month unchanged, guide).
+- Tests: no new test (the route is drawn on the map, which screen tests cannot see); the existing screen test
+  `testTodayIsShownOnTheMap` still passes.
