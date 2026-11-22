@@ -61,5 +61,7 @@ The full rules: `docs/spec.md`.
 - GitHub's simulator has an on-screen keyboard; his Mac's has not. A control under the
   keyboard takes no tap on CI.
 - CI's Xcode can be older than the Mac's: keep long arithmetic expressions typed and split.
+- UI tests run in en_US: the week starts on Sunday there (Monday on his phone). A test about
+  weeks must handle "today is the first day of the week" (it went red on Sunday 22 Nov 2026).
 - Identifiers name what a control IS (`home-type-go`), never what it says.
   Don't put an identifier on a whole screen container: its children inherit it.

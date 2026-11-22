@@ -522,8 +522,10 @@ final class AMSExpensesUITests: XCTestCase {
         XCTAssertTrue(toggle.label.contains("300"), "the Yesterday card reads '\(toggle.label)'")
         XCTAssertEqual(toggle.value as? String, "1 expense")
         XCTAssertFalse(app.buttons["yesterday-row-0"].exists, "yesterday is not folded at the start")
-        // 1.18: the quiet This week line (yesterday's taxi counts unless today is a Monday).
-        if Calendar.current.component(.weekday, from: Date()) != Calendar.current.firstWeekday {
+        // 1.18: the quiet This week line (yesterday's taxi counts unless today is the first day
+        // of the week: Sunday in the tests' en_US, Monday on his phone).
+        let firstDay = Calendar.current.component(.weekday, from: Date()) == Calendar.current.firstWeekday
+        if !firstDay {
             XCTAssertEqual(app.buttons["day-tile-this-week"].value as? String, "1 expense", "no This week card")
         }
         XCTAssertTrue(app.staticTexts["today-empty"].exists, "yesterday's taxi was counted as today")
@@ -533,7 +535,13 @@ final class AMSExpensesUITests: XCTestCase {
         XCTAssertTrue(row.waitForExistence(timeout: 10), "a tap did not open yesterday")
         XCTAssertTrue(row.label.contains("Taxi"), "the row reads '\(row.label)'")
         // 1.25: one card open at a time — Last week (empty) does nothing, a second tap closes.
-        XCTAssertFalse(app.buttons["day-tile-last-week"].isEnabled, "an empty Last week card can be tapped")
+        // On the first day of the week yesterday's taxi is in Last week (red on Sunday 22 Nov 2026).
+        let lastWeek = app.buttons["day-tile-last-week"]
+        if firstDay {
+            XCTAssertEqual(lastWeek.value as? String, "1 expense", "yesterday's taxi is not in Last week")
+        } else {
+            XCTAssertFalse(lastWeek.isEnabled, "an empty Last week card can be tapped")
+        }
         toggle.tap()
         expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: row)
         waitForExpectations(timeout: 10)
