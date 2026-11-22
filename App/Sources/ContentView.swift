@@ -345,12 +345,13 @@ struct ContentView: View {
     /// off ("Sun, 22… · Benalm…"). The date never shrinks; only a very long place is shortened.
     private var header: some View {
         TimelineView(.everyMinute) { context in
-            HStack(alignment: .center, spacing: 8) {  // PLANTED FAULT: the 1.31 layout
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .center, spacing: 8) {
                     Text(context.date, format: .dateTime.hour().minute())
                         .font(.system(size: 32, weight: .bold, design: .rounded))
                         .monospacedDigit()
+                    Spacer(minLength: 0)
+                    currencyButton
                 }
                 HStack(spacing: 4) {
                     Text(context.date, format: .dateTime.weekday(.abbreviated).day().month(.abbreviated))
@@ -365,8 +366,6 @@ struct ContentView: View {
                 .font(.footnote)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
-            }
-            HStack { Spacer(minLength: 0); currencyButton }
             }
         }
         .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
