@@ -759,3 +759,18 @@ Make it so that it fits on one line."
 - Tests: `testWhoItWasForIsOneTapOnOneLine` (new: four buttons on the same line, inside the screen, one tap
   chooses Anna then Others, only one chosen, the sheet stays); `testTheConsumerStartsAsMartinAndIsKept` and
   `testTheRowShowsWhoItWasFor` now tap the buttons directly.
+
+## 1.32 · Date and place line in full (his ask, 22 Nov 2026)
+
+From his phone picture of 22 Nov in Benalmádena: the line under the time read "Sun, 22… · Benalm…" with free
+space beside it. He said "fix".
+
+- **Header** (main screen, first card): the currency button (`home-currency`) now sits in one row with the big
+  time (time left, button right, centred on the time). The grey line with the date (`home-date`) and the place
+  (`home-place`) is below that row and has the whole width of the card. Before (1.11 to 1.31) the button stood
+  beside the time and the line together, and the line got only about half of the width, so both the date and the
+  place were cut. The date never shrinks (`fixedSize`); a place too long for the line ends with "…".
+- Test hook: `-uiTestingPlace <name>` sets the place name in UI tests.
+- What's new: a 1.32 entry. Guide (Currency): the button is beside the time; the grey line under it shows the date and place.
+- Test: `testTheDateAndPlaceLineHasTheWholeWidth` (place "Santa Cruz de Tenerife, Spain"; the date and the place
+  start below the currency button and stay on the screen).

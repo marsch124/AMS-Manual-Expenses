@@ -9,6 +9,11 @@ struct Release {
 
 enum Releases {
     static let all: [Release] = [
+        Release(version: "1.32", date: "22 November 2026", lines: [
+            "Date and place in full: on the main screen, the grey line under the time now shows the whole date and the whole place, for example “Sun, 22 Nov · Benalmádena, Spain”. Before (1.31), the line was cut off, for example “Sun, 22… · Benalm…”, although there was free space.",
+            "Why: the currency button (“EUR · auto”) now stands beside the big time only, not beside both lines. So the line under it can use the whole width of the card. The button works as before.",
+            "Only a very long place name is still shortened at its end, with “…”. The date is never shortened.",
+        ]),
         Release(version: "1.31", date: "22 November 2026", lines: [
             "Who it was for, with one tap: on the check sheet (New expense and Edit expense), under the category, there are now four buttons on one line: Martin, AMS, Anna and Others. Tap one and it is chosen at once; you stay on the sheet. Before (1.30), there was one label, for example “Martin”, and to change it you had to tap it, choose in a list and come back.",
             "Which one is chosen: the chosen button is full colour (Martin blue, AMS yellow, Anna green, Others grey). The other three are light, in their own colour. Only one is chosen at a time.",
@@ -232,7 +237,7 @@ enum Guide {
         Section(title: "Currency", lines: [
             "A currency you say is used: kronor, kr, crowns, SEK, euro, €.",
             "Otherwise it is the currency of the country you are in, from your location; without a location, from the iPhone’s time zone.",
-            "Tap the currency button to fix one by hand, or set it back to automatic.",
+            "Tap the currency button beside the time at the top (for example “EUR · auto”) to fix one by hand, or set it back to automatic. Under the time, a grey line shows the date and the place you are in.",
         ]),
         Section(title: "Language", lines: [
             "The globe chooses the language you dictate in: English, Svenska or Deutsch.",

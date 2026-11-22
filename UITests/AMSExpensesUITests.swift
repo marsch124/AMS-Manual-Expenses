@@ -189,6 +189,30 @@ final class AMSExpensesUITests: XCTestCase {
         XCTAssertTrue(app.descendants(matching: .any)["stats-category-ring"].firstMatch.exists, "no ring chart")
     }
 
+    /// 1.32 (his ask): the date and the place under the time show in full. The currency button
+    /// sits beside the time only, so the date and place line below has the whole width of the
+    /// card. In 1.31 the button stood beside both lines and a long place was cut off.
+    func testTheDateAndPlaceLineHasTheWholeWidth() {
+        let app = XCUIApplication()
+        app.launchArguments += ["-uiTesting", "-uiTestingPlace", "Santa Cruz de Tenerife, Spain",
+                                "-manualCurrency", "SEK", "-dictationLanguage", "en-US",
+                                "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+
+        let place = app.staticTexts["home-place"]
+        let date = app.staticTexts["home-date"]
+        let currency = app.buttons["home-currency"]
+        XCTAssertTrue(place.waitForExistence(timeout: 10), "the main screen shows no place")
+        XCTAssertTrue(date.exists, "the main screen shows no date")
+        XCTAssertTrue(currency.exists, "the main screen has no currency button")
+        XCTAssertEqual(place.label, "Santa Cruz de Tenerife, Spain")
+        // The line starts below the currency button, not beside it.
+        let buttonBottom: CGFloat = currency.frame.maxY
+        XCTAssertGreaterThanOrEqual(date.frame.minY, buttonBottom - 2, "the date is beside the currency button")
+        XCTAssertGreaterThanOrEqual(place.frame.minY, buttonBottom - 2, "the place is beside the currency button")
+        XCTAssertLessThanOrEqual(place.frame.maxX, app.windows.firstMatch.frame.width, "the place runs off the screen")
+    }
+
     /// 1.6 (his ask): a new expense is for Martin; choosing AMS is kept when it is saved.
     /// (1.31: the four people are buttons on the check sheet itself.)
     func testTheConsumerStartsAsMartinAndIsKept() {

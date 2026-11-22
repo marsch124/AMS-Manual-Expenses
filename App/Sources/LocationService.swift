@@ -27,6 +27,10 @@ final class LocationService: NSObject, ObservableObject, CLLocationManagerDelega
                 placeName = "Stockholm, Sweden"
             }
         }
+        // 1.32: a place name for the main screen's date and place line, `-uiTestingPlace <name>`.
+        if ExpensesApp.uiTesting, let i = arguments.firstIndex(of: "-uiTestingPlace"), i + 1 < arguments.count {
+            placeName = arguments[i + 1]
+        }
     }
 
     func refresh() {

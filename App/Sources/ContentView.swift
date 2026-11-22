@@ -340,43 +340,53 @@ struct ContentView: View {
 
     /// 1.11 (his ask "tighten things up"): one block — the time, under it the date and the place
     /// on one grey line, the currency on the right.
+    /// 1.32 (his ask): the currency sits beside the time only, so the date and place line has the
+    /// whole width of the card. Before, the currency stood beside both lines and the line was cut
+    /// off ("Sun, 22… · Benalm…"). The date never shrinks; only a very long place is shortened.
     private var header: some View {
-        HStack(alignment: .center, spacing: 8) {
-            TimelineView(.everyMinute) { context in
-                VStack(alignment: .leading, spacing: 0) {
+        TimelineView(.everyMinute) { context in
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(alignment: .center, spacing: 8) {
                     Text(context.date, format: .dateTime.hour().minute())
                         .font(.system(size: 32, weight: .bold, design: .rounded))
                         .monospacedDigit()
-                    HStack(spacing: 4) {
-                        Text(context.date, format: .dateTime.weekday(.abbreviated).day().month(.abbreviated))
-                        Text("·")
-                        Image(systemName: "location.fill").font(.caption2)
-                        Text(location.placeName ?? TimeZone.current.identifier)
-                    }
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
+                    Spacer(minLength: 0)
+                    currencyButton
                 }
-            }
-            HStack {
-                Spacer(minLength: 0)
-                Menu {
-                    Picker("Currency", selection: $manualCurrency) {
-                        Text("Automatic (\(autoCurrency))").tag("")
-                        ForEach(currencyOptions, id: \.self) { Text($0).tag($0) }
-                    }
-                } label: {
-                    Text(manualCurrency.isEmpty ? "\(defaultCurrency) · auto" : defaultCurrency)
-                        .bold()
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(Capsule().fill(Color.accentColor.opacity(0.15)))
+                HStack(spacing: 4) {
+                    Text(context.date, format: .dateTime.weekday(.abbreviated).day().month(.abbreviated))
+                        .fixedSize()
+                        .accessibilityIdentifier("home-date")
+                    Text("·")
+                    Image(systemName: "location.fill").font(.caption2)
+                    Text(location.placeName ?? TimeZone.current.identifier)
+                        .truncationMode(.tail)
+                        .accessibilityIdentifier("home-place")
                 }
-                .accessibilityIdentifier("home-currency")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
             }
-            .font(.subheadline)
         }
         .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+    }
+
+    private var currencyButton: some View {
+        Menu {
+            Picker("Currency", selection: $manualCurrency) {
+                Text("Automatic (\(autoCurrency))").tag("")
+                ForEach(currencyOptions, id: \.self) { Text($0).tag($0) }
+            }
+        } label: {
+            Text(manualCurrency.isEmpty ? "\(defaultCurrency) · auto" : defaultCurrency)
+                .bold()
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Capsule().fill(Color.accentColor.opacity(0.15)))
+        }
+        .font(.subheadline)
+        .fixedSize()
+        .accessibilityIdentifier("home-currency")
     }
 
     /// 1.11 (his ask "tighten things up"): the microphone on the left, the typing field beside it.
