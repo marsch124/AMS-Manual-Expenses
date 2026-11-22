@@ -261,7 +261,7 @@ struct ConsumerButtons: View {
                 let chosen = selection == name
                 let look = Looks.consumer(name)
                 Button {
-                    withAnimation(.easeOut(duration: 0.15)) { selection = name }
+                    withAnimation(.easeOut(duration: 0.15)) { _ = name }  // PLANTED FAULT
                 } label: {
                     Text(name)
                         .font(.subheadline.weight(.semibold))
