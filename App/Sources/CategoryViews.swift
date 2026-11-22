@@ -248,35 +248,38 @@ struct CategoriesScreen: View {
     }
 }
 
-/// Choosing who an expense was for (1.6): Martin, AMS, Anna (1.9) or Others, each with its
-/// colour; a tap chooses and goes back.
-struct ConsumerChooser: View {
+/// Who an expense was for (1.6): Martin, AMS, Anna (1.9) or Others, each in its colour.
+/// 1.31 (his ask): four buttons on one line of the check sheet instead of a label that opened
+/// a list. One tap chooses; the chosen one is full colour, the others a light tint of theirs.
+/// Equal widths, so the four always fit on one line (a long name shrinks a little first).
+struct ConsumerButtons: View {
     @Binding var selection: String
-    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        List {
+        HStack(spacing: 6) {
             ForEach(Array(Consumers.all.enumerated()), id: \.element) { index, name in
+                let chosen = selection == name
+                let look = Looks.consumer(name)
                 Button {
-                    selection = name
-                    dismiss()
+                    withAnimation(.easeOut(duration: 0.15)) { selection = name }
                 } label: {
-                    HStack(spacing: 12) {
-                        Circle().fill(Looks.consumer(name).fill).frame(width: 14, height: 14)
-                            .accessibilityHidden(true)
-                        Text(name)
-                        Spacer()
-                        if selection == name {
-                            Image(systemName: "checkmark").foregroundStyle(Color.accentColor)
-                        }
-                    }
+                    Text(name)
+                        .font(.subheadline.weight(.semibold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                        .foregroundStyle(chosen ? look.text : Looks.consumerInk(name))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
+                        .background(Capsule().fill(chosen ? look.fill : look.fill.opacity(0.15)))
+                        .contentShape(Capsule())
                 }
-                .tint(.primary)
+                // Each button takes its own tap (a plain row would pass every tap to all four).
+                .buttonStyle(.plain)
+                .accessibilityValue(chosen ? "Chosen" : "")
                 .accessibilityIdentifier("consumer-choice-\(index)")
             }
         }
-        .navigationTitle("For whom")
-        .navigationBarTitleDisplayMode(.inline)
+        .padding(.vertical, 2)
     }
 }
 

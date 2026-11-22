@@ -35,6 +35,12 @@ enum Looks {
         default: (.gray, .white)
         }
     }
+
+    /// Who it was for, as writing on a light tint of its colour: the colour itself, but a dark
+    /// yellow for AMS (yellow writing cannot be read).
+    static func consumerInk(_ name: String) -> Color {
+        name == "AMS" ? Color(red: 0.6, green: 0.45, blue: 0) : consumer(name).fill
+    }
 }
 
 /// A category's white icon in its coloured circle.

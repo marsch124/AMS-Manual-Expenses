@@ -190,6 +190,7 @@ final class AMSExpensesUITests: XCTestCase {
     }
 
     /// 1.6 (his ask): a new expense is for Martin; choosing AMS is kept when it is saved.
+    /// (1.31: the four people are buttons on the check sheet itself.)
     func testTheConsumerStartsAsMartinAndIsKept() {
         let app = launch()
         let field = app.textFields["home-type-field"]
@@ -198,23 +199,52 @@ final class AMSExpensesUITests: XCTestCase {
         field.typeText("Paper 89 kronor")
         app.buttons["home-type-go"].tap()
 
-        let value = app.staticTexts["entry-consumer-value"]
-        XCTAssertTrue(value.waitForExistence(timeout: 10), "the check sheet has no consumer")
-        XCTAssertEqual(value.label, "Martin")
-        app.buttons["entry-consumer"].tap()
+        let martin = app.buttons["consumer-choice-0"]
+        reveal(app, martin)
+        XCTAssertEqual(martin.value as? String, "Chosen", "a new expense is not for Martin")
         let ams = app.buttons["consumer-choice-1"]
-        XCTAssertTrue(ams.waitForExistence(timeout: 10))
         ams.tap()
-        XCTAssertTrue(value.waitForExistence(timeout: 10))
-        XCTAssertEqual(value.label, "AMS")
+        XCTAssertEqual(ams.value as? String, "Chosen")
         app.buttons["entry-save"].tap()
 
         // Open it again: the choice was saved, not just shown.
         let row = app.buttons["expense-row-0"]
         XCTAssertTrue(row.waitForExistence(timeout: 10))
         row.tap()
-        XCTAssertTrue(app.staticTexts["entry-consumer-value"].waitForExistence(timeout: 10))
-        XCTAssertEqual(app.staticTexts["entry-consumer-value"].label, "AMS")
+        let saved = app.buttons["consumer-choice-1"]
+        reveal(app, saved)
+        XCTAssertEqual(saved.value as? String, "Chosen", "AMS was not kept")
+    }
+
+    /// 1.31 (his ask): who it was for is four buttons on one line of the check sheet — Martin,
+    /// AMS, Anna, Others. One tap chooses; no list opens; only one is chosen at a time.
+    func testWhoItWasForIsOneTapOnOneLine() {
+        let app = launch()
+        let field = app.textFields["home-type-field"]
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        field.tap()
+        field.typeText("Stamps 30 kronor")
+        app.buttons["home-type-go"].tap()
+
+        let buttons = (0..<4).map { app.buttons["consumer-choice-\($0)"] }
+        reveal(app, buttons[3])
+        let width: CGFloat = app.windows.firstMatch.frame.width
+        let line: CGFloat = buttons[0].frame.midY
+        let half: CGFloat = buttons[0].frame.height / 2
+        for (i, b) in buttons.enumerated() {
+            XCTAssertTrue(b.exists && b.isHittable, "person button \(i) is not on the sheet")
+            XCTAssertEqual(b.frame.midY, line, accuracy: half, "person button \(i) is not on the same line")
+            XCTAssertLessThanOrEqual(b.frame.maxX, width, "person button \(i) runs off the screen")
+        }
+
+        buttons[2].tap()
+        // Still on the check sheet: the tap chose, it did not open a list.
+        XCTAssertTrue(app.buttons["entry-save"].exists, "a tap on Anna left the check sheet")
+        XCTAssertEqual(buttons[2].value as? String, "Chosen", "Anna is not chosen after one tap")
+        XCTAssertNotEqual(buttons[0].value as? String, "Chosen", "Martin is still chosen too")
+        buttons[3].tap()
+        XCTAssertEqual(buttons[3].value as? String, "Chosen", "Others is not chosen after one tap")
+        XCTAssertNotEqual(buttons[2].value as? String, "Chosen", "Anna is still chosen too")
     }
 
     /// 1.9: the row says who it was for (his colours), and Anna is a choice.
@@ -225,14 +255,10 @@ final class AMSExpensesUITests: XCTestCase {
         field.tap()
         field.typeText("Flowers 120 kronor")
         app.buttons["home-type-go"].tap()
-        let consumer = app.buttons["entry-consumer"]
-        XCTAssertTrue(consumer.waitForExistence(timeout: 10))
-        consumer.tap()
         let anna = app.buttons["consumer-choice-2"]
-        XCTAssertTrue(anna.waitForExistence(timeout: 10), "no third choice under For whom")
+        reveal(app, anna)
         anna.tap()
-        XCTAssertTrue(app.staticTexts["entry-consumer-value"].waitForExistence(timeout: 10))
-        XCTAssertEqual(app.staticTexts["entry-consumer-value"].label, "Anna")
+        XCTAssertEqual(anna.value as? String, "Chosen")
         app.buttons["entry-save"].tap()
 
         let row = app.buttons["expense-row-0"]

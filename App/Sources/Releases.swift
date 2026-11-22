@@ -9,6 +9,12 @@ struct Release {
 
 enum Releases {
     static let all: [Release] = [
+        Release(version: "1.31", date: "22 November 2026", lines: [
+            "Who it was for, with one tap: on the check sheet (New expense and Edit expense), under the category, there are now four buttons on one line: Martin, AMS, Anna and Others. Tap one and it is chosen at once; you stay on the sheet. Before (1.30), there was one label, for example “Martin”, and to change it you had to tap it, choose in a list and come back.",
+            "Which one is chosen: the chosen button is full colour (Martin blue, AMS yellow, Anna green, Others grey). The other three are light, in their own colour. Only one is chosen at a time.",
+            "Unchanged: a new expense still starts with Martin chosen. “Same again” and the favourites row keep the person of the expense. The coloured tags on the rows in the lists are as before.",
+            "Guide: How it works (For whom) and “Signs in this app” now describe the four buttons.",
+        ]),
         Release(version: "1.30", date: "21 November 2026", lines: [
             "Route length under the map: on the “On the map” screen, in the small grey lines under the map (where “N of M have a position” is), there is now a new line that says how long the drawn route is: “Route: about 850 m” or “Route: about 2.4 km”. Before (1.29) there was no length anywhere. The number is rounded like the place distances: whole 10 metres below 1 km (850 m), one decimal from 1 km to 10 km (2.4 km), whole kilometres from 10 km up (12 km). A very short route says “Route: under 50 m”.",
             "Several days add up: in “This week” and “Last week”, when the map shows the routes of several days, the line adds them up and says “Routes: about 5.3 km in all”. When you choose one day with the day buttons, only that day’s route is counted (“Route: about 1.2 km”). Tap the day again and the whole week is back.",
@@ -257,7 +263,7 @@ enum Guide {
             "Every category has an icon and a colour. Tap the icon in Settings › Categories to choose another one. A new category starts with a grey tag.",
         ]),
         Section(title: "For whom", lines: [
-            "Under the category, the check sheet says who the expense was for: Martin, AMS, Anna or Others. A new one is Martin; tap the label to change it.",
+            "Under the category, the check sheet has four buttons on one line: Martin, AMS, Anna and Others. They say who the expense was for. Tap one to choose it; the chosen one is full colour, the others are light. A new expense starts with Martin.",
             "Every expense in the lists shows it in colour: Martin blue, AMS yellow, Anna green, Others grey.",
         ]),
         Section(title: "Place visited", lines: [
@@ -295,6 +301,7 @@ enum Guide {
         Section(title: "Signs in this app", lines: [
             "A small card under Today in its own colour: amber is Yesterday, teal is This week, indigo is Last week. A card in full colour with white writing is the open one; tap it again to close it.",
             "Blue tag “Martin”, yellow tag “AMS”, green tag “Anna”, grey tag “Others”: who the expense was for. The tag is on every row.",
+            "The four buttons Martin, AMS, Anna and Others on the check sheet: the one in full colour is chosen; the light ones are not. One tap chooses another.",
             "Orange “· SEK 120 over” in the line with the number of expenses under the opened This week card: this week is above your weekly budget. Without orange, “· SEK 766 left” is what is left of it.",
             "A round coloured icon at the left of a row: the category. Each category has its own icon and colour; a new one starts grey.",
             "A small square picture on the right of a row: the expense has a photo. Open the expense and tap it to see it big.",

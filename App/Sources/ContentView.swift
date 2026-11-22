@@ -735,14 +735,9 @@ struct EntryEditor: View {
                         }
                     }
                     .accessibilityIdentifier("entry-category")
-                    // 1.6 (his ask): who it was for, the very last line, a pill like the category.
-                    NavigationLink { ConsumerChooser(selection: $draft.consumer) } label: {
-                        // 1.9: in his colour for that person (yellow is too light for text: dark then).
-                        pill(draft.consumer, filled: true,
-                             color: draft.consumer == "AMS" ? Color(red: 0.6, green: 0.45, blue: 0) : Looks.consumer(draft.consumer).fill)
-                            .accessibilityIdentifier("entry-consumer-value")
-                    }
-                    .accessibilityIdentifier("entry-consumer")
+                    // 1.6 (his ask): who it was for, under the category. 1.31 (his ask): four buttons on
+                    // one line, one tap chooses — no list to open any more.
+                    ConsumerButtons(selection: $draft.consumer)
                     // 1.7 (his ask): the place visited, a pill like the others; the places near
                     // this expense's GPS fix come first in the chooser.
                     NavigationLink { PlaceChooser(selection: $draft.visitedPlace, fix: draft.fix, visits: visits) } label: {

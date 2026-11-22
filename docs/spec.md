@@ -86,9 +86,9 @@ decimal pad, comma or point) with the Currency beside it (`entry-currency`); the
 time on the left as two quiet labels without a heading (`entry-time`; a tap opens the
 calendar with the time in its own sheet, `entry-time-picker`, Cancel / Done); what was heard is in italics; last, the category without a label
 (`entry-category`, showing `entry-category-value`: the name, or "No category" in grey;
-opens the chooser, §11); the very last line (1.6) the consumer pill (`entry-consumer`,
-value `entry-consumer-value`; chooser `consumer-choice-0` … Martin / AMS / Anna (1.9) / Others; a new
-expense is Martin, earlier ones count as Martin). Since 1.7 the last line is the place
+opens the chooser, §11); then (1.6) who it was for: since 1.31 four buttons on one line,
+`consumer-choice-0` … Martin / AMS / Anna (1.9) / Others, value "Chosen" on the chosen one (before
+1.31 a pill `entry-consumer` that opened a list); a new expense is Martin, earlier ones count as Martin. Since 1.7 the last line is the place
 visited (`entry-place`, value `entry-place-value`: the name, or "No place" in grey; opens
 the chooser, §13). A new expense's category is the one its description had last
 time, else the default category (§11).
@@ -251,8 +251,8 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
   look (onto another category: that one's look stays); deleting drops the choice.
 - **For whom** (his colours): Martin blue, AMS yellow (dark text), Anna green (new in 1.9,
   `consumer-choice-2`; Others is now `consumer-choice-3`), Others grey. Each row shows the name
-  in a small coloured label (`ConsumerTag`, read aloud "for <name>"); the check sheet's pill and
-  the chooser use the same colours.
+  in a small coloured label (`ConsumerTag`, read aloud "for <name>"); the check sheet's four
+  buttons (1.31) use the same colours.
 - **Rows** (`ExpenseRow`): icon · description over "time · category" and the For-whom label ·
   amount, and under an amount in another currency "≈ SEK N" at its day's rate (none while the
   rate is missing).
@@ -739,3 +739,23 @@ His yes to two ideas.
   "Signs in this app" has the arrowhead sign.
 - What's new: a 1.30 entry (before / now for length, several days, how measured, arrows, no turning, guide).
 - Tests: data test `testRouteLengthAndHalfway`; screen test `testTheRouteSaysHowLong` (finds `todaymap-route-length`).
+
+## 1.31 · Who it was for: four buttons on one line (his ask, 22 Nov 2026)
+
+His words: "I don't want to press the toggle in order to change from Martin to Anna to AMS to other.
+Make it so that it fits on one line."
+
+- **Check sheet** (`EntryEditor`, new and edit): under the category, `ConsumerButtons` (in `CategoryViews.swift`)
+  replaces the pill that opened the For whom list (`ConsumerChooser`, removed; ids `entry-consumer` and
+  `entry-consumer-value` are gone). Four capsule buttons on one line, equal widths, order as before:
+  Martin `consumer-choice-0`, AMS `consumer-choice-1`, Anna `consumer-choice-2`, Others `consumer-choice-3`.
+  One tap chooses and the sheet stays. Chosen: full colour with its text colour (Martin blue, AMS yellow with
+  dark text, Anna green, Others grey), accessibility value "Chosen". Not chosen: a light tint (15 %) of its
+  colour, the writing in its colour (AMS dark yellow, `Looks.consumerInk`). Subheadline semibold, one line,
+  shrinks to 70 % before it would wrap. Before (1.30): one pill, a tap opened a list, a tap there went back.
+- Unchanged: a new expense is Martin; Same again and favourites keep the expense's person; the row tags.
+- Guide (How it works): For whom describes the buttons; "Signs in this app" has the buttons sign.
+- What's new: a 1.31 entry.
+- Tests: `testWhoItWasForIsOneTapOnOneLine` (new: four buttons on the same line, inside the screen, one tap
+  chooses Anna then Others, only one chosen, the sheet stays); `testTheConsumerStartsAsMartinAndIsKept` and
+  `testTheRowShowsWhoItWasFor` now tap the buttons directly.
