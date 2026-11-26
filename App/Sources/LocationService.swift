@@ -19,6 +19,8 @@ final class LocationService: NSObject, ObservableObject, CLLocationManagerDelega
         // 1.7: the best the phone can do, so a shop can be told from the one next door.
         manager.desiredAccuracy = kCLLocationAccuracyBest
         let arguments = ProcessInfo.processInfo.arguments
+        // 1.34: picture mode shows a made-up place and asks for nothing.
+        if ExpensesApp.picture.sample { placeName = "Stockholm, Sweden" }
         if ExpensesApp.uiTesting, let i = arguments.firstIndex(of: "-uiTestingFix"), i + 1 < arguments.count {
             // <latitude>,<longitude>[,<accuracy in metres>]
             let parts = arguments[i + 1].split(separator: ",").compactMap { Double($0) }
@@ -34,6 +36,8 @@ final class LocationService: NSObject, ObservableObject, CLLocationManagerDelega
     }
 
     func refresh() {
+        // 1.34: picture mode never asks for the location (the system also calls this by itself).
+        if ExpensesApp.picture.sample { return }
         switch manager.authorizationStatus {
         case .notDetermined: manager.requestWhenInUseAuthorization()
         case .authorizedWhenInUse, .authorizedAlways: manager.requestLocation()

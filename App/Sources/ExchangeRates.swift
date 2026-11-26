@@ -11,7 +11,7 @@ final class ExchangeRates: ObservableObject {
     private static let storeKey = "exchangeRates"
 
     init() {
-        if ExpensesApp.uiTesting {
+        if ExpensesApp.isolated {
             // UI tests never touch the internet: one euro is always 10 kronor there.
             table = .fixed(["EUR": 10])
             return
@@ -28,7 +28,7 @@ final class ExchangeRates: ObservableObject {
     /// up to today, one request per currency (a currency the bank does not know cannot spoil
     /// the others). At most once an hour, unless a currency is still missing altogether.
     func update(for spends: [Spend]) async {
-        guard !ExpensesApp.uiTesting else { return }
+        guard !ExpensesApp.isolated else { return }
         let foreign = spends.filter { $0.currency != homeCurrency }
         guard let oldest = foreign.map(\.date).min() else { return }
         let codes = Set(foreign.map(\.currency)).sorted()

@@ -36,7 +36,7 @@ struct SettingsScreen: View {
                         Text("kr").foregroundStyle(.secondary)
                     }
                 } footer: {
-                    Text("In kronor. The “This week” line on the main screen then says how much is left. Leave it empty for no budget.")
+                    Text("In kronor. The “This week” card on the main screen then says how much is left. Leave it empty for no budget.")
                 }
                 .onAppear { budgetText = weeklyBudget > 0 ? Draft.format(weeklyBudget) : "" }
                 Section("About") {

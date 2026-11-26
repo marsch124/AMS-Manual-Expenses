@@ -27,7 +27,7 @@ final class RoadWays: ObservableObject {
     }
 
     func ask(_ pairs: [(Fix, Fix)]) {
-        guard !ExpensesApp.uiTesting else { return }
+        guard !ExpensesApp.isolated else { return }
         for (a, b) in pairs where RouteShape.asksForRoad(straight: a.distance(to: b)) {
             let key = Self.key(a, b)
             if asked.insert(key).inserted { waiting.append((key, a, b)) }

@@ -149,10 +149,13 @@ extension Draft {
 /// the plain name.
 enum Consumers {
     static let key = "consumerNames"
+    /// 1.34: in picture mode the three invented names, held in memory only (never stored).
+    static var pictureNames: [String]?
 
     /// The three names (the defaults of a new install until the list has been filled).
     static var names: [String] {
-        WhoNames.decode(UserDefaults.standard.string(forKey: key) ?? "") ?? WhoNames.defaults
+        if let pictureNames { return pictureNames }
+        return WhoNames.decode(UserDefaults.standard.string(forKey: key) ?? "") ?? WhoNames.defaults
     }
     static var all: [String] { names + [WhoNames.others] }
     static var initial: String { names[0] }

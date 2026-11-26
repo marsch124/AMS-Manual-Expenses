@@ -9,6 +9,13 @@ struct Release {
 
 enum Releases {
     static let all: [Release] = [
+        Release(version: "1.34", date: "26 November 2026", lines: [
+            "Picture mode, new: the app can now start with made-up expenses and open one chosen screen at once, so pictures of the app can be made without any tapping and without your own data. Before (1.33) this was not possible. Now it is there, and you never see it in normal use: it starts only when the app is started with a special launch word.",
+            "How it starts: with “-pictures” the app shows about 24 made-up expenses in kronor: 6 for today and the others over the last 14 days. A few have made-up places in Stockholm, so the map has pins. The names for “who was it for” are Sam, Alex and Robin. With “-show” and one of map, statistics, yesterday, this-week or last-week, that screen or that card is open at the start. Without “-pictures”, “-show” does nothing.",
+            "Your data is safe: in picture mode the app keeps the made-up expenses only in the memory of the app, never on the iPhone. It does not use iCloud, does not change any setting, does not write any file, does not ask for your location and does not use the internet. When the app is closed, the made-up expenses are gone. Your real expenses are not shown and not touched. A normal start works exactly as before.",
+            "Two wrong texts fixed: in Settings, under the weekly budget, the grey note said that the “This week” line on the main screen shows how much is left. That line has been a card since 1.25. Now the note says: when you open “This week” on the main screen, it then says how much is left. And the written specification now describes version 1.34 (it was behind).",
+            "Guide: How it works has a new short part, “Pictures of the app”. “Signs in this app” stays right: no mark or colour changed.",
+        ]),
         Release(version: "1.33", date: "26 November 2026", lines: [
             "The “who was it for” buttons now come from your own expenses and not from the app’s code. Before (1.32), the four buttons were fixed in the app. Now the app keeps your own list of three names, plus “Others”, on the phone. Nothing else changes: the buttons, their order and their colours look as before.",
             "First start after this update: the app fills the list once from the people already found in your expenses — the names in the order they first appear by date, at most three. If your expenses have fewer than three, the empty places get “Me”, “Work” or “Partner”. A new install with no expenses starts with “Me”, “Work”, “Partner” and “Others”. “Others” is always the last button.",
@@ -310,6 +317,11 @@ enum Guide {
             "Every total is in kronor. An amount in euros is counted at the European Central Bank’s rate of its day; on a weekend or a holiday, the last rate before it.",
             "The rates are fetched over the internet and kept on the iPhone. Only dates and currency names are sent, never an expense.",
             "Without a rate yet (offline), that amount is shown apart, for example “+ €12.50”, until the iPhone is online.",
+        ]),
+        Section(title: "Pictures of the app", lines: [
+            "For making pictures of the app there is a picture mode. You do not need it: it starts only when the app is started with the launch word “-pictures”.",
+            "Then the app shows made-up expenses in kronor (names Sam, Alex and Robin, places in Stockholm), and with “-show” and map, statistics, yesterday, this-week or last-week it opens that screen or card at once.",
+            "The made-up expenses live only in the memory of the app: nothing is saved, no location is asked for, nothing is sent over the internet, and your own expenses are not shown. Start the app normally and everything is as you left it.",
         ]),
         Section(title: "Signs in this app", lines: [
             "A small card under Today in its own colour: amber is Yesterday, teal is This week, indigo is Last week. A card in full colour with white writing is the open one; tap it again to close it.",

@@ -24,14 +24,18 @@ struct ContentView: View {
     @State private var saves = 0
     @State private var showSaved = false
     /// 1.25: which small card is open below (one at a time); all closed when the app starts.
-    @State private var openTile: DayTile.Kind?
+    @State private var openTile: DayTile.Kind? = DayTile.Kind(pictureScreen: ExpensesApp.picture.screen)
+    /// 1.34: picture mode (`-show map` / `-show statistics`) opens those screens at the start.
+    @State private var pictureMap = false
+    @State private var pictureStats = false
     /// 1.19: the expense just deleted, for the Undo bar.
     @State private var deleted: DeletedExpense?
     /// 1.19: the weekly budget in kronor from Settings; 0 = none.
     @AppStorage("weeklyBudget") private var weeklyBudget = 0.0
 
     private var autoCurrency: String {
-        location.currency ?? CurrencyDefaults.currency(forTimeZone: TimeZone.current.identifier) ?? "SEK"
+        if ExpensesApp.picture.sample { return "SEK" }
+        return location.currency ?? CurrencyDefaults.currency(forTimeZone: TimeZone.current.identifier) ?? "SEK"
     }
     private var defaultCurrency: String { manualCurrency.isEmpty ? autoCurrency : manualCurrency }
     private var currencyOptions: [String] {
@@ -255,6 +259,8 @@ struct ContentView: View {
                     .accessibilityIdentifier("home-settings")
                 }
             }
+            .navigationDestination(isPresented: $pictureMap) { TodayMapScreen(all: expenses) }
+            .navigationDestination(isPresented: $pictureStats) { StatisticsScreen() }
             .sheet(isPresented: $showSettings) {
                 SettingsScreen(csv: csv)
             }
@@ -323,7 +329,14 @@ struct ContentView: View {
         }
         .onAppear {
             speech.onFinish = { handle($0) }
-            if !ExpensesApp.uiTesting { location.refresh() }
+            if !ExpensesApp.isolated { location.refresh() }
+            if ExpensesApp.picture.screen == .map || ExpensesApp.picture.screen == .statistics {
+                // Picture mode: push the screen once the main screen is up.
+                Task {
+                    try? await Task.sleep(for: .milliseconds(700))
+                    if ExpensesApp.picture.screen == .map { pictureMap = true } else { pictureStats = true }
+                }
+            }
             if ExpensesApp.uiTesting && ProcessInfo.processInfo.arguments.contains("-uiTestingDictateRequest") {
                 dictationRequest.pending = true
             }
@@ -331,7 +344,7 @@ struct ContentView: View {
         }
         .onChange(of: dictationRequest.pending) { _, _ in takeDictationRequest() }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active && !ExpensesApp.uiTesting { location.refresh() }
+            if phase == .active && !ExpensesApp.isolated { location.refresh() }
         }
         .task(id: expenses.count) {
             await rates.update(for: expenses.map(\.spend))
@@ -394,7 +407,7 @@ struct ContentView: View {
         HStack(alignment: .center, spacing: 12) {
             Button {
                 // 1.7: a fresh GPS fix while he speaks, for the expense he is about to log.
-                if !speech.isRecording && !ExpensesApp.uiTesting { location.refresh() }
+                if !speech.isRecording && !ExpensesApp.isolated { location.refresh() }
                 speech.toggle(localeID: language)
             } label: {
                 Image(systemName: speech.isRecording ? "stop.fill" : "mic.fill")
@@ -862,6 +875,15 @@ extension View {
 struct DayTile: View {
     enum Kind: String {
         case yesterday = "Yesterday", thisWeek = "This week", lastWeek = "Last week"
+        /// 1.34: the card a picture-mode launch word opens.
+        init?(pictureScreen: PictureMode.Screen?) {
+            switch pictureScreen {
+            case .yesterday: self = .yesterday
+            case .thisWeek: self = .thisWeek
+            case .lastWeek: self = .lastWeek
+            default: return nil
+            }
+        }
         var id: String {
             switch self {
             case .yesterday: "yesterday"

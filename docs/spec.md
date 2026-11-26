@@ -1,6 +1,6 @@
 # AMS Manual Expenses — specification
 
-What the app does, rule by rule, written from the code (version 1.33, 26 Nov 2026).
+What the app does, rule by rule, written from the code (version 1.34, 26 Nov 2026).
 Change this file in the same commit as the behaviour it describes.
 
 ## 1. The main screen (`ContentView.swift`)
@@ -801,3 +801,25 @@ Why: the repository is public, and the names of the owner, their company and the
 - Guide (For whom, Signs in this app) and What's new (1.33) updated; history entries 1.6–1.31 no longer name people.
 - Tests: Core `WhoNamesTests` (seeding rule, rename and validity rules; invented names); the UI tests that tapped the
   buttons now work by place (a new install shows Me / Work / Partner).
+
+## 1.34 · Picture mode (26 Nov 2026)
+
+For making screenshots without taps and without real data. Not a feature the owner uses; it runs only from a launch word.
+
+- **Launch words** (read by `PictureMode.parse` in Core, `PictureMode.swift`): `-pictures` turns picture mode on;
+  `-show <screen>` with `map`, `statistics`, `yesterday`, `this-week` or `last-week` opens that screen (0.7 s after the start, the map or
+  Statistics pushed on the main screen; the Yesterday / This week / Last week card opened). `-show` without `-pictures`
+  does nothing; an unknown screen word opens nothing. Test: Core `PictureModeTests`.
+- **Sample** (`PictureSample.swift`): 24 invented expenses in SEK — 6 today (never in the future, always today) and 18
+  over the 13 days before, dates relative to now; some with an invented place and a position in central Stockholm
+  (corner café, market hall, pharmacy …), two with none. "Who was it for": Sam, Alex, Robin, held in memory
+  (`Consumers.pictureNames`, which `Consumers.names` answers first). `homeCurrency` stays "SEK"; the currency button
+  shows SEK; the place line says "Stockholm, Sweden". Nothing personal.
+- **What it never touches** (`ExpensesApp.isolated` = `-uiTesting` or picture mode): the store is in memory only
+  (`isStoredInMemoryOnly`); no location question and no location request; no internet (exchange rates fixed, no
+  street-way look-ups for the map routes); no `UserDefaults` write (the names are not seeded or stored; the category,
+  icon and name settings are not wiped as `-uiTesting` does) and no file written. Closing the app drops the sample.
+- **Normal starts and UI tests** behave exactly as before (`-uiTesting` keeps its own clearing, fixed rates, timings and hooks).
+- Texts: What's new (1.34), Guide part "Pictures of the app", Settings budget note (said a "This week" line that is a card
+  since 1.25: now "When you open “This week” on the main screen, it then says how much is left."). Signs in this app: no change.
+- Tests: one Core data test (`PictureModeTests`); no new UI test.

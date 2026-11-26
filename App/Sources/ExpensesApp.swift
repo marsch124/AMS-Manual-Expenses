@@ -7,6 +7,11 @@ struct ExpensesApp: App {
     /// UI tests start the app with `-uiTesting`: an empty store kept in memory only, and no
     /// location question (its system alert would sit on top of every test).
     static let uiTesting = ProcessInfo.processInfo.arguments.contains("-uiTesting")
+    /// 1.34: picture mode (`-pictures`, `-show <screen>`): made-up expenses for screenshots.
+    static let picture = PictureMode.parse(ProcessInfo.processInfo.arguments)
+    /// The app touches nothing outside itself: no location question, no internet, no stored
+    /// settings changed. True in UI tests and in picture mode.
+    static let isolated = uiTesting || picture.sample
 
     @StateObject private var rates = ExchangeRates()
     private let container: ModelContainer?
@@ -23,9 +28,14 @@ struct ExpensesApp: App {
         // 1.33: the "who was it for" names are filled once from the stored expenses, before any
         // screen shows (a screen's own query may not have loaded yet and would see no expenses).
         let made = try? ModelContainer(for: Expense.self,
-                                       configurations: ModelConfiguration(isStoredInMemoryOnly: Self.uiTesting))
+                                       configurations: ModelConfiguration(isStoredInMemoryOnly: Self.isolated))
         container = made
-        if let made, let all = try? ModelContext(made).fetch(FetchDescriptor<Expense>(sortBy: [SortDescriptor(\.date)])) {
+        if Self.picture.sample {
+            // Picture mode: invented names held in memory, sample expenses in the memory store.
+            // Nothing is written to the settings or to a file.
+            Consumers.pictureNames = PictureSample.names
+            if let made { PictureSample.fill(ModelContext(made)) }
+        } else if let made, let all = try? ModelContext(made).fetch(FetchDescriptor<Expense>(sortBy: [SortDescriptor(\.date)])) {
             Consumers.seedIfNeeded(from: all)
         }
     }
