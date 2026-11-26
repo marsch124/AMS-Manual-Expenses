@@ -9,15 +9,23 @@ struct Release {
 
 enum Releases {
     static let all: [Release] = [
+        Release(version: "1.33", date: "26 November 2026", lines: [
+            "The “who was it for” buttons now come from your own expenses and not from the app’s code. Before (1.32), the four buttons were fixed in the app. Now the app keeps your own list of three names, plus “Others”, on the phone. Nothing else changes: the buttons, their order and their colours look as before.",
+            "First start after this update: the app fills the list once from the people already found in your expenses — the names in the order they first appear by date, at most three. If your expenses have fewer than three, the empty places get “Me”, “Work” or “Partner”. A new install with no expenses starts with “Me”, “Work”, “Partner” and “Others”. “Others” is always the last button.",
+            "Colours go by place in the list, as before: first name blue, second yellow, third green, “Others” grey. A name that is not in the list is grey.",
+            "New in Settings › Your expenses: “Who it was for”. There you can rename the three names. Cancel leaves everything as it was; Save is the full-colour button. When you rename a name, it is renamed in all your expenses too, so the totals, the search, the CSV and the monthly report stay together. A name cannot be empty, cannot be used twice and cannot be “Others”.",
+            "A new expense starts with the first name in the list (as before). “Same again”, the favourites row and the coloured tags on the rows keep working as before.",
+            "Guide: How it works (For whom, and “Signs in this app”) now says that the names are your own and where to rename them.",
+        ]),
         Release(version: "1.32", date: "22 November 2026", lines: [
             "Date and place in full: on the main screen, the grey line under the time now shows the whole date and the whole place, for example “Sun, 22 Nov · Benalmádena, Spain”. Before (1.31), the line was cut off, for example “Sun, 22… · Benalm…”, although there was free space.",
             "Why: the currency button (“EUR · auto”) now stands beside the big time only, not beside both lines. So the line under it can use the whole width of the card. The button works as before.",
             "Only a very long place name is still shortened at its end, with “…”. The date is never shortened.",
         ]),
         Release(version: "1.31", date: "22 November 2026", lines: [
-            "Who it was for, with one tap: on the check sheet (New expense and Edit expense), under the category, there are now four buttons on one line: Martin, AMS, Anna and Others. Tap one and it is chosen at once; you stay on the sheet. Before (1.30), there was one label, for example “Martin”, and to change it you had to tap it, choose in a list and come back.",
-            "Which one is chosen: the chosen button is full colour (Martin blue, AMS yellow, Anna green, Others grey). The other three are light, in their own colour. Only one is chosen at a time.",
-            "Unchanged: a new expense still starts with Martin chosen. “Same again” and the favourites row keep the person of the expense. The coloured tags on the rows in the lists are as before.",
+            "Who it was for, with one tap: on the check sheet (New expense and Edit expense), under the category, there are now four buttons on one line: three names of people or purposes, and Others. Tap one and it is chosen at once; you stay on the sheet. Before (1.30), there was one label, for example the first name, and to change it you had to tap it, choose in a list and come back.",
+            "Which one is chosen: the chosen button is full colour (the first name blue, the second yellow, the third green, Others grey). The other three are light, in their own colour. Only one is chosen at a time.",
+            "Unchanged: a new expense still starts with the first name chosen. “Same again” and the favourites row keep the person of the expense. The coloured tags on the rows in the lists are as before.",
             "Guide: How it works (For whom) and “Signs in this app” now describe the four buttons.",
         ]),
         Release(version: "1.30", date: "21 November 2026", lines: [
@@ -146,7 +154,7 @@ enum Releases {
         ]),
         Release(version: "1.9", date: "27 October 2026", lines: [
             "Every category has its own icon and colour: in the lists, on the check sheet and in Statistics. Change one in Settings › Categories: tap its icon.",
-            "Who it was for, in colour on every expense: Martin blue, AMS yellow, Anna green, Others grey. Anna is new under “For whom”.",
+            "Who it was for, in colour on every expense: the first name blue, the second yellow, the third green, Others grey. The third name is new under “For whom”.",
             "Statistics › By category: a ring in the category colours, with the total in the middle. In Last 30 days, today’s bar is the strong one.",
             "The Today card: today’s total in large numbers, and how many expenses.",
             "An amount in euros has its kronor under it, for example “≈ SEK 125”.",
@@ -168,8 +176,8 @@ enum Releases {
             "The CSV export has the columns Place visited, Latitude and Longitude.",
         ]),
         Release(version: "1.6", date: "24 October 2026", lines: [
-            "Who it was for: the last line of the check sheet is a small label — Martin (always first), AMS or Others. Tap it to change.",
-            "The CSV export has a Consumer column. Earlier expenses count as Martin.",
+            "Who it was for: the last line of the check sheet is a small label — the first name (always first), the second or Others. Tap it to change.",
+            "The CSV export has a Consumer column. Earlier expenses count as the first name.",
         ]),
         Release(version: "1.5", date: "23 October 2026", lines: [
             "“Dictate expense” in the Shortcuts app: it opens Expenses and starts listening straight away.",
@@ -268,8 +276,8 @@ enum Guide {
             "Every category has an icon and a colour. Tap the icon in Settings › Categories to choose another one. A new category starts with a grey tag.",
         ]),
         Section(title: "For whom", lines: [
-            "Under the category, the check sheet has four buttons on one line: Martin, AMS, Anna and Others. They say who the expense was for. Tap one to choose it; the chosen one is full colour, the others are light. A new expense starts with Martin.",
-            "Every expense in the lists shows it in colour: Martin blue, AMS yellow, Anna green, Others grey.",
+            "Under the category, the check sheet has four buttons on one line: your three names and Others. They say who the expense was for. Tap one to choose it; the chosen one is full colour, the others are light. A new expense starts with the first name. You can rename the three in Settings › Who it was for; the names are first filled from your own expenses.",
+            "Every expense in the lists shows it in colour: the first name blue, the second yellow, the third green, Others grey. A renamed name keeps its colour, because the colour goes by place in the list.",
         ]),
         Section(title: "Place visited", lines: [
             "The last line of the check sheet is the place you visited, for example “ICA Odenplan”. Tap it and choose a place, or type a new one on the top line (“New place”) and tap Add.",
@@ -305,8 +313,8 @@ enum Guide {
         ]),
         Section(title: "Signs in this app", lines: [
             "A small card under Today in its own colour: amber is Yesterday, teal is This week, indigo is Last week. A card in full colour with white writing is the open one; tap it again to close it.",
-            "Blue tag “Martin”, yellow tag “AMS”, green tag “Anna”, grey tag “Others”: who the expense was for. The tag is on every row.",
-            "The four buttons Martin, AMS, Anna and Others on the check sheet: the one in full colour is chosen; the light ones are not. One tap chooses another.",
+            "Blue, yellow and green tags (your first, second and third name) and a grey tag “Others”: who the expense was for. The tag is on every row.",
+            "The four buttons on the check sheet (your three names and Others): the one in full colour is chosen; the light ones are not. One tap chooses another.",
             "Orange “· SEK 120 over” in the line with the number of expenses under the opened This week card: this week is above your weekly budget. Without orange, “· SEK 766 left” is what is left of it.",
             "A round coloured icon at the left of a row: the category. Each category has its own icon and colour; a new one starts grey.",
             "A small square picture on the right of a row: the expense has a photo. Open the expense and tap it to see it big.",

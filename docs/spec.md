@@ -1,6 +1,6 @@
 # AMS Manual Expenses — specification
 
-What the app does, rule by rule, written from the code (version 1.11, 27 Oct 2026).
+What the app does, rule by rule, written from the code (version 1.33, 26 Nov 2026).
 Change this file in the same commit as the behaviour it describes.
 
 ## 1. The main screen (`ContentView.swift`)
@@ -87,8 +87,8 @@ time on the left as two quiet labels without a heading (`entry-time`; a tap open
 calendar with the time in its own sheet, `entry-time-picker`, Cancel / Done); what was heard is in italics; last, the category without a label
 (`entry-category`, showing `entry-category-value`: the name, or "No category" in grey;
 opens the chooser, §11); then (1.6) who it was for: since 1.31 four buttons on one line,
-`consumer-choice-0` … Martin / AMS / Anna (1.9) / Others, value "Chosen" on the chosen one (before
-1.31 a pill `entry-consumer` that opened a list); a new expense is Martin, earlier ones count as Martin. Since 1.7 the last line is the place
+`consumer-choice-0` … the three names of the owner's list (1.33, §6) / Others, value "Chosen" on the chosen one (before
+1.31 a pill `entry-consumer` that opened a list); a new expense is the first name, earlier ones count as the first name. Since 1.7 the last line is the place
 visited (`entry-place`, value `entry-place-value`: the name, or "No place" in grey; opens
 the chooser, §13). A new expense's category is the one its description had last
 time, else the default category (§11).
@@ -99,6 +99,7 @@ time, else the default category (§11).
 ## 6. Settings (`SettingsScreen.swift`)
 
 - **Categories** (`settings-categories`): §11.
+- **Who it was for** (`settings-who`, 1.33): the three names on the check sheet's buttons; see §1.33 at the end.
 - **Places** (`settings-places`, 1.7): §13.
 - **Export all as CSV** (`settings-export`): every expense, oldest first, columns
   Date, Time, Description, Category (1.3), Consumer (1.6), Place visited (1.7), Amount,
@@ -249,8 +250,8 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
   button; it opens the 17 choices (`icon-choice-0` …; Cancel `icon-cancel`); a tap chooses and
   closes. Kept in UserDefaults `categoryIcons`, "name<TAB>symbol" per line. Renaming keeps the
   look (onto another category: that one's look stays); deleting drops the choice.
-- **For whom** (his colours): Martin blue, AMS yellow (dark text), Anna green (new in 1.9,
-  `consumer-choice-2`; Others is now `consumer-choice-3`), Others grey. Each row shows the name
+- **For whom** (his colours, by place in the list of three names, 1.33): first blue, second yellow (dark text), third green
+  (`consumer-choice-2`; Others is `consumer-choice-3`), Others grey; a value not in the list is grey. Each row shows the name
   in a small coloured label (`ConsumerTag`, read aloud "for <name>"); the check sheet's four
   buttons (1.31) use the same colours.
 - **Rows** (`ExpenseRow`): icon · description over "time · category" and the For-whom label ·
@@ -482,7 +483,7 @@ Apple's map (MapKit). Nothing is sent anywhere by the app; Apple's map loads its
   per expense). From his mark check of 19 Nov: a button that is only a symbol gets a word.
 - **Signs in this app**: Guide (How it works) has a new section "Signs in this app", before "Your data",
   with every mark and colour that means something and its meaning: the arrow › (folds open), the consumer
-  tags (Martin blue, AMS yellow, Anna green, Others grey), the orange "over", the category round icon, the
+  tags (first name blue, second yellow, third green, Others grey), the orange "over", the category round icon, the
   photo square on a row, "≈ … kr", whole amounts, the week bars (1.10 to 1.22: today strong teal, earlier days pale
   teal, empty or future days grey; since 1.23 today's bar is pale too, only its letter is bold; the Last 30 days chart follows in 1.24: pale bars, bold "Today" word above today's), "EUR · auto", "auto · 12 m away", the teal dot with white ring and the
   small named dots on the place map, the numbered circles and grey "–" on the day map, the red microphone,
@@ -742,22 +743,22 @@ His yes to two ideas.
 
 ## 1.31 · Who it was for: four buttons on one line (his ask, 22 Nov 2026)
 
-His words: "I don't want to press the toggle in order to change from Martin to Anna to AMS to other.
+His words: "I don't want to press the toggle in order to change from one person to the next.
 Make it so that it fits on one line."
 
 - **Check sheet** (`EntryEditor`, new and edit): under the category, `ConsumerButtons` (in `CategoryViews.swift`)
   replaces the pill that opened the For whom list (`ConsumerChooser`, removed; ids `entry-consumer` and
   `entry-consumer-value` are gone). Four capsule buttons on one line, equal widths, order as before:
-  Martin `consumer-choice-0`, AMS `consumer-choice-1`, Anna `consumer-choice-2`, Others `consumer-choice-3`.
-  One tap chooses and the sheet stays. Chosen: full colour with its text colour (Martin blue, AMS yellow with
-  dark text, Anna green, Others grey), accessibility value "Chosen". Not chosen: a light tint (15 %) of its
-  colour, the writing in its colour (AMS dark yellow, `Looks.consumerInk`). Subheadline semibold, one line,
+  first name `consumer-choice-0`, second `consumer-choice-1`, third `consumer-choice-2`, Others `consumer-choice-3`.
+  One tap chooses and the sheet stays. Chosen: full colour with its text colour (first blue, second yellow with
+  dark text, third green, Others grey), accessibility value "Chosen". Not chosen: a light tint (15 %) of its
+  colour, the writing in its colour (second place dark yellow, `Looks.consumerInk`). Subheadline semibold, one line,
   shrinks to 70 % before it would wrap. Before (1.30): one pill, a tap opened a list, a tap there went back.
-- Unchanged: a new expense is Martin; Same again and favourites keep the expense's person; the row tags.
+- Unchanged: a new expense is the first name; Same again and favourites keep the expense's person; the row tags.
 - Guide (How it works): For whom describes the buttons; "Signs in this app" has the buttons sign.
 - What's new: a 1.31 entry.
 - Tests: `testWhoItWasForIsOneTapOnOneLine` (new: four buttons on the same line, inside the screen, one tap
-  chooses Anna then Others, only one chosen, the sheet stays); `testTheConsumerStartsAsMartinAndIsKept` and
+  chooses the third name then Others, only one chosen, the sheet stays); `testTheConsumerStartsAsTheFirstNameAndIsKept` and
   `testTheRowShowsWhoItWasFor` now tap the buttons directly.
 
 ## 1.32 · Date and place line in full (his ask, 22 Nov 2026)
@@ -774,3 +775,29 @@ space beside it. He said "fix".
 - What's new: a 1.32 entry. Guide (Currency): the button is beside the time; the grey line under it shows the date and place.
 - Test: `testTheDateAndPlaceLineHasTheWholeWidth` (place "Santa Cruz de Tenerife, Spain"; the date and the place
   start below the currency button and stay on the screen).
+
+## 1.33 · The "who was it for" names are the owner's own (26 Nov 2026)
+
+Why: the repository is public, and the names of the owner, their company and their partner were written in the code.
+
+- **Stored value**: an expense's `consumer` stays the plain name string, so every expense already saved keeps its value.
+  The model's stored default is now `""` (every initialiser sets a name, so it is never used).
+- **The list**: UserDefaults `consumerNames` (`Consumers.key`), the three names one per line; "Others" is always the
+  fourth button and is not stored. `Consumers.names` / `all` / `initial` read it; the first name is what a new expense
+  starts with. Until it is filled, `Consumers.names` answers the neutral defaults Me, Work, Partner.
+- **Seeding, once** (`WhoNames.seed(from:)` in Core, called by `Consumers.seedIfNeeded` from `ExpensesApp.init`, before
+  any screen shows): when `consumerNames` is empty, the distinct `consumer` values of the stored expenses, oldest
+  first by date, "Others" and empty ones left out, at most three. Fewer than three: the empty place takes the default
+  of that place (Me / Work / Partner; the next unused default when that name is already taken). No expenses (new
+  install): Me, Work, Partner. A UI test run clears `consumerNames` first, like the category list.
+- **Colours by place** (`Looks.consumer`): first blue, second yellow (dark text, `consumerInk` dark yellow), third green,
+  Others and any name not in the list grey. Same colours as before 1.33.
+- **Settings › Your expenses › Who it was for** (`WhoScreen`, `settings-who`): three text fields `who-name-0…2` with the
+  colour dot, "Others" grey and fixed below. Toolbar Cancel (`who-cancel`, nothing changes) and Save (`who-save`,
+  full colour, disabled until something changed and the list is valid: no empty name, no two the same, none "Others").
+  Save renames the value in every stored expense in one look-up per expense (`WhoNames.renames`, so a swap works),
+  writes `consumerNames`, and the buttons, tags, search, CSV and report follow. No Mac target, so no Escape key.
+- Not touched: favourites, Same again, the undo bar, statistics, search and the report only copy or print the stored string.
+- Guide (For whom, Signs in this app) and What's new (1.33) updated; history entries 1.6–1.31 no longer name people.
+- Tests: Core `WhoNamesTests` (seeding rule, rename and validity rules; invented names); the UI tests that tapped the
+  buttons now work by place (a new install shows Me / Work / Partner).

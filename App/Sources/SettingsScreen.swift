@@ -16,6 +16,8 @@ struct SettingsScreen: View {
                 Section("Your expenses") {
                     NavigationLink { CategoriesScreen() } label: { Text("Categories") }
                         .accessibilityIdentifier("settings-categories")
+                    NavigationLink { WhoScreen() } label: { Text("Who it was for") }
+                        .accessibilityIdentifier("settings-who")
                     NavigationLink { PlacesScreen() } label: { Text("Places") }
                         .accessibilityIdentifier("settings-places")
                     ShareLink(item: CSVExport(csv: csv), preview: SharePreview("Expenses.csv")) {

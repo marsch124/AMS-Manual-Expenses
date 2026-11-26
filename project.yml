@@ -12,7 +12,7 @@ settings:
     DEVELOPMENT_TEAM: D24ENP83QQ
     CODE_SIGN_STYLE: Automatic
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "1.32"
+    MARKETING_VERSION: "1.33"
     CURRENT_PROJECT_VERSION: "1"
 packages:
   # The parser — everything the app knows about reading a sentence, with no screen in it.
@@ -29,7 +29,7 @@ targets:
       - package: ExpenseCore
     settings:
       base:
-        # Martin chose this bundle id (22 Oct 2026). It is the app's identity in
+        # The owner chose this bundle id (22 Oct 2026). It is the app's identity in
         # App Store Connect and TestFlight — never change it.
         PRODUCT_BUNDLE_IDENTIFIER: com.schabbauer.amsmanualexpenses
         # iPhone only, portrait. iPhone-only also keeps Apple's iPad orientation rule

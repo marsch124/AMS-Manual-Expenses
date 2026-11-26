@@ -40,7 +40,7 @@ public enum ExpenseParser {
     static let timeRe = regex(#"(?:\b(?:at|around|klockan|kl\.?|um|gegen)\s+(\d{1,2})(?:[:.](\d{2}))?\s*(a\.?m\.?|p\.?m\.?|uhr)?)|(?:\b(\d{1,2})(?:[:.](\d{2}))?\s*(a\.?m\.?|p\.?m\.?|uhr)(?!\p{L}))"#)
     /// How long ago, said out loud: "3 hours ago", "for 3 hours ago", "half an hour ago",
     /// "för 3 timmar sedan", "för en halvtimme sen", "vor einer halben Stunde", "2 days ago".
-    /// Asked for by Martin on 22 Oct 2026 ("for 3 hours ago" was not understood in 1.0).
+    /// Asked for by the owner on 22 Oct 2026 ("for 3 hours ago" was not understood in 1.0).
     static let agoRes: [NSRegularExpression] = {
         let n = #"\d{1,3}(?:[.,]\d)?"#
         let en = "half an?|an?|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve"

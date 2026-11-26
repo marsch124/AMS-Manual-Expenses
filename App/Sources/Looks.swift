@@ -2,8 +2,8 @@ import ExpenseCore
 import SwiftUI
 
 /// 1.9: the colours and icons — categories (his choice per category, Settings › Categories)
-/// and who an expense was for (his colours, 27 Oct 2026: Martin blue, AMS yellow, Anna green,
-/// Others grey).
+/// and who an expense was for (his colours, 27 Oct 2026, now by place in his list: first blue,
+/// second yellow, third green, Others grey).
 enum Looks {
     /// UserDefaults key of his category icon choices ("name<TAB>symbol" per line).
     static let iconsKey = "categoryIcons"
@@ -27,19 +27,20 @@ enum Looks {
     }
 
     /// Who it was for: the label's fill, and its text colour (dark on yellow, so it can be read).
+    /// By place in the list of names; a name not in the list (and Others) is grey.
     static func consumer(_ name: String) -> (fill: Color, text: Color) {
-        switch name {
-        case "Martin": (.blue, .white)
-        case "AMS": (.yellow, .black)
-        case "Anna": (.green, .white)
+        switch Consumers.names.firstIndex(of: name) {
+        case 0: (.blue, .white)
+        case 1: (.yellow, .black)
+        case 2: (.green, .white)
         default: (.gray, .white)
         }
     }
 
     /// Who it was for, as writing on a light tint of its colour: the colour itself, but a dark
-    /// yellow for AMS (yellow writing cannot be read).
+    /// yellow for the second place (yellow writing cannot be read).
     static func consumerInk(_ name: String) -> Color {
-        name == "AMS" ? Color(red: 0.6, green: 0.45, blue: 0) : consumer(name).fill
+        Consumers.names.firstIndex(of: name) == 1 ? Color(red: 0.6, green: 0.45, blue: 0) : consumer(name).fill
     }
 }
 

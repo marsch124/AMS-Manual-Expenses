@@ -1,6 +1,6 @@
 import Foundation
 
-/// Every total is counted in kronor (Martin's choice, 22 Oct 2026): an amount in another
+/// Every total is counted in kronor (the owner's choice, 22 Oct 2026): an amount in another
 /// currency is converted with the European Central Bank's rate of its day.
 public let homeCurrency = "SEK"
 
@@ -22,7 +22,7 @@ public struct Spend: Equatable, Sendable {
     }
 }
 
-/// Categories (1.3, Martin 22 Oct 2026: "coffee and café were in different statistics").
+/// Categories (1.3, the owner, 22 Oct 2026: "coffee and café were in different statistics").
 public enum Categories {
     /// The list a new install starts with; he changes it in Settings › Categories.
     public static let defaults = ["Café", "Groceries", "Restaurant", "Transport", "Shopping",

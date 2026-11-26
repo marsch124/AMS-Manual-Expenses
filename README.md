@@ -2,7 +2,7 @@
 
 An iPhone app for logging expenses during the day by voice: "Coffee 45 kronor",
 "Taxi 12 euros 50", "Lunch 129 kr at 1 pm". Every entry is checked before it is
-saved. Data stays on the iPhone. Distributed to Martin through TestFlight.
+saved. Data stays on the iPhone. Distributed to its owner through TestFlight.
 
 Organised and run like AMS Packing and AMS Paragon: XcodeGen project, the logic in
 a Swift package of its own (`Core/`), UI tests by identifier in CI on every push,
@@ -44,7 +44,7 @@ outside `~/Documents`.
 
 ## Tests
 
-Martin's standing rule: UI tests in CI on every push, every control found by its
+The owner's standing rule: UI tests in CI on every push, every control found by its
 `accessibilityIdentifier` and never by its words, starting with two and growing one
 at a time. A red run blocks a release. Every test is SEEN TO FAIL before it is
 trusted: plant the fault it guards against, watch it go red, remove the fault.

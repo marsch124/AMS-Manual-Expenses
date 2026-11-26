@@ -58,7 +58,7 @@ final class ExpenseParserTests: XCTestCase {
         XCTAssertEqual(r.title, "Taxi")
     }
 
-    /// "for 3 hours ago" was not understood in 1.0 (Martin, 22 Oct 2026).
+    /// "for 3 hours ago" was not understood in 1.0 (the owner, 22 Oct 2026).
     func testTimeAgo() {
         func minutesBack(_ s: String) -> Int { Int(now.timeIntervalSince(parse(s).date) / 60) }
         XCTAssertEqual(minutesBack("Coffee 45 kronor for 3 hours ago"), 180)

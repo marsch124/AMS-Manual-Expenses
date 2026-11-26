@@ -7,12 +7,12 @@ The same pipeline as AMS Packing, for the iPhone only.
 1. **App Store Connect app record** — My Apps → "+" → New App: platform **iOS**, name
    **AMS Manual Expenses**, bundle ID **com.schabbauer.amsmanualexpenses** (already
    registered), SKU `AMSManualExpenses`, Full Access.
-2. **Tester group** — TestFlight → Internal Testing → "+" → group **Martin**, with
-   Martin in it. (Can also be made over the API: `POST /v1/betaGroups`, then a new
+2. **Tester group** — TestFlight → Internal Testing → "+" → one group for the owner, with
+   the owner in it. (Can also be made over the API: `POST /v1/betaGroups`, then a new
    betaTester tied to that group — an existing tester id from another app answers 409.)
 3. **Secrets** (all set 22 Oct 2026): `ASC_KEY_ID` = `63M2792NNV` (the ADMIN key),
    `ASC_ISSUER_ID`, `ASC_KEY_P8` (the .p8's text), `ASC_TEAM_ID` = `D24ENP83QQ`,
-   `TESTER_GROUP` = `Martin`.
+   `TESTER_GROUP` = the name of that group.
 
 ## Every release
 

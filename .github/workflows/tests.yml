@@ -1,4 +1,4 @@
-# Martin's standing rule (16 Sep 2026): UI tests in CI on every push, every control found
+# The owner's standing rule (16 Sep 2026): UI tests in CI on every push, every control found
 # by its accessibilityIdentifier, never by its words. A red run blocks a release.
 # The TestFlight workflow calls this one first.
 name: Tests

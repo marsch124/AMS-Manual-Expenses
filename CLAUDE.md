@@ -4,14 +4,14 @@ Memory for anyone (human or Claude) picking this project up. Keep it short and c
 Run the same way as AMS Packing (`../AMS Packing App`) and AMS Paragon (`../AMS PARA`);
 when in doubt, do what they do.
 
-## Owner
+## Working with the owner
 
-Martin Schabbauer — project manager, part-time retired, lives in Sweden, not
-a developer. English is not his first language: short, plain sentences, common words, no
-idioms, no computer talk (no error codes, API names or tool quirks in what you tell him).
-Name buttons and screens exactly as the app spells them; give whole URLs. He never uses
-the Terminal and does not need Xcode: you build, test, push and ship.
-Don't ask him what you can find out yourself, and don't ask before doing the agreed work.
+The owner is not a developer and English is not their first language: short, plain
+sentences, common words, no idioms, no computer talk (no error codes, API names or tool
+quirks in what you tell them). Name buttons and screens exactly as the app spells them; give
+whole URLs. They never use the Terminal and do not need Xcode: you build, test, push and ship.
+Don't ask what you can find out yourself, and don't ask before doing the agreed work.
+The repo is public: no real names, amounts or places of the owner in code, tests, docs or notes.
 
 ## What the app is
 
@@ -22,7 +22,7 @@ The full rules: `docs/spec.md`.
 
 ## Fixed decisions
 
-- Bundle ID `com.schabbauer.amsmanualexpenses` (his choice). Team `D24ENP83QQ`.
+- Bundle ID `com.schabbauer.amsmanualexpenses` (the owner's choice). Team `D24ENP83QQ`.
 - Repo `marsch124/AMS-Manual-Expenses` (public — nothing private in it; `private/` is
   git-ignored). Local folder `~/Documents/01 Leisure/30 App Development/AMS Manual Expenses`.
 - Branch `main`. The app was started on 22 Oct 2026 in a cloud session from his phone on
@@ -43,7 +43,7 @@ The full rules: `docs/spec.md`.
 4. When the push's Tests run is green, start TestFlight yourself:
    `gh workflow run testflight.yml -R marsch124/AMS-Manual-Expenses -f notes="<what is new>"`.
    It skips the suite when that commit is already green, archives, uploads and releases
-   the build to the tester group "Martin" with the notes as What to Test.
+   the build to the owner's tester group (its name is the `TESTER_GROUP` secret) with the notes as What to Test.
 5. Wait for the run to finish. Then tell him in one line: "the upload is done, Apple is
    processing it now — look for build N in TestFlight in a few minutes". Never say "it is in
    TestFlight" when the run goes green: Apple still processes it for 5–15 minutes.
@@ -54,7 +54,7 @@ The full rules: `docs/spec.md`.
 - TestFlight needs the ADMIN App Store Connect key (`63M2792NNV`); App Manager cannot
   cloud-sign. Every CI archive mints a "Created via API" development certificate; at about
   ten the archive fails — revoke the "Created via API" ones (standing permission), never
-  the one named "Martin Schabbauer".
+  the owner's own one (named after them).
 - A green upload does not reach his phone unless the build is released to the group —
   `tools/release-to-testers.py` does that in the workflow.
 - The icon must be opaque (it is: flat teal, white microphone).

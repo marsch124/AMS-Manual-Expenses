@@ -248,12 +248,14 @@ struct CategoriesScreen: View {
     }
 }
 
-/// Who an expense was for (1.6): Martin, AMS, Anna (1.9) or Others, each in its colour.
+/// Who an expense was for (1.6): the three names of the owner's list or Others, each in its colour.
 /// 1.31 (his ask): four buttons on one line of the check sheet instead of a label that opened
 /// a list. One tap chooses; the chosen one is full colour, the others a light tint of theirs.
 /// Equal widths, so the four always fit on one line (a long name shrinks a little first).
 struct ConsumerButtons: View {
     @Binding var selection: String
+    /// Read so the buttons follow a rename in Settings.
+    @AppStorage(Consumers.key) private var namesText = ""
 
     var body: some View {
         HStack(spacing: 6) {

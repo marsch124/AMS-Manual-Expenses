@@ -27,6 +27,7 @@
 		A6EB646CFE13CD2F56EF332F /* Expense.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64F416F4742FEAE975470089 /* Expense.swift */; };
 		A991E874F5F7E8C55A82D102 /* ExpenseCore in Frameworks */ = {isa = PBXBuildFile; productRef = AE6C9CC8906C95706596A9A9 /* ExpenseCore */; };
 		E2289CF54220194218652B94 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9C50AA0A85B3F8CB50C1D2F3 /* Assets.xcassets */; };
+		F6E71CD9909873C93D3F632E /* WhoScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F56B5688D48075DD8B03E19 /* WhoScreen.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -43,6 +44,7 @@
 		03131EBA5BAFF8A24D77E2AD /* SettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreen.swift; sourceTree = "<group>"; };
 		0BDB85892C431A91D610EA36 /* CategoryViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryViews.swift; sourceTree = "<group>"; };
 		2E79444E6EEA878603CAD76B /* Releases.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Releases.swift; sourceTree = "<group>"; };
+		2F56B5688D48075DD8B03E19 /* WhoScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhoScreen.swift; sourceTree = "<group>"; };
 		3FC1D1340C238BE2968D4211 /* ReportScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportScreen.swift; sourceTree = "<group>"; };
 		41FD41D19C403F3B9915E2A1 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		5B6AB7C8229C4F3326D20C12 /* ExpensesApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpensesApp.swift; sourceTree = "<group>"; };
@@ -95,6 +97,7 @@
 				93F6DA573B04858B4FE9C71C /* Shortcuts.swift */,
 				ED94732FE1D6F6023E7C0FE6 /* SpeechRecognizer.swift */,
 				646D9740096957C6131A10B8 /* StatisticsScreen.swift */,
+				2F56B5688D48075DD8B03E19 /* WhoScreen.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -269,6 +272,7 @@
 				5BE639E6A29B7A2FC3630643 /* Shortcuts.swift in Sources */,
 				99EFC14DE1F9062295D3C410 /* SpeechRecognizer.swift in Sources */,
 				91709ADAE3CC0AAA438CF81A /* StatisticsScreen.swift in Sources */,
+				F6E71CD9909873C93D3F632E /* WhoScreen.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -346,7 +350,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.30;
+				MARKETING_VERSION = 1.33;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -477,7 +481,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.30;
+				MARKETING_VERSION = 1.33;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";

@@ -1,7 +1,7 @@
 import XCTest
 
 /// UI tests — every control is found by its accessibilityIdentifier, never by its words
-/// (Martin's standing rule, 16 Sep 2026). Two to start with; each release that touches a
+/// (the owner's standing rule, 16 Sep 2026). Two to start with; each release that touches a
 /// flow adds the test for that flow, seen to fail once before it is trusted.
 final class AMSExpensesUITests: XCTestCase {
     override func setUp() {
@@ -213,9 +213,9 @@ final class AMSExpensesUITests: XCTestCase {
         XCTAssertLessThanOrEqual(place.frame.maxX, app.windows.firstMatch.frame.width, "the place runs off the screen")
     }
 
-    /// 1.6 (his ask): a new expense is for Martin; choosing AMS is kept when it is saved.
+    /// 1.6 (his ask): a new expense is for the first name; choosing the second is kept when it is saved.
     /// (1.31: the four people are buttons on the check sheet itself.)
-    func testTheConsumerStartsAsMartinAndIsKept() {
+    func testTheConsumerStartsAsTheFirstNameAndIsKept() {
         let app = launch()
         let field = app.textFields["home-type-field"]
         XCTAssertTrue(field.waitForExistence(timeout: 10))
@@ -223,12 +223,12 @@ final class AMSExpensesUITests: XCTestCase {
         field.typeText("Paper 89 kronor")
         app.buttons["home-type-go"].tap()
 
-        let martin = app.buttons["consumer-choice-0"]
-        reveal(app, martin)
-        XCTAssertEqual(martin.value as? String, "Chosen", "a new expense is not for Martin")
-        let ams = app.buttons["consumer-choice-1"]
-        ams.tap()
-        XCTAssertEqual(ams.value as? String, "Chosen")
+        let first = app.buttons["consumer-choice-0"]
+        reveal(app, first)
+        XCTAssertEqual(first.value as? String, "Chosen", "a new expense is not for the first name")
+        let second = app.buttons["consumer-choice-1"]
+        second.tap()
+        XCTAssertEqual(second.value as? String, "Chosen")
         app.buttons["entry-save"].tap()
 
         // Open it again: the choice was saved, not just shown.
@@ -237,11 +237,11 @@ final class AMSExpensesUITests: XCTestCase {
         row.tap()
         let saved = app.buttons["consumer-choice-1"]
         reveal(app, saved)
-        XCTAssertEqual(saved.value as? String, "Chosen", "AMS was not kept")
+        XCTAssertEqual(saved.value as? String, "Chosen", "the second name was not kept")
     }
 
-    /// 1.31 (his ask): who it was for is four buttons on one line of the check sheet — Martin,
-    /// AMS, Anna, Others. One tap chooses; no list opens; only one is chosen at a time.
+    /// 1.31 (his ask): who it was for is four buttons on one line of the check sheet — three
+    /// names (a new install: Me, Work, Partner) and Others. One tap chooses; no list opens; only one is chosen at a time.
     func testWhoItWasForIsOneTapOnOneLine() {
         let app = launch()
         let field = app.textFields["home-type-field"]
@@ -263,15 +263,15 @@ final class AMSExpensesUITests: XCTestCase {
 
         buttons[2].tap()
         // Still on the check sheet: the tap chose, it did not open a list.
-        XCTAssertTrue(app.buttons["entry-save"].exists, "a tap on Anna left the check sheet")
-        XCTAssertEqual(buttons[2].value as? String, "Chosen", "Anna is not chosen after one tap")
-        XCTAssertNotEqual(buttons[0].value as? String, "Chosen", "Martin is still chosen too")
+        XCTAssertTrue(app.buttons["entry-save"].exists, "a tap on the third name left the check sheet")
+        XCTAssertEqual(buttons[2].value as? String, "Chosen", "the third name is not chosen after one tap")
+        XCTAssertNotEqual(buttons[0].value as? String, "Chosen", "the first name is still chosen too")
         buttons[3].tap()
         XCTAssertEqual(buttons[3].value as? String, "Chosen", "Others is not chosen after one tap")
-        XCTAssertNotEqual(buttons[2].value as? String, "Chosen", "Anna is still chosen too")
+        XCTAssertNotEqual(buttons[2].value as? String, "Chosen", "the third name is still chosen too")
     }
 
-    /// 1.9: the row says who it was for (his colours), and Anna is a choice.
+    /// 1.9: the row says who it was for (his colours), and the third name is a choice.
     func testTheRowShowsWhoItWasFor() {
         let app = launch()
         let field = app.textFields["home-type-field"]
@@ -279,15 +279,15 @@ final class AMSExpensesUITests: XCTestCase {
         field.tap()
         field.typeText("Flowers 120 kronor")
         app.buttons["home-type-go"].tap()
-        let anna = app.buttons["consumer-choice-2"]
-        reveal(app, anna)
-        anna.tap()
-        XCTAssertEqual(anna.value as? String, "Chosen")
+        let third = app.buttons["consumer-choice-2"]
+        reveal(app, third)
+        third.tap()
+        XCTAssertEqual(third.value as? String, "Chosen")
         app.buttons["entry-save"].tap()
 
         let row = app.buttons["expense-row-0"]
         XCTAssertTrue(row.waitForExistence(timeout: 10))
-        XCTAssertTrue(row.label.contains("for Anna"), "the row reads '\(row.label)'")
+        XCTAssertTrue(row.label.contains("for Partner"), "the row reads '\(row.label)'")
     }
 
     /// 1.7 (his ask): a new place typed on the check sheet is kept, and the next expense at the
@@ -690,5 +690,40 @@ final class AMSExpensesUITests: XCTestCase {
         if undo.exists { undo.tap() }
         expectation(for: NSPredicate(format: "label == '2 expenses'"), evaluatedWith: app.staticTexts["today-count"])
         waitForExpectations(timeout: 10)
+    }
+
+    /// 1.33: Settings › Who it was for — the three names can be renamed (Cancel leaves them,
+    /// Save keeps the new one), and the check sheet's button shows it.
+    func testTheWhoNamesCanBeRenamedInSettings() {
+        let app = launch()
+        app.buttons["home-settings"].tap()
+        let row = app.buttons["settings-who"]
+        XCTAssertTrue(row.waitForExistence(timeout: 10))
+        row.tap()
+        let first = app.textFields["who-name-0"]
+        XCTAssertTrue(first.waitForExistence(timeout: 10))
+        XCTAssertEqual(first.value as? String, "Me", "a new install starts with Me")
+        XCTAssertFalse(app.buttons["who-save"].isEnabled, "Save is on before anything changed")
+        first.tap()
+        first.typeText("Sam")
+        XCTAssertTrue(app.buttons["who-save"].isEnabled, "Save is off after a change")
+        app.buttons["who-cancel"].tap()
+        row.tap()
+        XCTAssertEqual(app.textFields["who-name-0"].value as? String, "Me", "Cancel did not leave the name")
+        let again = app.textFields["who-name-0"]
+        again.tap()
+        again.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 2) + "Sam")
+        app.buttons["who-save"].tap()
+        XCTAssertTrue(app.buttons["settings-who"].waitForExistence(timeout: 10))
+        app.buttons["settings-done"].tap()
+
+        let field = app.textFields["home-type-field"]
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        field.tap()
+        field.typeText("Stamps 30 kronor")
+        app.buttons["home-type-go"].tap()
+        let button = app.buttons["consumer-choice-0"]
+        reveal(app, button)
+        XCTAssertEqual(button.label, "Sam", "the button does not show the new name")
     }
 }

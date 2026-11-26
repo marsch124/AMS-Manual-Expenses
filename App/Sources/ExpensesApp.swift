@@ -1,3 +1,4 @@
+import ExpenseCore
 import SwiftData
 import SwiftUI
 
@@ -8,6 +9,7 @@ struct ExpensesApp: App {
     static let uiTesting = ProcessInfo.processInfo.arguments.contains("-uiTesting")
 
     @StateObject private var rates = ExchangeRates()
+    private let container: ModelContainer?
 
     init() {
         // The category list lives in UserDefaults, which a UI test run does not wipe:
@@ -16,6 +18,15 @@ struct ExpensesApp: App {
             UserDefaults.standard.removeObject(forKey: CategoryList.key)
             UserDefaults.standard.removeObject(forKey: CategoryList.defaultKey)
             UserDefaults.standard.removeObject(forKey: Looks.iconsKey)
+            UserDefaults.standard.removeObject(forKey: Consumers.key)
+        }
+        // 1.33: the "who was it for" names are filled once from the stored expenses, before any
+        // screen shows (a screen's own query may not have loaded yet and would see no expenses).
+        let made = try? ModelContainer(for: Expense.self,
+                                       configurations: ModelConfiguration(isStoredInMemoryOnly: Self.uiTesting))
+        container = made
+        if let made, let all = try? ModelContext(made).fetch(FetchDescriptor<Expense>(sortBy: [SortDescriptor(\.date)])) {
+            Consumers.seedIfNeeded(from: all)
         }
     }
 
@@ -24,6 +35,6 @@ struct ExpensesApp: App {
             ContentView()
                 .environmentObject(rates)
         }
-        .modelContainer(for: Expense.self, inMemory: Self.uiTesting)
+        .modelContainer(container ?? (try! ModelContainer(for: Expense.self)))
     }
 }

@@ -17,8 +17,8 @@ final class Expense {
     var createdAt: Date = Date()
     /// Since 1.3; "" = no category. A name from Settings › Categories.
     var category: String = ""
-    /// Since 1.6: who the expense was for — Martin (default), AMS, Anna (1.9) or Others.
-    var consumer: String = Consumers.initial
+    /// Since 1.6: who the expense was for — one of the owner's own names (see `Consumers`) or Others.
+    var consumer: String = ""
     /// Since 1.7: the GPS fix when it was logged (nil: none known, or logged before 1.7).
     var latitude: Double?
     var longitude: Double?
@@ -143,8 +143,24 @@ extension Draft {
     }
 }
 
-/// Who an expense was for (1.6, his three values; Martin is the default; 1.9 adds Anna).
+/// Who an expense was for. 1.33: the three names are the owner's own list, kept in the app's
+/// settings on the device (`consumerNames`), not in the code; "Others" is always the fourth.
+/// The first name is the one a new expense starts with. The value stored with an expense stays
+/// the plain name.
 enum Consumers {
-    static let all = ["Martin", "AMS", "Anna", "Others"]
-    static let initial = "Martin"
+    static let key = "consumerNames"
+
+    /// The three names (the defaults of a new install until the list has been filled).
+    static var names: [String] {
+        WhoNames.decode(UserDefaults.standard.string(forKey: key) ?? "") ?? WhoNames.defaults
+    }
+    static var all: [String] { names + [WhoNames.others] }
+    static var initial: String { names[0] }
+
+    /// First start after the update: fill the list once from the stored expenses (oldest first).
+    static func seedIfNeeded(from expenses: [Expense]) {
+        guard WhoNames.decode(UserDefaults.standard.string(forKey: key) ?? "") == nil else { return }
+        let seeded = WhoNames.seed(from: expenses.map(\.consumer))
+        UserDefaults.standard.set(WhoNames.encode(seeded), forKey: key)
+    }
 }

@@ -3,7 +3,7 @@ import ExpenseCore
 import SwiftData
 import SwiftUI
 
-/// Statistics (1.2, Martin's four picks): week and month totals with the average per day,
+/// Statistics (1.2, the owner's four picks): week and month totals with the average per day,
 /// a bar for each of the last 30 days, what he spends most on, and every earlier day.
 /// Every sum is in kronor.
 struct StatisticsScreen: View {
