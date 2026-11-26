@@ -1,0 +1,853 @@
+<meta charset="utf-8">
+<title>Expenses Tour</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Expenses Tour: chapter rail on the left, coach card + a pretend iPhone on the right. Same engine as the other AMS tours.
+   Written for AMS Manual Expenses 1.30. Update this tour in the release that changes a taught screen. */
+:root {
+  --bg: #F4F6F7; --panel: #FFFFFF; --fg: #16232A; --muted: #5F7078; --line: #E2E8EA;
+  --accent: #0F766E; --accent-soft: #D6EFEA; --good: #15803D; --good-soft: #E3F4E8; --warn: #C2410C;
+  --shadow: 0 18px 40px rgba(22,35,42,.2);
+  --pbg:#F4F6F7; --pcard:#FFFFFF; --pink:#16232A; --pmuted:#5F7078; --pline:#E2E8EA; --pfield:rgba(120,120,128,.14);
+  --ind:#0F766E; --gt:#0F766E; --band:#0B2E2B; --bz:#FF8C1A; --bz-ink:#4A2300; --bzt:#C2410C;
+  --plum:#9C3D8C; --plumt:#9C3D8C; --navy:#2A5194; --grn:#30D158; --grn-ink:#0B3A17; --sess:#15803D;
+  --yel:#FFD60A; --yel-ink:#3D3000; --wut:#A16207; --gold:#B7791F; --acc:#2F6FE0; --red:#DC3D43; --blue:#0A84FF; --pink2:#FF6FA8; --pink2-ink:#5A0F2E;
+  --f-display: "Avenir Next", "Helvetica Neue", system-ui, sans-serif;
+  --f-body: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --f-phone: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg:#0E1416; --panel:#161F22; --fg:#E7EDEE; --muted:#94A6AC; --line:#26343A;
+  --accent:#2DD4BF; --accent-soft:#123A36; --good:#86EFAC; --good-soft:#15301F; --warn:#FDBA74;
+  --shadow: 0 18px 40px rgba(0,0,0,.55);
+  --pbg:#0E1416; --pcard:#161F22; --pink:#E7EDEE; --pmuted:#94A6AC; --pline:#26343A; --pfield:rgba(120,120,128,.3);
+  --gt:#2DD4BF; --bzt:#FDBA74; --plumt:#E29BD6; --sess:#86EFAC; --wut:#FCD34D; --gold:#F6C453;
+  color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg:#0E1416; --panel:#161F22; --fg:#E7EDEE; --muted:#94A6AC; --line:#26343A;
+  --accent:#2DD4BF; --accent-soft:#123A36; --good:#86EFAC; --good-soft:#15301F; --warn:#FDBA74;
+  --shadow: 0 18px 40px rgba(0,0,0,.55);
+  --pbg:#0E1416; --pcard:#161F22; --pink:#E7EDEE; --pmuted:#94A6AC; --pline:#26343A; --pfield:rgba(120,120,128,.3);
+  --gt:#2DD4BF; --bzt:#FDBA74; --plumt:#E29BD6; --sess:#86EFAC; --wut:#FCD34D; --gold:#F6C453;
+  color-scheme: dark }
+
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15px; line-height: 1.45; margin: 0 }
+.wrap { max-width: 1240px; margin: 0 auto; padding-block: 20px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; grid-template-columns: 230px minmax(0,1fr); gap: 22px; }
+svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex: none }
+svg.g { fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex: none }
+
+/* Rail */
+.rail { display: flex; flex-direction: column; gap: 4px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); align-self: start; }
+.brand { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.brand h1 { font-family: var(--f-display); font-size: 19px; line-height: 1.1; margin: 0; text-wrap: balance }
+.brand small { color: var(--muted); font-size: 12px }
+.logo { width: 40px; height: 40px; border-radius: 10px; background: #0F766E; color: #fff; display: grid; place-items: center; flex: none }
+.chap { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 9px; border: 0; background: none; color: var(--fg); font: inherit; text-align: left; cursor: pointer; }
+.chap:hover { background: var(--accent-soft) }
+.chap:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.chap .n { color: var(--muted); font-size: 12px; margin-left: auto; font-variant-numeric: tabular-nums; white-space: nowrap }
+.chap.cur { background: var(--accent-soft); color: var(--accent); font-weight: 600 }
+.chap.done .n { color: var(--good) }
+.bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; margin: 10px 2px 2px }
+.bar i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .4s }
+.railnote { color: var(--muted); font-size: 12px; margin: 4px 2px }
+
+/* Coach */
+.main { display: grid; grid-template-columns: minmax(0,1fr); gap: 14px; min-width: 0; align-content: start }
+.topnote { margin: 0; padding: 8px 12px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); font-weight: 600; font-size: 13.5px }
+.coach { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px 16px; align-items: center; }
+.coach .eyebrow { grid-column: 1 / -1; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); font-weight: 600; display: flex; gap: 8px; align-items: center }
+.coach .eyebrow .kind { color: var(--muted); font-weight: 500 }
+.coach h2 { font-family: var(--f-display); font-size: 23px; line-height: 1.2; margin: 0; text-wrap: balance }
+.coach p { margin: 4px 0 0; color: var(--fg); max-width: 62ch }
+.coach .btns { display: flex; gap: 8px; align-items: center }
+.btn { font: inherit; font-weight: 600; border-radius: 9px; padding: 8px 16px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); cursor: pointer }
+.btn.main-b { background: #0F766E; border-color: #0F766E; color: #fff }
+.btn.main-b:disabled { opacity: .45; cursor: default }
+.btn.ghost { border-color: transparent; color: var(--muted) }
+.answers { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px }
+.ans { font: inherit; padding: 8px 14px; border-radius: 9px; border: 1.5px solid var(--line); background: var(--panel); color: var(--fg); cursor: pointer; text-align: left }
+.ans:hover { border-color: var(--accent) }
+.ans.right { border-color: var(--good); background: var(--good-soft); color: var(--good); font-weight: 600 }
+.ans.wrong { border-color: var(--warn); color: var(--warn); text-decoration: line-through }
+.feedback { grid-column: 1 / -1; font-weight: 600; color: var(--good); min-height: 1.4em; margin: 0 }
+.feedback.no { color: var(--warn) }
+
+/* Stage = pretend iPhone, 390 x 760, scaled to fit */
+.stagebox { position: relative; width: min(100%, 390px); aspect-ratio: 390 / 760; border-radius: 40px; overflow: hidden; box-shadow: 0 0 0 6px #1f1f23, var(--shadow); justify-self: center; background: var(--pbg) }
+.stage { position: absolute; left: 0; top: 0; width: 390px; height: 760px; transform-origin: 0 0; font-family: var(--f-phone); font-size: 15px; line-height: 1.3; color: var(--pink); background: var(--pbg); overflow: hidden; -webkit-user-select: none; user-select: none }
+:where(.stage button) { font: inherit; color: inherit }
+:where(.stage input) { font: inherit; color: var(--pink); -webkit-user-select: text; user-select: text }
+.sbar { position: absolute; left: 0; right: 0; top: 0; height: 44px; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 30px 6px 34px; font-weight: 600; font-size: 15px; z-index: 40; pointer-events: none; background: linear-gradient(var(--pbg) 70%, transparent) }
+.sbar .bat { width: 25px; height: 12px; border: 1.5px solid var(--pink); border-radius: 4px; position: relative; opacity: .8 }
+.sbar .bat::after { content: ""; position: absolute; left: 1.5px; top: 1.5px; bottom: 1.5px; width: 70%; background: var(--pink); border-radius: 2px }
+.scr { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; padding: 46px 16px 84px; scrollbar-width: none }
+.scr::-webkit-scrollbar { display: none }
+.sp { flex: 1 }
+.tr { color: var(--gt) }
+
+/* Tab bar: flat, three items, like the app */
+.tabs { position: absolute; left: 0; right: 0; bottom: 0; height: 64px; background: var(--pcard); border-top: 1px solid var(--pline); display: flex; align-items: flex-start; padding-top: 6px; z-index: 30 }
+.tabs button { flex: 1; border: 0; background: none; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 10.5px; color: var(--pmuted); cursor: pointer; padding: 0 }
+.tabs button svg { width: 24px; height: 24px }
+.tabs button.on { font-weight: 600 }
+
+/* Navigation */
+.ltop { display: flex; align-items: center; min-height: 40px }
+.nbk { display: flex; align-items: center; border: 0; background: none; color: var(--acc); font-size: 16px; padding: 4px 0; cursor: pointer; min-height: 40px }
+.nbk svg { width: 20px; height: 20px }
+.ltitle { margin: 0 0 8px; font-size: 32px; line-height: 1.12; font-weight: 700 }
+.inl { display: flex; align-items: center; min-height: 40px; margin-bottom: 4px }
+.inl b { flex: 1; text-align: center; font-size: 17px }
+.inl .l, .inl .r { width: 80px; display: flex }
+.inl .r { justify-content: flex-end }
+.ib { border: 0; background: none; padding: 6px; cursor: pointer; display: grid; place-items: center; color: var(--gt); border-radius: 10px }
+.ib svg { width: 22px; height: 22px }
+.cap { color: var(--pmuted); font-size: 12.5px; margin: 4px 0 }
+
+/* ---------- Pretend screens of Expenses (every class starts with ex-) ---------- */
+:root { --ex-amb:#F59E0B; --ex-ind:#4F46E5; --ex-red:#E5383B; --mapbg:#E3EAE0; --mapst:#FFFFFF; --mapw:#BFD9EA; --tint:rgba(15,118,110,.14) }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mapbg:#1F2A26; --mapst:#33423C; --mapw:#1D3340; --tint:rgba(45,212,191,.2) } }
+:root[data-theme="dark"] { --mapbg:#1F2A26; --mapst:#33423C; --mapw:#1D3340; --tint:rgba(45,212,191,.2) }
+.stage { --acc:#0F766E; --gt:#0F766E; --pbg:#F2F2F7 }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .stage { --acc:#2DD4BF; --gt:#2DD4BF; --pbg:#0E1416 } }
+:root[data-theme="dark"] .stage { --acc:#2DD4BF; --gt:#2DD4BF; --pbg:#0E1416 }
+.ex-top { display: flex; align-items: center; min-height: 38px; position: relative }
+.ex-top b { position: absolute; left: 0; right: 0; text-align: center; font-size: 17px; pointer-events: none }
+.ex-top .sp { flex: 1 }
+.ex-top .ib { padding: 5px }
+.ex-g { background: var(--pcard); border-radius: 12px; margin: 0 0 8px; overflow: hidden }
+.ex-hdr { display: flex; align-items: center; gap: 8px; padding: 6px 14px }
+.ex-time { font: 700 32px/1 ui-rounded, "SF Pro Rounded", var(--f-phone); font-variant-numeric: tabular-nums }
+.ex-date { font-size: 12.5px; color: var(--pmuted); display: flex; gap: 4px; align-items: center; white-space: nowrap }
+.ex-date svg { width: 11px; height: 11px }
+.ex-cur { margin-left: auto; border: 0; border-radius: 999px; padding: 6px 12px; background: color-mix(in srgb, var(--acc) 15%, transparent); color: var(--acc); font-weight: 700; font-size: 15px; cursor: pointer }
+.ex-dict { display: flex; gap: 12px; align-items: center; padding: 8px 14px }
+.ex-mic { width: 64px; height: 64px; border-radius: 50%; border: 0; background: var(--acc); color: #fff; display: grid; place-items: center; cursor: pointer; flex: none }
+.ex-mic.on { background: var(--ex-red) }
+.ex-mic svg { width: 30px; height: 30px; fill: none; stroke: #fff; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round }
+.ex-tf { flex: 1; min-width: 0 }
+.ex-tfr { display: flex; gap: 6px; align-items: center }
+.ex-in { flex: 1; min-width: 0; height: 34px; border: 0; border-radius: 8px; background: var(--pfield); padding: 0 10px; font-size: 15px }
+.ex-go { border: 0; background: none; color: var(--acc); font-size: 16px; cursor: pointer }
+.ex-go:disabled { color: var(--pmuted); opacity: .5; cursor: default }
+.ex-stat { font-size: 12.5px; color: var(--pmuted); margin-top: 3px; min-height: 16px }
+.ex-favs { display: flex; gap: 8px; padding: 0 14px 8px }
+.ex-fav { border: 1px solid var(--pline); border-radius: 8px; padding: 3px 11px; font-size: 13px; background: var(--pfield); color: var(--acc); cursor: pointer }
+.ex-sec { font-size: 12.5px; color: var(--pmuted); text-transform: uppercase; padding: 6px 14px 3px }
+.ex-card { display: flex; align-items: center; padding: 6px 14px }
+.ex-big { font: 700 34px/1.05 ui-rounded, "SF Pro Rounded", var(--f-phone); font-variant-numeric: tabular-nums }
+.ex-sub { font-size: 14px; color: var(--pmuted) }
+.ex-bars { display: flex; gap: 6px; align-items: flex-end; margin-left: auto }
+.ex-bars div { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 10px; color: var(--pmuted) }
+.ex-bars i { display: block; width: 11px; border-radius: 3px; background: color-mix(in srgb, var(--acc) 38%, transparent) }
+.ex-bars div.f i { background: var(--pline); height: 4px !important }
+.ex-bars div.t span { font-weight: 700; color: var(--acc) }
+.ex-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 5px 14px; min-height: 40px; border: 0; border-top: 1px solid var(--pline); background: transparent; text-align: left; cursor: pointer; color: var(--pink) }
+.ex-row.hi { background: var(--tint) }
+.ex-row .m { flex: 1; min-width: 0 }
+.ex-row .m b { display: block; font-weight: 500; font-size: 15px; line-height: 1.2 }
+.ex-row .m small { display: flex; gap: 6px; align-items: center; font-size: 12px; color: var(--pmuted) }
+.ex-row .a { text-align: right; font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums }
+.ex-row .a small { display: block; font-weight: 400; font-size: 11.5px; color: var(--pmuted) }
+.ex-ci { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; flex: none }
+.ex-ci svg { width: 14px; height: 14px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round }
+.ex-tag { font-size: 10.5px; font-weight: 700; border-radius: 6px; padding: 1px 6px; color: #fff }
+.ex-thumb { width: 30px; height: 30px; border-radius: 6px; background: linear-gradient(135deg, #6EC6C0, #2F8F88); flex: none }
+.ex-tiles { display: flex; gap: 8px; margin: 2px 0 8px }
+.ex-tile { flex: 1; min-width: 0; text-align: left; border: 0; border-radius: 14px; padding: 7px 9px; background: var(--pcard); cursor: pointer; color: var(--pink) }
+.ex-tile b { display: block; font-size: 12.5px; font-weight: 600 }
+.ex-tile .v { display: block; font: 700 17px/1.2 ui-rounded, "SF Pro Rounded", var(--f-phone); white-space: nowrap }
+.ex-tile .c { display: block; font-size: 11px; color: var(--pmuted); height: 16px; line-height: 16px }
+.ex-tile.on { color: #fff }
+.ex-tile.on .c { color: rgba(255,255,255,.85) }
+.ex-mini { display: flex; gap: 3px; align-items: flex-end; height: 16px }
+.ex-mini i { width: 6px; border-radius: 1.5px; display: block }
+.ex-line { display: flex; align-items: center; gap: 6px; padding: 4px 14px; font-size: 13px; color: var(--pmuted) }
+.ex-sw { width: 16px; height: 10px; border-radius: 3px; background: var(--tint); border: .5px solid color-mix(in srgb, var(--acc) 40%, transparent); display: inline-block }
+.ex-over { color: #F97316 }
+.ex-undo { position: absolute; left: 12px; right: 12px; bottom: 16px; z-index: 66; display: flex; align-items: center; gap: 10px; background: #292929; border-radius: 14px; padding: 8px 8px 8px 14px; color: #fff; font-weight: 600; font-size: 14.5px }
+.ex-undo button { border: 0; border-radius: 16px; background: var(--acc); color: #fff; font-weight: 700; font-size: 14.5px; padding: 8px 16px; cursor: pointer; min-height: 36px }
+.ex-saved { position: absolute; top: 46px; left: 50%; transform: translateX(-50%); z-index: 70; background: color-mix(in srgb, var(--acc) 92%, #000); color: #fff; font-weight: 600; font-size: 13.5px; padding: 6px 14px; border-radius: 18px; display: flex; gap: 6px; align-items: center; animation: pop .3s }
+.ex-saved svg { width: 15px; height: 15px; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round }
+.ex-toast { position: absolute; left: 50%; bottom: 100px; transform: translateX(-50%); background: #2F3B41; color: #fff; font-weight: 600; font-size: 13px; padding: 7px 14px; border-radius: 18px; z-index: 90; animation: pop .3s; max-width: 340px; text-align: center }
+.ex-menu { position: absolute; z-index: 80; right: 14px; top: 84px; background: var(--pcard); border: 1px solid var(--pline); border-radius: 12px; box-shadow: 0 8px 28px rgba(0,0,0,.3); min-width: 190px; overflow: hidden }
+.ex-menu.l { right: auto; left: 14px; top: 46px }
+.ex-menu button { display: flex; width: 100%; border: 0; background: none; text-align: left; padding: 11px 14px; font-size: 16px; cursor: pointer; justify-content: space-between; color: var(--pink) }
+.ex-menu button + button { border-top: 1px solid var(--pline) }
+.ex-menu button.on::after { content: "\2713"; color: var(--acc) }
+.ex-sheet { position: absolute; left: 0; right: 0; bottom: 0; top: 34px; border-radius: 22px 22px 0 0; background: var(--pbg); z-index: 55; overflow: hidden; box-shadow: 0 -8px 30px rgba(0,0,0,.3) }
+.ex-nav { display: flex; align-items: center; justify-content: space-between; min-height: 46px; padding: 0 12px; position: relative; z-index: 3; background: var(--pbg) }
+.ex-nav b { position: absolute; left: 0; right: 0; text-align: center; font-size: 17px; pointer-events: none }
+.ex-nb { border: 0; background: none; color: var(--acc); font-size: 17px; cursor: pointer; padding: 8px 4px; display: flex; align-items: center; z-index: 1 }
+.ex-nb.sv { font-weight: 700 }
+.ex-nb:disabled { color: var(--pmuted); opacity: .5; cursor: default }
+.ex-nb svg { width: 20px; height: 20px }
+.ex-sheet .scr { inset: 46px 0 0 0; padding: 4px 16px 40px }
+.ex-cap { font-size: 12.5px; color: var(--pmuted); text-transform: uppercase; padding: 8px 14px 3px }
+.ex-heard { font-style: italic; color: var(--pmuted); display: block; padding: 6px 14px; font-size: 14px }
+.ex-fld { display: flex; align-items: center; gap: 8px; padding: 10px 14px; min-height: 42px; border-top: 1px solid var(--pline); width: 100%; background: none; border-left: 0; border-right: 0; border-bottom: 0; text-align: left; color: var(--pink); font-size: 16px }
+.ex-fld:first-child { border-top: 0 }
+button.ex-fld { cursor: pointer }
+.ex-amt { font: 600 20px/1 var(--f-phone); font-variant-numeric: tabular-nums; flex: 1 }
+.ex-amt.empty { color: var(--pmuted); font-weight: 400 }
+.ex-curp { color: var(--pink); font-size: 16px }
+.ex-lbl { background: var(--pfield); border-radius: 999px; padding: 3px 10px; font-size: 14.5px; font-variant-numeric: tabular-nums }
+.ex-pill { font-weight: 600; font-size: 15px; border-radius: 999px; padding: 4px 12px; background: color-mix(in srgb, var(--acc) 15%, transparent); color: var(--acc) }
+.ex-pill.g { background: var(--pfield); color: var(--pmuted); font-weight: 500 }
+.ex-auto { margin-left: auto; font-size: 12.5px; color: var(--pmuted) }
+.ex-chev { color: var(--pmuted); margin-left: auto; display: flex }
+.ex-chev svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round }
+.ex-fix { height: 110px; border-radius: 10px; background: var(--mapbg); position: relative; overflow: hidden; width: 100% }
+.ex-fix i { position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; margin: -7px; border-radius: 50%; background: #0F9C8F; border: 3px solid #fff }
+.ex-mapcap { display: flex; gap: 6px; align-items: center; font-size: 12.5px; color: var(--pmuted); margin-top: 5px }
+.ex-mapcap svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round }
+.ex-ph { display: flex; align-items: center; gap: 8px; padding: 10px 14px }
+.ex-ph span { flex: 1; color: var(--pmuted); font-size: 15px }
+.ex-cap2 { border: 0; border-radius: 999px; padding: 7px 12px; font-weight: 600; font-size: 14px; display: flex; gap: 6px; align-items: center; cursor: pointer }
+.ex-cap2 svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round }
+.ex-cap2.full { background: var(--acc); color: #fff }
+.ex-cap2.light { background: color-mix(in srgb, var(--acc) 15%, transparent); color: var(--acc) }
+.ex-photo { height: 150px; margin: 0 14px 6px; border-radius: 12px; background: linear-gradient(135deg, #6EC6C0, #2F8F88) }
+.ex-red { color: #E5383B; font-size: 16px }
+.ex-seg { display: flex; background: var(--pfield); border-radius: 9px; padding: 2px; margin: 4px 0 8px }
+.ex-seg button { flex: 1; border: 0; background: none; border-radius: 7px; padding: 5px 0; font-size: 13px; cursor: pointer; color: var(--pink) }
+.ex-seg button.on { background: var(--pcard); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.15) }
+.ex-map { position: relative; height: 190px; border-radius: 12px; overflow: hidden; background: var(--mapbg); margin-bottom: 6px }
+.ex-map svg { position: absolute; inset: 0; width: 100%; height: 100% }
+.ex-days { display: flex; gap: 6px; flex-wrap: wrap; padding: 2px 0 6px }
+.ex-day { border: 0; border-radius: 999px; padding: 5px 13px; font-weight: 700; font-size: 13.5px; cursor: pointer }
+.ex-mrow { display: flex; align-items: center; gap: 10px; padding: 6px 14px; border-top: 1px solid var(--pline); min-height: 40px }
+.ex-num { width: 24px; height: 24px; border-radius: 50%; color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 12.5px; flex: none }
+.ex-hint { font-size: 12px; color: var(--pmuted); margin: 2px 2px }
+.ex-st { display: flex; align-items: baseline; gap: 8px; padding: 9px 14px; border-top: 1px solid var(--pline) }
+.ex-st:first-child { border-top: 0 }
+.ex-st b { font-weight: 500; flex: 1 }
+.ex-st span { font-variant-numeric: tabular-nums; font-weight: 600 }
+.ex-st small { color: var(--pmuted); font-size: 12.5px }
+.ex-ring { display: flex; align-items: center; gap: 14px; padding: 10px 14px }
+.ex-ring svg { width: 92px; height: 92px; flex: none }
+.ex-b30 { display: flex; gap: 2px; align-items: flex-end; height: 70px; padding: 6px 14px 0 }
+.ex-b30 i { flex: 1; background: color-mix(in srgb, var(--acc) 35%, transparent); border-radius: 2px; display: block }
+.ex-b30 i.t { position: relative }
+.ex-b30 i.t::before { content: "Today"; position: absolute; bottom: 100%; right: -8px; font-size: 9px; font-style: normal; font-weight: 700; color: var(--acc) }
+.ex-sig { display: flex; gap: 10px; align-items: flex-start; padding: 8px 14px; border-top: 1px solid var(--pline); font-size: 13px; line-height: 1.3 }
+.ex-sig:first-child { border-top: 0 }
+.ex-sig .k { width: 58px; flex: none; display: flex; justify-content: center; align-items: center; min-height: 26px }
+.ex-sig .k svg { width: 40px; height: 22px }
+.ex-sig .k .ex-tag, .ex-sig .k .ex-pill { font-size: 11px }
+.ex-ver { font-size: 13px; line-height: 1.35; padding: 8px 14px; border-top: 1px solid var(--pline) }
+.ex-ver:first-child { border-top: 0 }
+.ex-note { font-size: 12.5px; color: var(--pmuted); padding: 4px 14px 8px }
+.ex-pw { display: flex; gap: 10px; align-items: center; padding: 10px 14px; border-top: 1px solid var(--pline); width: 100%; background: none; border-left: 0; border-right: 0; border-bottom: 0; text-align: left; color: var(--pink); font-size: 16px; cursor: pointer }
+.ex-pw .d { margin-left: auto; color: var(--pmuted); font-size: 14px }
+.ex-pw:first-child { border-top: 0 }
+.ex-sh { height: 28px; border-radius: 8px; background: var(--pfield); display: flex; align-items: center; gap: 6px; padding: 0 8px; margin: 4px 0 8px }
+.ex-sh svg { width: 15px; height: 15px; fill: none; stroke: var(--pmuted); stroke-width: 2; stroke-linecap: round }
+.ex-sh input { flex: 1; border: 0; background: none; font-size: 15px; min-width: 0 }
+.ex-ck { color: var(--acc); margin-left: auto }
+
+/* Highlight: no position here (it would break absolutely placed boxes) */
+.target { z-index: 2; animation: ring 1.6s ease-in-out infinite; border-radius: 9px }
+@keyframes ring { 0%,100% { box-shadow: 0 0 0 2px #E6B53F, 0 0 0 6px rgba(230,181,63,.35) } 50% { box-shadow: 0 0 0 2px #E6B53F, 0 0 0 11px rgba(230,181,63,0) } }
+@keyframes pop { from { transform: translate(-50%, 8px); opacity: .3 } to { transform: translate(-50%, 0); opacity: 1 } }
+
+/* Finish */
+.finish { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px }
+.finish h3 { font-family: var(--f-display); margin: 0 0 8px; font-size: 19px }
+.finish label { display: flex; gap: 10px; align-items: flex-start; padding: 7px 0; border-top: 1px solid var(--line); cursor: pointer }
+.finish input { width: 18px; height: 18px; accent-color: #0F766E; margin-top: 2px; flex: none }
+
+@media (min-width: 1020px) {
+  .main { grid-template-columns: minmax(0,1fr) 402px; align-items: start }
+  .topnote, .finish { grid-column: 1 / -1 }
+  .coach { grid-column: 1; grid-template-columns: minmax(0,1fr); position: sticky; top: 16px }
+  .stagebox { grid-column: 2; grid-row: 2 }
+  .coach { grid-row: 2 }
+}
+@media (max-width: 820px) {
+  .wrap { grid-template-columns: minmax(0,1fr) }
+  .rail { position: static; flex-direction: row; flex-wrap: wrap; gap: 4px }
+  .brand { width: 100% }
+  .chap .n { display: none }
+  .railnote, .bar { width: 100% }
+  .coach { grid-template-columns: minmax(0,1fr) }
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important } }
+</style>
+
+
+<div class="wrap">
+  <nav class="rail" id="rail" aria-label="Chapters"></nav>
+  <main class="main">
+    <p class="topnote">Everything here is a practice copy. Nothing changes on your iPhone.</p>
+    <section class="coach" id="coach" aria-live="polite"></section>
+    <div class="stagebox" id="stagebox"><div class="stage" id="stage"></div></div>
+    <section class="finish" id="finish" hidden></section>
+  </main>
+</div>
+
+<script>
+/* ---------- Icons: simple hand-drawn line shapes, 24-pt grid, stroke 1.9, round ends, no fill. ---------- */
+const ICON = {
+  cup: 'M5 9h11v5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5Z M16 10h1.5a2.5 2.5 0 0 1 0 5H16 M8 4v2 M12 4v2',
+  cart: 'M3.5 5h2.5l2 10h9l2-7H7 M9.5 19.5h.1 M16.5 19.5h.1',
+  fork: 'M7 4v6a2 2 0 0 0 4 0V4 M9 4v16 M16 4c-2 2-2.5 5-2 8h3 M16 12v8',
+  car: 'M4 15v-3l2-5h12l2 5v3Z M4 15v3 M20 15v3 M7.5 12h.1 M16.5 12h.1',
+  bag: 'M5.5 8h13l-1 12h-11Z M9 8V7a3 3 0 0 1 6 0v1',
+  home: 'M4 11 12 4l8 7 M6 10v9.5h12V10 M10 19.5v-5h4v5',
+  heart: 'M12 19.5C6 15 4 11.5 4 9a4 4 0 0 1 8-1 4 4 0 0 1 8 1c0 2.5-2 6-8 10.5Z',
+  mask: 'M4 6h16v5a8 8 0 0 1-16 0Z M8.5 10.5h.1 M15.5 10.5h.1 M9 14.5c1.5 1.3 4.5 1.3 6 0',
+  plane: 'M3 13l18-8-5 16-4-6Z M12 15l9-10',
+  grid: 'M4 4h6v6H4Z M14 4h6v6h-6Z M4 14h6v6H4Z M14 14h6v6h-6Z',
+  mic: 'M12 3.5a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0v-5a3 3 0 0 0-3-3Z M6 11a6 6 0 0 0 12 0 M12 17v3.5',
+  stop: 'M7 7h10v10H7Z',
+  globe: 'M3.5 12a8.5 8.5 0 1 0 17 0 8.5 8.5 0 1 0-17 0 M3.5 12h17 M12 3.5c-3 3-3 14 0 17 M12 3.5c3 3 3 14 0 17',
+  pin: 'M12 20.5s6-5.2 6-10a6 6 0 0 0-12 0c0 4.8 6 10 6 10Z M12 8.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z',
+  map: 'M4 6.5l5-2 6 2 5-2v13l-5 2-6-2-5 2Z M9 4.5v13 M15 6.5v13',
+  chart: 'M5 20v-7 M10 20V8 M15 20v-6 M20 20V4',
+  gear: 'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z M12 3v3 M12 18v3 M3 12h3 M18 12h3 M5.6 5.6l2.1 2.1 M16.3 16.3l2.1 2.1 M5.6 18.4l2.1-2.1 M16.3 7.7l2.1-2.1',
+  sliders: 'M5 7h14 M5 12h14 M5 17h14 M9 5v4 M15 10v4 M8 15v4',
+  again: 'M19 12a7 7 0 1 1-2.2-5.1 M19 4.5V8h-3.5',
+  camera: 'M4 8h3l1.5-2h7L17 8h3v11H4Z M12 10.5a3.2 3.2 0 1 0 0 6.4 3.2 3.2 0 0 0 0-6.4Z',
+  photo: 'M4 6h16v12H4Z M4 16l5-5 4 4 2-2 5 5',
+  check: 'M5 12.5l5 5 9-10.5', plus: 'M12 5v14M5 12h14',
+  chevR: 'M9 6l6 6-6 6', chevL: 'M15 6l-6 6 6 6', chevD: 'M7 10l5 5 5-5',
+  search: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14ZM20 20l-4-4',
+  phone: 'M8 3.5h8a1.5 1.5 0 0 1 1.5 1.5v14a1.5 1.5 0 0 1-1.5 1.5H8A1.5 1.5 0 0 1 6.5 19V5A1.5 1.5 0 0 1 8 3.5Z M11 17.8h2',
+  coin: 'M3.5 12a8.5 8.5 0 1 0 17 0 8.5 8.5 0 1 0-17 0 M14.5 9.2c-.6-.8-1.6-1.2-2.6-1.2-1.5 0-2.5.8-2.5 2 0 3 5.3 1.5 5.3 4.2 0 1.2-1.1 2-2.7 2-1.1 0-2.1-.5-2.8-1.3 M12 6.5V8 M12 16v1.5'
+};
+const icon = (n, cls = 'i') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${ICON[n]}"/></svg>`;
+const ico = (n, px) => `<svg class="g" width="${px}" height="${px}" viewBox="0 0 24 24" aria-hidden="true"><path d="${ICON[n]}"/></svg>`;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- Invented data. Nothing here is a real expense, place or person. ---------- */
+const DOT = ' · ';
+const CATS = { 'Café': ['cup', '#8B5E3C'], Groceries: ['cart', '#34A853'], Restaurant: ['fork', '#FF9500'], Transport: ['car', '#0A84FF'], Shopping: ['bag', '#E91E73'], Home: ['home', '#5856D6'], Health: ['heart', '#E5383B'], Leisure: ['mask', '#AF52DE'], Travel: ['plane', '#30B0C7'], Other: ['grid', '#8E8E93'] };
+const CAFE = 'Café';
+const WHO = { Sam: ['#0A84FF', '#fff'], Club: ['#FFD60A', '#3D3000'], Lena: ['#34A853', '#fff'], Others: ['#8E8E93', '#fff'] };
+const WHON = ['Sam', 'Club', 'Lena', 'Others'];
+const PLACES = [['Harbour Market', 80], ['Café Alva', 350], ['Bistro Nord', 3400], ['Bus Terminal', 12000]];
+const dist = m => m < 1000 ? Math.round(m / 10) * 10 + ' m' : m < 10000 ? (m / 1000).toFixed(1) + ' km' : Math.round(m / 1000) + ' km';
+const DAYN = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+const DCOL = { Mon: '#0A84FF', Tue: '#34A853', Wed: '#FF9500', Thu: '#AF52DE', Fri: '#E91E73' };
+const RATE = 11.04;                                          // one euro in kronor, made up
+const mk = (id, d, t, n, c, k, w, p, x, y, a) => ({ id, d, t, n, c, k, w: w || 'Sam', p: p || '', x: x == null ? null : x, y: y == null ? null : y, cur: a ? 'EUR' : 'SEK', a: a || k });
+const WEEK = [
+  mk('m1', 0, '08:10', 'Coffee', CAFE, 45, 'Sam', 'Café Alva', 60, 150), mk('m2', 0, '12:30', 'Lunch', 'Restaurant', 119, 'Sam', 'Bistro Nord', 120, 90),
+  mk('t1', 1, '08:15', 'Coffee', CAFE, 45, 'Sam', 'Café Alva', 62, 148), mk('t2', 1, '17:40', 'Groceries', 'Groceries', 286, 'Lena', 'Harbour Market', 200, 150),
+  mk('w1', 2, '09:00', 'Coffee', CAFE, 45, 'Sam', 'Café Alva', 58, 152),
+  mk('h1', 3, '12:20', 'Lunch', 'Restaurant', 129, 'Sam', 'Bistro Nord', 180, 70), mk('h2', 3, '18:05', 'Cinema', 'Leisure', 140, 'Club', '', 300, 120),
+  mk('f1', 4, '08:05', 'Bus ticket', 'Transport', 39, 'Sam'), mk('f2', 4, '09:25', 'Coffee', CAFE, 45, 'Sam', 'Café Alva', 64, 146),
+  mk('f3', 4, '12:10', 'Lunch', 'Restaurant', 129, 'Sam', 'Bistro Nord', 170, 76), mk('f4', 4, '13:20', 'Taxi', 'Transport', 138, 'Sam', '', 270, 110, 12.5)
+];
+const LASTW = [['Mon', 'Coffee', CAFE, 45], ['Tue', 'Coffee', CAFE, 45], ['Tue', 'Lunch', 'Restaurant', 129], ['Wed', 'Coffee', CAFE, 45], ['Thu', 'Lunch', 'Restaurant', 129], ['Thu', 'Pharmacy', 'Health', 96], ['Fri', 'Coffee', CAFE, 45], ['Fri', 'Lunch', 'Restaurant', 129], ['Sat', 'Groceries', 'Groceries', 312], ['Sun', 'Shoes', 'Shopping', 507]];
+const LASTDAYS = [45, 174, 45, 225, 174, 312, 507];
+const ROUTE = { Mon: '0.9 km', Tue: '1.4 km', Thu: '1.1 km', Fri: '1.9 km' };
+const money = n => Math.round(n).toLocaleString('en-US');
+const sek = n => 'SEK ' + money(n);
+const amtTxt = (r, whole) => r.cur === 'EUR' ? '€' + (whole ? Math.round(r.a) : r.a.toFixed(2)) : 'SEK ' + (whole ? money(r.k) : r.k.toFixed(2));
+const START = () => ({ page: null, sheet: null, sub: null, en: null, menu: null, added: [], gone: [], budget: 0, tile: null, span: 'Today', day: null,
+  cur: '', lang: 'en-US', typed: '', listen: null, undo: null, saved: false, toast: '', statSpan: 'Month', q: '', pq: '', near: false, sig: 1, favs: true });
+let S = START();
+const set = o => { S = Object.assign(START(), o); };      // full reset, then what the step needs
+const timers = [];
+const later = (fn, ms) => { const h = setTimeout(fn, ms); timers.push(h); return h; };
+const clearTimers = () => { while (timers.length) clearTimeout(timers.pop()); };
+
+const todayRows = () => S.added.concat(WEEK.filter(r => r.d === 4).slice().reverse()).filter(r => !S.gone.includes(r.id));
+const weekRows = () => S.added.concat(WEEK.slice().reverse()).filter(r => !S.gone.includes(r.id));
+const yestRows = () => WEEK.filter(r => r.d === 3).slice().reverse();
+const sum = a => a.reduce((n, r) => n + r.k, 0);
+const catIc = (c, px) => { const v = CATS[c]; return v ? `<span class="ex-ci" style="width:${px || 28}px;height:${px || 28}px;background:${v[1]}">${icon(v[0], 'i')}</span>` : `<span class="ex-ci" style="width:${px || 28}px;height:${px || 28}px;background:#8E8E93">${icon('grid', 'i')}</span>`; };
+const tag = w => `<span class="ex-tag" style="background:${WHO[w] ? WHO[w][0] : '#8E8E93'};color:${WHO[w] ? WHO[w][1] : '#fff'}">${esc(w)}</span>`;
+const catFor = t => ({ coffee: CAFE, kaffe: CAFE, lunch: 'Restaurant', taxi: 'Transport', 'bus ticket': 'Transport', groceries: 'Groceries' })[t.toLowerCase()] || CAFE;
+
+/* ---------- The sentence reader (a small copy of the app's rules, enough for the practice) ---------- */
+function parse(s) {
+  let t = s.trim(), amt = 0, cur = /euro|eur|€/i.test(t) ? 'EUR' : 'SEK', m;
+  if ((m = t.match(/(\d+)\s*euros?\s*(?:and\s*)?(\d+)/i))) amt = parseFloat(m[1]) + parseFloat(m[2]) / 100;
+  else if ((m = t.match(/(\d+(?:[.,]\d+)?)/))) amt = parseFloat(m[1].replace(',', '.'));
+  let title = t.replace(/\d+([.,]\d+)?/g, '').replace(/\b(kronor|krona|crowns?|kr|sek|euros?|eur|cents?|and)\b|€/gi, '').replace(/\s+/g, ' ').trim();
+  title = title ? title[0].toUpperCase() + title.slice(1) : 'Expense';
+  return { title, amt, cur };
+}
+function newEntry(heard, title, amt, cur) {
+  const cat = catFor(title), pl = title.toLowerCase() === 'coffee' || title.toLowerCase() === 'kaffe' ? PLACES[1][0] : '';
+  S.en = { mode: 'new', heard, title, amt: amt ? String(amt) : '', cur, cat, who: 'Sam', place: pl, auto: !!pl, photo: false, date: '27 Nov 2026', time: '13:42', id: null };
+  S.sheet = 'entry'; S.sub = null;
+}
+const amountOk = e => e.amt !== '' && parseFloat(e.amt) > 0;
+
+/* ---------- The pretend iPhone ---------- */
+const tilePart = (key, name, col) => {
+  const yest = key === 'yest', wk = key === 'week', rows = yest ? yestRows() : wk ? weekRows() : null;
+  const total = yest ? sum(rows) : wk ? sum(rows) : LASTW.reduce((n, r) => n + r[3], 0), cnt = yest ? rows.length : wk ? rows.length : LASTW.length, on = S.tile === key;
+  let bars = '';
+  if (yest) bars = `<span class="c">${cnt} expenses</span>`;
+  else {
+    const vals = wk ? [0, 1, 2, 3, 4, 5, 6].map(i => i < 5 ? sum(rows.filter(r => r.d === i)) : 0) : LASTDAYS, top = Math.max(...vals, 1);
+    bars = `<div class="ex-mini">${vals.map(v => `<i style="height:${v ? Math.max(3, v / top * 16) : 2}px;background:${on ? '#fff' : col};opacity:${v ? .55 : .25}"></i>`).join('')}</div>`;
+  }
+  return `<button class="ex-tile ${on ? 'on' : ''}" style="${on ? 'background:' + col : ''}" data-act="tile" data-id="${key}" data-t="tile-${key}"><b style="color:${on ? '#fff' : col}">${name}</b><span class="v">${sek(total)}</span>${bars}</button>`;
+};
+const rowHTML = (r, o) => {
+  o = o || {};
+  const when = (o.wk ? DAYN[r.d] + ' ' : '') + r.t + DOT + r.c, hi = o.hi ? ' hi' : '';
+  return `<button class="ex-row${hi}" data-act="row" data-id="${r.id}" data-t="${o.t || ''}">${catIc(r.c, 28)}<span class="m"><b>${esc(r.n)}</b><small>${esc(when)} ${tag(r.w)}</small></span>${r.photo ? '<span class="ex-thumb"></span>' : ''}<span class="a">${amtTxt(r, o.wk)}${r.cur === 'EUR' ? `<small>≈ SEK ${money(r.k)}</small>` : ''}</span></button>`;
+};
+function barsHTML() {
+  const vals = [0, 1, 2, 3, 4].map(i => sum(weekRows().filter(r => r.d === i))).concat([0, 0]), top = Math.max(...vals, 1);
+  return `<div class="ex-bars" data-t="week-bars">${vals.map((v, i) => `<div class="${i > 4 ? 'f' : ''} ${i === 4 ? 't' : ''}"><i style="height:${v ? Math.max(4, v / top * 52) : 4}px"></i><span>${'MTWTFSS'[i]}</span></div>`).join('')}</div>`;
+}
+function homeHTML() {
+  const rows = todayRows(), tot = sum(rows);
+  const curTxt = S.cur ? S.cur : 'SEK · auto';
+  const status = S.listen ? (S.listen.text || 'Listening…') : '';
+  let open = '';
+  if (S.tile) {
+    const rs = S.tile === 'yest' ? yestRows() : S.tile === 'week' ? weekRows() : LASTW.map((l, i) => ({ id: 'l' + i, d: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].indexOf(l[0]), t: '', n: l[1], c: l[2], k: l[3], a: l[3], cur: 'SEK', w: 'Sam' })).reverse();
+    const wk = S.tile !== 'yest';
+    const ranked = rs.map((r, i) => [r.k, i]).sort((a, b) => b[0] - a[0] || a[1] - b[1]).slice(0, 5).map(x => x[1]);
+    const more = rs.length > 5;
+    const left = S.tile === 'week' && S.budget ? S.budget - sum(rs) : null;
+    const note = wk ? `<div class="ex-line" data-t="wk-note"><span>${rs.length} expenses${left == null ? '' : left >= 0 ? DOT + sek(left) + ' left' : `<span class="ex-over">${DOT}${sek(-left)} over</span>`}</span>${more ? '<span style="margin-left:auto;display:flex;gap:4px;align-items:center"><i class="ex-sw"></i>= the 5 highest</span>' : ''}</div>` : '';
+    open = `<div class="ex-g">${note}${rs.map((r, i) => {
+      const x = S.tile === 'last' ? Object.assign({}, r, { t: '' }) : r;
+      return S.tile === 'last' ? `<button class="ex-row${more && ranked.includes(i) ? ' hi' : ''}" data-act="soon">${catIc(r.c, 28)}<span class="m"><b>${esc(r.n)}</b><small>${['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][r.d]}${DOT}${esc(r.c)} ${tag('Sam')}</small></span><span class="a">SEK ${money(r.k)}</span></button>` : rowHTML(x, { wk, hi: more && wk && ranked.includes(i), t: i === 0 ? 'open-row-0' : '' });
+    }).join('')}</div>`;
+  }
+  return `<div class="scr" data-keep>
+    <div class="ex-top"><button class="ib" data-act="lang-open" data-t="lang" aria-label="Language">${icon('globe')}</button><b>Expenses</b><span class="sp"></span>
+      <button class="ib" data-act="map-open" data-t="map-btn" aria-label="On the map">${icon('map')}</button><button class="ib" data-act="stats-open" data-t="stats-btn" aria-label="Statistics">${icon('chart')}</button><button class="ib" data-act="settings-open" data-t="settings-btn" aria-label="Settings">${icon('gear')}</button></div>
+    <div class="ex-g"><div class="ex-hdr" data-t="header"><div><div class="ex-time">13:42</div><div class="ex-date">Fri 27 Nov ${DOT.trim()} ${ico('pin', 11)} Eastvale</div></div><button class="ex-cur" data-act="cur-open" data-t="currency">${esc(curTxt)}</button></div></div>
+    <div class="ex-g"><div class="ex-dict"><button class="ex-mic ${S.listen ? 'on' : ''}" data-act="mic" data-t="mic" aria-label="Dictate expense">${icon(S.listen ? 'stop' : 'mic')}</button>
+      <div class="ex-tf"><div class="ex-tfr"><input class="ex-in" data-in="typed" data-t="type-field" placeholder="…or type an expense" value="${esc(S.typed)}"><button class="ex-go" data-act="go" data-t="type-go" ${S.typed.trim() ? '' : 'disabled'}>Go</button></div><div class="ex-stat" data-t="status">${esc(status)}</div></div></div>
+      ${S.favs ? `<div class="ex-favs">${['Coffee', 'Lunch', 'Bus'].map((f, i) => `<button class="ex-fav" data-act="fav" data-id="${f}" data-t="fav-${i}">${f}</button>`).join('')}</div>` : ''}</div>
+    <div class="ex-g"><div class="ex-sec">Today</div>
+      ${rows.length ? `<div class="ex-card" data-t="today-card"><div><div class="ex-big" data-t="today-total">${sek(tot)}</div><div class="ex-sub">${rows.length} expenses</div></div>${barsHTML()}</div>` : '<div class="ex-card ex-sub">No expenses yet today.</div>'}
+      ${rows.map((r, i) => rowHTML(r, { t: i === 0 ? 'row-0' : i === 2 ? 'row-2' : '' })).join('')}</div>
+    <div class="ex-tiles" data-t="tiles">${tilePart('yest', 'Yesterday', 'var(--ex-amb)')}${tilePart('week', 'This week', 'var(--acc)')}${tilePart('last', 'Last week', 'var(--ex-ind)')}</div>
+    ${open}</div>`;
+}
+
+/* The check sheet */
+function mapFix() { return `<div class="ex-fix" data-t="fix"><svg viewBox="0 0 330 110" width="100%" height="100%" preserveAspectRatio="none" aria-hidden="true"><path d="M0 70 L330 40 M90 0 L120 110 M210 0 L250 110" stroke="var(--mapst)" stroke-width="7" fill="none"/></svg><i></i></div>`; }
+function entrySheet() {
+  const e = S.en, nm = e.mode === 'new' ? 'New expense' : 'Edit expense';
+  if (S.sub) return subPage();
+  const ok = amountOk(e);
+  return `<div class="ex-sheet" data-sh="entry"><div class="ex-nav"><button class="ex-nb" data-act="sheet-cancel" data-t="sheet-cancel">Cancel</button><b>${nm}</b><button class="ex-nb sv" data-act="en-save" data-t="save" ${ok ? '' : 'disabled'}>Save</button></div>
+  <div class="scr" data-keep>
+    ${e.heard ? `<div class="ex-cap">Heard</div><div class="ex-g"><i class="ex-heard" data-t="en-heard">${esc(e.heard)}</i></div>` : ''}
+    <div class="ex-g">
+      <div class="ex-fld" data-t="en-title">${esc(e.title)}</div>
+      <div class="ex-fld" data-t="en-amount"><span class="ex-amt ${e.amt === '' ? 'empty' : ''}">${e.amt === '' ? 'Amount' : esc(e.amt)}</span><span class="ex-curp">${e.cur} ▾</span></div>
+      <button class="ex-fld" data-act="soon" data-t="en-time"><span class="ex-lbl">${e.date}</span><span class="ex-lbl">${e.time}</span></button>
+      <button class="ex-fld" data-act="en-cat" data-t="en-cat">${catIc(e.cat, 28)}<span class="ex-pill ${e.cat ? '' : 'g'}">${esc(e.cat || 'No category')}</span><span class="ex-chev">${icon('chevR')}</span></button>
+      <button class="ex-fld" data-act="en-who" data-t="en-who"><span class="ex-pill" style="background:${WHO[e.who][0]};color:${WHO[e.who][1]}">${esc(e.who)}</span><span class="ex-chev">${icon('chevR')}</span></button>
+      <button class="ex-fld" data-act="en-place" data-t="en-place"><span class="ex-pill ${e.place ? '' : 'g'}" data-t="place-val">${esc(e.place || 'No place')}</span>${e.auto && e.place ? '<span class="ex-auto" data-t="auto">auto · 12 m away</span>' : ''}<span class="ex-chev" style="${e.auto && e.place ? 'margin-left:6px' : ''}">${icon('chevR')}</span></button>
+      <div class="ex-fld" style="display:block" data-t="en-map">${mapFix()}<div class="ex-mapcap">${ico('pin', 14)} Eastvale · ±8 m</div></div>
+    </div>
+    <div class="ex-g" data-t="photo-row">${e.photo ? '<div style="padding-top:8px"><div class="ex-photo" data-t="photo"></div></div>' : ''}
+      <div class="ex-ph"><span>Photo</span>${e.photo ? '<button class="ex-nb ex-red" style="padding:4px" data-act="photo-remove" data-t="photo-remove">Remove photo</button>' :
+        `<button class="ex-cap2 full" data-act="soon" data-t="photo-camera">${icon('camera')}Take photo</button><button class="ex-cap2 light" data-act="photo-choose" data-t="photo-choose">${icon('photo')}Choose photo</button>`}</div></div>
+    ${e.mode === 'edit' ? `<div class="ex-g"><button class="ex-fld" data-act="en-same" data-t="entry-same" style="color:var(--acc)">${ico('again', 18)} Same again, now</button><button class="ex-fld ex-red" data-act="en-delete" data-t="entry-delete">Delete expense</button></div>` : ''}
+  </div></div>`;
+}
+function subPage() {
+  const e = S.en;
+  const nav = (t, right) => `<div class="ex-nav"><button class="ex-nb" data-act="sub-back" data-t="sub-back">${icon('chevL')}Back</button><b>${t}</b>${right || '<span></span>'}</div>`;
+  if (S.sub === 'cat') return `<div class="ex-sheet" data-sh="cat">${nav('Category')}<div class="scr" data-keep><div class="ex-g">
+    <button class="ex-fld" data-act="cat-pick" data-id="" data-t="cat-none"><span class="ex-pill g">None</span></button>
+    ${Object.keys(CATS).map(c => `<button class="ex-fld" data-act="cat-pick" data-id="${c}" data-t="cat-${c}">${catIc(c, 28)}<span>${c}</span>${e.cat === c ? `<span class="ex-ck">${icon('check')}</span>` : ''}</button>`).join('')}
+    <button class="ex-fld" data-act="soon" style="color:var(--acc)">New category…</button></div></div></div>`;
+  if (S.sub === 'who') return `<div class="ex-sheet" data-sh="who">${nav('For whom')}<div class="scr" data-keep><div class="ex-g">
+    ${WHON.map(w => `<button class="ex-fld" data-act="who-pick" data-id="${w}" data-t="who-${w}">${tag(w)}<span>${w}</span>${e.who === w ? `<span class="ex-ck">${icon('check')}</span>` : ''}</button>`).join('')}</div></div></div>`;
+  const q = S.pq.trim().toLowerCase(), match = p => !q || p[0].toLowerCase().includes(q);
+  const pr = p => `<button class="ex-fld" data-act="place-pick" data-id="${p[0]}" data-t="place-${p[0].split(' ')[0]}"><span>${p[0]}</span><span class="ex-sub" style="margin-left:auto">${dist(p[1])}</span>${e.place === p[0] ? `<span class="ex-ck" style="margin-left:6px">${icon('check')}</span>` : ''}</button>`;
+  const near = PLACES.filter(p => p[1] < 1000 && match(p)), other = PLACES.filter(p => p[1] >= 1000 && match(p)), all = PLACES.filter(match).slice().sort((a, b) => a[1] - b[1]);
+  const lists = S.near ? `<div class="ex-cap">By distance</div><div class="ex-g">${all.map(pr).join('')}</div>`
+    : `${near.length ? `<div class="ex-cap">Nearby</div><div class="ex-g">${near.map(pr).join('')}</div>` : ''}${other.length ? `<div class="ex-cap">Other places</div><div class="ex-g">${other.map(pr).join('')}</div>` : ''}`;
+  const pm = PLACES.filter(match);
+  return `<div class="ex-sheet" data-sh="place">${nav('Place', `<button class="ex-nb" data-act="place-sort" data-t="place-sort">${S.near ? 'Usual order' : 'Nearest first'}</button>`)}<div class="scr" data-keep>
+    <div class="ex-sh" data-t="place-search">${icon('search')}<input data-in="pq" placeholder="Search places" value="${esc(S.pq)}"></div>
+    <div class="ex-g"><div class="ex-fld"><span class="ex-sub">New place</span><span class="ex-nb" style="margin-left:auto">Add</span></div>
+    <button class="ex-fld" data-act="place-pick" data-id="" data-t="place-none"><span class="ex-pill g">None</span></button></div>
+    ${lists}${pm.length ? '' : '<div class="ex-note">No place matches.</div>'}
+    <div class="ex-map" style="height:130px" data-t="place-map"><svg viewBox="0 0 330 130" preserveAspectRatio="none" aria-hidden="true"><path d="M0 80 L330 50 M100 0 L130 130 M220 0 L260 130" stroke="var(--mapst)" stroke-width="7" fill="none"/>
+      ${pm.map((p, i) => `<circle cx="${60 + i * 80}" cy="${40 + (i % 2) * 50}" r="5" fill="#8E8E93"/><text x="${60 + i * 80}" y="${34 + (i % 2) * 50}" font-size="10" text-anchor="middle" fill="var(--pink)">${p[0]}</text>`).join('')}<circle cx="165" cy="65" r="7" fill="#0F9C8F" stroke="#fff" stroke-width="3"/></svg></div>
+  </div></div>`;
+}
+
+/* The map */
+function mapData() {
+  const all = WEEK.filter(r => r.x != null), tod = all.filter(r => r.d === 4);
+  const ordN = r => all.indexOf(r) + 1;
+  let pins, routes = [], list;
+  if (S.span === 'Today') { const fr = WEEK.filter(r => r.d === 4); pins = tod.map((r, i) => ({ r, n: i + 1, col: 'var(--acc)' })); routes = [{ pts: tod, col: '#0F9C8F', len: '1.9 km' }]; list = fr.map(r => ({ r, n: r.x != null ? tod.indexOf(r) + 1 : 0, col: 'var(--acc)' })); }
+  else if (S.span === 'This week' || S.span === 'Last week') {
+    const sel = S.day ? all.filter(r => DAYN[r.d] === S.day) : all;
+    pins = sel.map(r => ({ r, n: ordN(r), col: DCOL[DAYN[r.d]] }));
+    DAYN.forEach(dn => { const p = sel.filter(r => DAYN[r.d] === dn); if (p.length > 1) routes.push({ pts: p, col: DCOL[dn], len: ROUTE[dn] }); });
+    list = WEEK.filter(r => !S.day || DAYN[r.d] === S.day).map(r => ({ r, n: r.x != null ? ordN(r) : 0, col: DCOL[DAYN[r.d]] }));
+  } else { pins = all.map((r, i) => ({ r, n: i + 1, col: 'var(--acc)' })); list = WEEK.map(r => ({ r, n: r.x != null ? ordN(r) : 0, col: 'var(--acc)' })); }
+  return { pins, routes, list };
+}
+function routeSVG(routes) {
+  let out = '';
+  routes.forEach(rt => {
+    rt.pts.forEach((p, i) => {
+      if (i === 0) return; const a = rt.pts[i - 1], dx = p.x - a.x, dy = p.y - a.y, side = i % 2 ? 1 : -1;
+      const cx = (a.x + p.x) / 2 - dy * .15 * side, cy = (a.y + p.y) / 2 + dx * .15 * side;
+      out += `<path d="M${a.x} ${a.y} Q${cx} ${cy} ${p.x} ${p.y}" fill="none" stroke="${rt.col}" stroke-width="4" stroke-linecap="round" stroke-dasharray="0.1 8" opacity=".9"/>`;
+      const mx = .25 * a.x + .5 * cx + .25 * p.x, my = .25 * a.y + .5 * cy + .25 * p.y, ang = Math.atan2(p.y - a.y, p.x - a.x) * 180 / Math.PI;
+      out += `<g transform="translate(${mx} ${my}) rotate(${ang})" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M-4 -4 L2 0 L-4 4" stroke="#fff" stroke-width="4.5"/><path d="M-4 -4 L2 0 L-4 4" stroke="${rt.col}" stroke-width="2.4"/></g>`;
+    });
+  });
+  return out;
+}
+function mapPage() {
+  const md = mapData(), wk = S.span === 'This week' || S.span === 'Last week';
+  const mapNo = md.list.filter(x => x.n).length, tot = sum(md.list.map(x => x.r));
+  const days = wk ? DAYN.map(d => `<button class="ex-day" style="${S.day === d ? 'background:' + DCOL[d] + ';color:#fff' : 'background:' + DCOL[d] + '26;color:' + DCOL[d]}" data-act="map-day" data-id="${d}" data-t="day-${d}">${d}</button>`).join('') : '';
+  const len = md.routes.length ? (md.routes.length === 1 ? 'Route: about ' + md.routes[0].len : 'Routes: about 5.3 km in all') : '';
+  return `<div class="scr" data-keep><div class="ex-top"><button class="nbk" data-act="page-back" data-t="page-back">${icon('chevL')}Expenses</button><b>On the map</b></div>
+    <div class="ex-seg" data-t="map-span">${['Today', 'This week', 'Last week', 'Month'].map(s => `<button class="${S.span === s ? 'on' : ''}" data-act="map-span" data-id="${s}" data-t="span-${s.replace(' ', '-')}">${s}</button>`).join('')}</div>
+    <div class="ex-map" data-t="map"><svg viewBox="0 0 358 190" preserveAspectRatio="none" aria-hidden="true"><path d="M0 110 L358 70 M100 0 L140 190 M240 0 L280 190 M0 170 L358 150" stroke="var(--mapst)" stroke-width="8" fill="none"/><path d="M290 190 C300 150 340 150 358 120 L358 190Z" fill="var(--mapw)"/>
+      ${S.span === 'Month' ? '<circle cx="30" cy="40" r="11" fill="#0F9C8F"/><circle cx="330" cy="150" r="11" fill="#0F9C8F"/>' : ''}${routeSVG(md.routes)}
+      ${md.pins.map(p => `<g><circle cx="${p.r.x}" cy="${p.r.y}" r="11" fill="${p.col === 'var(--acc)' ? '#0F9C8F' : p.col}" stroke="#fff" stroke-width="2"/><text x="${p.r.x}" y="${p.r.y + 4}" font-size="11.5" font-weight="700" fill="#fff" text-anchor="middle">${p.n}</text></g>`).join('')}</svg></div>
+    ${wk ? `<div class="ex-days" data-t="days">${days}</div>` : ''}
+    <div class="ex-g"><div class="ex-sec" style="display:flex"><span>${S.span}${S.day ? DOT + S.day : ''}</span><span style="margin-left:auto">${sek(tot)}</span></div>
+    ${md.list.map(x => `<div class="ex-mrow"><span class="ex-num" style="background:${x.n ? (x.col === 'var(--acc)' ? '#0F9C8F' : x.col) : 'transparent'};color:${x.n ? '#fff' : 'var(--pmuted)'}">${x.n || '–'}</span><span class="m" style="flex:1"><b style="font-weight:500">${esc(x.r.n)}</b><div class="ex-sub" style="font-size:12px">${(wk ? DAYN[x.r.d] + ' ' : '') + x.r.t}${DOT}${x.r.x != null ? esc(x.r.p || 'no place') : 'no position'}</div></span><b>${amtTxt(x.r)}</b></div>`).join('')}</div>
+    <div class="ex-hint" data-t="map-count">${mapNo} of ${md.list.length} have a position</div>
+    ${len ? `<div class="ex-hint" data-t="route-len">${len}</div>` : ''}
+    ${wk ? `<div class="ex-hint" data-t="day-hint">${S.day ? 'Only ' + S.day + ' · tap it again for the whole week.' : 'Tap a day to show only that day.'}</div>` : ''}</div>`;
+}
+
+/* Statistics, search, report, settings, guide */
+function statsPage() {
+  const cats = [[CAFE, 12, 540], ['Restaurant', 8, 1032], ['Groceries', 5, 1430], ['Transport', 6, 322], ['Leisure', 2, 280]], tot = 3604;
+  let a0 = -90; const arcs = cats.map(c => { const a = c[2] / tot * 360, s = a0; a0 += a; const r = 40, f = x => [50 + r * Math.cos(x * Math.PI / 180), 50 + r * Math.sin(x * Math.PI / 180)]; const [x1, y1] = f(s), [x2, y2] = f(s + a - 2);
+    return `<path d="M${x1.toFixed(1)} ${y1.toFixed(1)} A${r} ${r} 0 ${a > 180 ? 1 : 0} 1 ${x2.toFixed(1)} ${y2.toFixed(1)}" fill="none" stroke="${CATS[c[0]][1]}" stroke-width="11"/>`; }).join('');
+  const bars = Array.from({ length: 30 }, (_, i) => [30, 55, 0, 12, 70, 40, 18, 0, 25, 60, 35, 22, 90, 0, 14, 28, 45, 0, 33, 51, 20, 0, 27, 66, 38, 15, 41, 29, 63, 50][i]);
+  return `<div class="scr" data-keep><div class="ex-top"><button class="nbk" data-act="page-back" data-t="page-back">${icon('chevL')}Expenses</button><b>Statistics</b></div>
+    <div class="ex-g"><button class="ex-pw" data-act="stats-search" data-t="stats-search">Search expenses<span class="d">${icon('chevR')}</span></button><button class="ex-pw" data-act="soon" data-t="report-row">Monthly report<span class="d">${icon('chevR')}</span></button></div>
+    <div class="ex-cap">Totals</div><div class="ex-g"><div class="ex-st"><b>This week</b><span>${sek(1160)}</span><small>SEK 232 a day</small></div><div class="ex-st"><b>This month</b><span>${sek(3604)}</span><small>SEK 133 a day</small></div><div class="ex-st"><b>Last month</b><span>${sek(5210)}</span><small>SEK 174 a day</small></div></div>
+    <div class="ex-cap">By category</div><div class="ex-g"><div class="ex-seg" style="margin:6px 14px">${['Week', 'Month', 'Last month', 'All'].map(s => `<button class="${S.statSpan === s ? 'on' : ''}" data-act="stat-span" data-id="${s}" data-t="stat-${s.replace(' ', '-')}">${s}</button>`).join('')}</div>
+      <div class="ex-ring" data-t="ring"><svg viewBox="0 0 100 100">${arcs}<text x="50" y="52" font-size="13" font-weight="700" text-anchor="middle" fill="var(--pink)">${money(tot)}</text><text x="50" y="65" font-size="8" text-anchor="middle" fill="var(--pmuted)">${S.statSpan}</text></svg>
+      <div style="flex:1">${cats.map(c => `<div class="ex-sub" style="display:flex;gap:6px;align-items:center;font-size:12.5px">${catIc(c[0], 16)}<span style="flex:1">${c[0]}</span><span>${c[1]}× · SEK ${money(c[2])}</span></div>`).join('')}</div></div></div>
+    <div class="ex-cap">Last 30 days</div><div class="ex-g"><div class="ex-b30" data-t="b30">${bars.map((v, i) => `<i class="${i === 29 ? 't' : ''}" style="height:${Math.max(3, v * .7)}px"></i>`).join('')}</div><div style="height:6px"></div></div>
+    <div class="ex-cap">What you spend most on</div><div class="ex-g"><div class="ex-st"><b>Coffee</b><span>14× · SEK 630</span></div><div class="ex-st"><b>Lunch</b><span>9× · SEK 1,161</span></div></div></div>`;
+}
+function searchPage() {
+  const words = S.q.toLowerCase().split(/\s+/).filter(Boolean);
+  const res = !words.length ? [] : WEEK.filter(r => { const h = (r.n + ' ' + r.c + ' ' + r.p + ' ' + r.w).toLowerCase(); return words.every(w => h.includes(w)); }).slice().reverse();
+  const summary = words.length && res.length ? `${res.length} expenses ${DOT.trim()} ${sek(sum(res))}` : '';
+  return `<div class="scr" data-keep><div class="ex-top"><button class="nbk" data-act="page-back" data-t="page-back">${icon('chevL')}Statistics</button><b>Search</b></div>
+    <div class="ex-sh" data-t="search-field">${icon('search')}<input data-in="q" placeholder="Search expenses" value="${esc(S.q)}"></div>
+    ${!words.length ? '<div class="ex-note" data-t="search-hint">Type one or more words: description, category, place, who it was for…</div>' : res.length ? `<div class="ex-line" data-t="search-summary"><b style="color:var(--pink)">${summary}</b></div><div class="ex-g">${res.map(r => rowHTML(r, { wk: true })).join('')}</div>` : '<div class="ex-note">Nothing found.</div>'}</div>`;
+}
+function settingsPage() {
+  return `<div class="scr" data-keep><div class="ex-top"><span class="sp"></span><b>Settings</b><button class="nbk" data-act="page-back" data-t="page-back" style="font-weight:600">Done</button></div>
+    <div class="ex-cap">Your expenses</div><div class="ex-g"><div class="ex-pw">Categories<span class="d">${icon('chevR')}</span></div><div class="ex-pw">Places<span class="d">${icon('chevR')}</span></div><div class="ex-pw" style="color:var(--acc)">${ico('chevD', 18)} Export all as CSV</div>
+      <div class="ex-pw" style="cursor:default">Weekly budget<span class="d" style="display:flex;gap:6px;align-items:center"><input class="ex-in" style="width:90px;text-align:right" data-in="budget" data-t="budget" placeholder="None" value="${S.budget || ''}">kr</span></div></div>
+    <div class="ex-note">In kronor. The “This week” line on the main screen then says how much is left. Leave it empty for no budget.</div>
+    <div class="ex-cap">About</div><div class="ex-g"><button class="ex-pw" data-act="soon">What's new<span class="d">${icon('chevR')}</span></button><button class="ex-pw" data-act="howto-open" data-t="howto-row">How it works<span class="d">${icon('chevR')}</span></button><div class="ex-pw" style="cursor:default">Version<span class="d">1.30 (1)</span></div></div></div>`;
+}
+const SIGNS = [
+  [`<span style="display:flex;gap:3px"><i class="ex-sw" style="width:16px;background:var(--ex-amb)"></i><i class="ex-sw" style="width:16px;background:var(--acc)"></i><i class="ex-sw" style="width:16px;background:var(--ex-ind)"></i></span>`, 'A small card under Today in its own colour: amber is Yesterday, teal is This week, indigo is Last week. Full colour with white writing is the open one.'],
+  [`${tag('Sam')} ${tag('Club')}`, 'A coloured tag on every row: who the expense was for (blue, yellow, green or grey).'],
+  [catIc(CAFE, 26), 'A round coloured icon at the left of a row: the category.'],
+  ['<span class="ex-thumb"></span>', 'A small square picture on the right of a row: the expense has a photo.'],
+  ['<span class="ex-sub">≈ SEK 138</span>', 'A grey “≈ SEK” line under an amount: what an amount in another currency is in kronor, at the bank’s rate of that day.'],
+  ['<span class="ex-sub">€10 · + €8</span>', 'Whole units like “€10”: only in the opened This week and Last week lists, and the “+ €8” beside a card’s total. Everywhere else you see cents.'],
+  ['<span class="ex-sw" style="width:34px;height:20px"></span>', 'A light teal background behind an expense: one of that week’s five highest. The small line with the count shows the same square and “= the 5 highest”.'],
+  ['<span class="ex-over" style="font-size:12px">· SEK 120 over</span>', 'Orange “over”: this week is above your weekly budget. Without orange, “left” is what remains of it.'],
+  ['<span class="ex-cur" style="margin:0;padding:4px 9px;font-size:12px">EUR · auto</span>', 'A currency button with “auto”: the currency is chosen by itself. Fix one by hand and “auto” is gone.'],
+  ['<span class="ex-auto" style="margin:0">auto · 12 m away</span>', 'The place was filled in by itself, because you used it that far from here before.']
+];
+const SIGNS2 = [
+  ['<span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:#0F9C8F;border:3px solid #fff;box-shadow:0 0 0 1px #aaa"></span>', 'A small teal dot with a white ring on the place map: where this expense was logged. A dot with a name is a place you used before.'],
+  ['<span class="ex-num" style="background:#0F9C8F">2</span> <span class="ex-num" style="background:transparent;color:var(--pmuted)">–</span>', 'A numbered circle: the order you paid in. In the week maps it takes the colour of its day. A grey “–” means no position: not on the map.'],
+  ['<svg viewBox="0 0 40 22"><path d="M2 14 Q14 4 24 12 T38 8" fill="none" stroke="#0F9C8F" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="0.1 7"/></svg>', 'A dotted line between pins: the way you went, in the order you paid. Teal in Today, the day’s colour in the weeks. Along streets when pins are close, a gentle bow otherwise. A picture, not a measured track.'],
+  ['<svg viewBox="0 0 40 22"><path d="M14 4 L24 11 L14 18" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/><path d="M14 4 L24 11 L14 18" fill="none" stroke="#E91E73" stroke-width="2.6" stroke-linecap="round"/></svg>', 'A small arrowhead on the dotted line: the way you went, from the older pin to the newer one.'],
+  ['<span class="ex-sub" style="font-size:11.5px">Route: about 850 m</span>', '“Route: about …” under the map: the length of the dotted line as drawn, not a measured walk.'],
+  [`<span class="ex-mic on" style="width:30px;height:30px">${icon('stop')}</span>`, 'A red microphone or stop square: the app is listening now. Red text under it: something went wrong.'],
+  ['<span class="ex-undo" style="position:static;padding:4px 8px;font-size:11px">Undo</span>', 'The dark bar with “Undo”: you just deleted an expense; tap Undo within 6 seconds.'],
+  ['<span class="ex-cap2 full" style="padding:5px 10px;font-size:12px">Save</span> <span class="ex-cap2 light" style="padding:5px 10px;font-size:12px">Choose</span>', 'A full teal button is the main action; a light teal button is the second choice.']
+];
+function signsPage() {
+  const L = S.sig === 1 ? SIGNS : SIGNS2;
+  return `<div class="scr" data-keep><div class="ex-top"><button class="nbk" data-act="page-back" data-t="page-back">${icon('chevL')}Settings</button><b>How it works</b></div>
+    <div class="ex-cap">Signs in this app${S.sig === 2 ? ' (continued)' : ''}</div><div class="ex-g" data-t="sign-${S.sig}">${L.map(s => `<div class="ex-sig"><span class="k">${s[0]}</span><span>${s[1]}</span></div>`).join('')}</div></div>`;
+}
+function menuHTML() {
+  if (S.menu === 'cur') return `<div class="ex-menu">${[['', 'Automatic (SEK)'], ['SEK', 'SEK'], ['EUR', 'EUR']].map(m => `<button class="${S.cur === m[0] ? 'on' : ''}" data-act="cur-pick" data-id="${m[0] || 'auto'}" data-t="cur-${m[0] || 'auto'}">${m[1]}</button>`).join('')}</div>`;
+  if (S.menu === 'lang') return `<div class="ex-menu l">${[['en-US', 'English'], ['sv-SE', 'Svenska'], ['de-DE', 'Deutsch']].map(m => `<button class="${S.lang === m[0] ? 'on' : ''}" data-act="lang-pick" data-id="${m[0]}" data-t="lang-${m[0]}">${m[1]}</button>`).join('')}</div>`;
+  return '';
+}
+function renderStage() {
+  const st = document.getElementById('stage');
+  const pk = () => (S.page || 'home') + '|' + (S.sheet || '') + '|' + (S.sub || '');
+  const keyOf = e => e.closest('.ex-sheet') ? 'sh:' + pk() : 'pg:' + (S.page || 'home'), prevKeys = renderStage.keys || {};
+  const scrolls = renderStage.scrolls = renderStage.scrolls || {};
+  st.querySelectorAll('[data-keep]').forEach(e => { if (e.dataset.k) scrolls[e.dataset.k] = e.scrollTop; });
+  const ae = document.activeElement, inId = ae && st.contains(ae) ? ae.dataset.in : null, sel = inId ? [ae.selectionStart, ae.selectionEnd] : null;
+  const body = S.page === 'map' ? mapPage() : S.page === 'stats' ? statsPage() : S.page === 'search' ? searchPage() : S.page === 'settings' ? settingsPage() : S.page === 'signs' ? signsPage() : homeHTML();
+  const over = (S.sheet === 'entry' ? entrySheet() : '') + menuHTML();
+  const undo = S.undo ? `<div class="ex-undo" data-t="undo-bar"><span style="flex:1">${esc(S.undo.label)}</span><button data-act="undo" data-t="undo-btn">Undo</button></div>` : '';
+  st.innerHTML = `<div class="sbar"><span>13:42</span><span class="bat"></span></div>${body}${S.saved ? `<div class="ex-saved" data-t="saved-pill">${ico('check', 15)}Saved</div>` : ''}${undo}${over}${S.toast ? `<div class="ex-toast">${esc(S.toast)}</div>` : ''}`;
+  renderStage.keys = {};
+  st.querySelectorAll('[data-keep]').forEach(e => { const k = keyOf(e); e.dataset.k = k; renderStage.keys[k] = 1; e.scrollTop = prevKeys[k] ? (scrolls[k] || 0) : 0; });
+  if (inId) { const nf = st.querySelector(`[data-in="${inId}"]`); if (nf) { nf.focus(); try { nf.setSelectionRange(sel[0], sel[1]); } catch (e) {} } }
+  markTarget();
+}
+let toastH = null;
+function toast(t) { S.toast = t; renderStage(); clearTimeout(toastH); toastH = setTimeout(() => { S.toast = ''; renderStage(); }, 2400); }
+const soon = () => toast('Practice copy: not drawn here.');
+let undoSeq = 0;
+function startUndo(label, id) {
+  const sq = ++undoSeq; S.undo = { sq, label, id };
+  later(() => {
+    if (!S.undo || S.undo.sq !== sq) return;
+    if (!solved) { startUndo(label, id); toast('The bar lasts 6 seconds and has gone. Here it is again, for practice.'); }
+    else { S.undo = null; renderStage(); }
+  }, 6000);
+  renderStage();
+}
+
+/* ---------- Actions inside the pretend iPhone ---------- */
+const stage = document.getElementById('stage');
+stage.addEventListener('input', ev => {
+  const k = ev.target.dataset.in; if (!k) return; const v = ev.target.value;
+  if (k === 'typed') { S.typed = v; renderStage(); emit('typed', v); }
+  else if (k === 'pq') { S.pq = v; renderStage(); if (v.trim()) emit('place-search', v); }
+  else if (k === 'q') { S.q = v; renderStage(); if (v.trim()) emit('search-typed', v); }
+  else if (k === 'budget') { S.budget = parseFloat(String(v).replace(',', '.')) || 0; if (S.budget > 0) emit('budget', S.budget); }
+});
+stage.addEventListener('keydown', ev => {
+  if (ev.key !== 'Enter') return; const k = ev.target.dataset && ev.target.dataset.in; if (k === 'typed' && S.typed.trim()) act('go'); else if (k) ev.target.blur();
+});
+stage.addEventListener('click', ev => {
+  const el = ev.target.closest('[data-act]');
+  if (!el) { if (S.menu) { S.menu = null; renderStage(); } return; }
+  act(el.dataset.act, el.dataset.id, el);
+});
+const find = id => todayRows().concat(weekRows()).find(r => r.id === id);
+function openEdit(r) { S.en = { mode: 'edit', heard: '', title: r.n, amt: String(r.cur === 'EUR' ? r.a.toFixed(2) : r.k), cur: r.cur, cat: r.c, who: r.w, place: r.p, auto: false, photo: !!r.photo, date: '27 Nov 2026', time: r.t, id: r.id }; S.sheet = 'entry'; S.sub = null; renderStage(); emit('entry-open', 'edit'); }
+function act(a, id, el) {
+  if (S.menu && !/^(cur|lang)-pick$/.test(a)) S.menu = null;
+  switch (a) {
+    case 'soon': soon(); break;
+    case 'cur-open': S.menu = S.menu === 'cur' ? null : 'cur'; renderStage(); emit('cur-open'); break;
+    case 'cur-pick': S.cur = id === 'auto' ? '' : id; S.menu = null; renderStage(); emit('cur', id === 'auto' ? 'auto' : id); break;
+    case 'lang-open': S.menu = S.menu === 'lang' ? null : 'lang'; renderStage(); emit('lang-open'); break;
+    case 'lang-pick': S.lang = id; S.menu = null; renderStage(); emit('lang', id); break;
+    case 'mic':
+      if (S.listen) { S.listen = null; renderStage(); break; }
+      S.listen = { text: '' }; renderStage(); emit('mic');
+      later(() => { S.listen = { text: 'Taxi 12 euros 50' }; renderStage(); }, 800);
+      later(() => { S.listen = null; S.typed = ''; newEntry('Taxi 12 euros 50', 'Taxi', 12.5, 'EUR'); renderStage(); emit('entry-open', 'voice'); }, 2000);
+      break;
+    case 'go': { const p = parse(S.typed); const heard = S.typed.trim(); S.typed = ''; newEntry(heard, p.title, p.amt, p.cur); renderStage(); emit('entry-open', 'typed'); break; }
+    case 'fav': { const r = WEEK.filter(x => x.n.startsWith(id)).pop(); newEntry('', r.n, r.k, 'SEK'); S.en.cat = r.c; S.en.place = r.p; S.en.auto = false; S.en.heard = ''; renderStage(); emit('entry-open', 'fav'); break; }
+    case 'row': { const r = find(id); if (r) openEdit(r); else soon(); break; }
+    case 'sheet-cancel': S.sheet = null; S.sub = null; renderStage(); break;
+    case 'sub-back': S.sub = null; S.pq = ''; renderStage(); break;
+    case 'en-cat': S.sub = 'cat'; renderStage(); emit('cat-open'); break;
+    case 'cat-pick': S.en.cat = id; S.sub = null; renderStage(); emit('cat-pick', id); break;
+    case 'en-who': S.sub = 'who'; renderStage(); emit('who-open'); break;
+    case 'who-pick': S.en.who = id; S.sub = null; renderStage(); emit('who-pick', id); break;
+    case 'en-place': S.sub = 'place'; S.pq = ''; renderStage(); emit('place-open'); break;
+    case 'place-pick': S.en.place = id; S.en.auto = false; S.sub = null; S.pq = ''; renderStage(); emit('place-pick', id); break;
+    case 'place-sort': S.near = !S.near; renderStage(); emit('sort', S.near ? 'near' : 'usual'); break;
+    case 'photo-choose': S.en.photo = true; renderStage(); emit('photo', true); break;
+    case 'photo-remove': S.en.photo = false; renderStage(); emit('photo', false); break;
+    case 'en-save': { const e = S.en; if (!amountOk(e)) break;
+      if (e.mode === 'new') { const a = parseFloat(e.amt); S.added.unshift({ id: 'n' + S.added.length, d: 4, t: e.time, n: e.title, c: e.cat, k: e.cur === 'EUR' ? Math.round(a * RATE) : a, w: e.who, p: e.place, x: null, y: null, cur: e.cur, a, photo: e.photo }); }
+      S.sheet = null; S.sub = null; S.saved = true; renderStage(); later(() => { S.saved = false; renderStage(); }, 2500); emit('saved'); break; }
+    case 'en-same': { const e = S.en; S.en = Object.assign({}, e, { mode: 'new', heard: '', date: '27 Nov 2026', time: '13:43', id: null }); renderStage(); emit('same'); break; }
+    case 'en-delete': { const e = S.en; S.gone.push(e.id); S.sheet = null; S.sub = null; startUndo('Deleted ' + e.title, e.id); emit('deleted'); break; }
+    case 'undo': if (S.undo) { S.gone = S.gone.filter(x => x !== S.undo.id); S.undo = null; renderStage(); emit('undo'); } break;
+    case 'tile': { S.tile = S.tile === id ? null : id; renderStage(); emit('tile', S.tile); break; }
+    case 'map-open': S.page = 'map'; S.span = 'Today'; S.day = null; renderStage(); emit('map-open'); break;
+    case 'map-span': S.span = id; S.day = null; renderStage(); emit('span', id); break;
+    case 'map-day': S.day = S.day === id ? null : id; renderStage(); emit('day', S.day); break;
+    case 'stats-open': S.page = 'stats'; renderStage(); emit('stats-open'); break;
+    case 'stat-span': S.statSpan = id; renderStage(); break;
+    case 'stats-search': S.page = 'search'; S.q = ''; renderStage(); emit('search-open'); break;
+    case 'settings-open': S.page = 'settings'; renderStage(); emit('settings-open'); break;
+    case 'howto-open': S.page = 'signs'; renderStage(); emit('howto-open'); break;
+    case 'page-back': S.page = S.page === 'search' ? 'stats' : S.page === 'signs' ? 'settings' : null; renderStage(); break;
+    default: break;
+  }
+}
+
+/* ---------- Lessons (see, try, check). Every step's setup does a full reset of what that step needs. ---------- */
+const home = (o) => set(o || {});
+const withEntry = (title, amt, cur, heard, o) => { set(o || {}); newEntry(heard == null ? '' : heard, title, amt, cur); if (o && o.sub) S.sub = o.sub; };
+const LESSONS = [
+  { title: 'The main screen', icon: 'home', steps: [
+    { kind: 'look', head: 'Everything on one screen', text: 'The app opens on "Expenses". At the top: the time, under it the day and the place, and on the right the currency button, for example "SEK · auto". The four small buttons in the bar are the globe (the language you dictate in: English, Svenska or Deutsch), the map, the chart (Statistics) and the gear (Settings).', target: 'header', setup: () => home() },
+    { kind: 'look', head: 'Say it, or type it', text: 'The big round microphone is the main button. Tap it and say what you paid, for example "Coffee 45 kronor" or "Taxi 12 euros 50". Recording stops by itself after a short pause. Beside it is a field, "…or type an expense", with Go. Under it a line shows "Listening…" or the words heard, and nothing at all while the app is idle.', target: 'mic', setup: () => home() },
+    { kind: 'look', head: 'Today', text: 'The list shows today’s expenses, newest first, and the card on top shows today’s total in large numbers, how many expenses, and this week as seven small bars. An amount in euros has its kronor under it ("≈ SEK 138"), at the bank’s rate of that day.', target: 'today-card', setup: () => home() },
+    { kind: 'try', head: 'Fix a currency', text: 'Tap the currency button and choose "EUR".', target: 'currency', setup: () => home(), wait: 'cur', when: d => d === 'EUR', on: { 'cur-open': 'cur-EUR' }, ok: 'The button now says "EUR", without "auto". Choose "Automatic" again and the app goes back to the currency of the country you are in. A currency you say out loud ("12 euros") always wins.' },
+    { kind: 'check', head: 'Quick check', text: 'The currency button says "SEK · auto". What does "auto" mean?', answers: ['The currency was chosen by itself, from where you are', 'The app will say the amount aloud', 'The expense will be saved without a check'], right: 0, ok: 'Right. Without a location the iPhone’s time zone is used; fix a currency by hand and "auto" goes away.' },
+  ]},
+  { title: 'Say it and check it', icon: 'mic', steps: [
+    { kind: 'try', head: 'Type a sentence', text: 'Type "Coffee 45 kronor" in the field, then tap "Go".', target: 'type-field', setup: () => home(), wait: 'entry-open', on: { typed: 'type-go' }, robot: { type: 'type', value: 'Coffee 45 kronor' }, ok: 'Typed or spoken, a sentence is read in the same way. The app finds the amount, the currency and the description. Nothing is saved yet: the check sheet opens first.' },
+    { kind: 'try', head: 'Say it', text: 'Tap the microphone. In this practice copy it "hears" a sentence for you: "Taxi 12 euros 50".', target: 'mic', setup: () => home(), wait: 'entry-open', ok: 'While it listens the microphone turns red with a stop square, and the words appear under it. Then the check sheet opens. "12 euros 50" is read as 12.50.' },
+    { kind: 'look', head: 'The check sheet, from the top', text: 'It is headed "New expense". First the sentence it heard, in italics. Then the Description, the Amount with its currency beside it, and the date and time as two quiet labels. Cancel throws the expense away; Save keeps it.', target: 'en-heard', setup: () => withEntry('Taxi', 12.5, 'EUR', 'Taxi 12 euros 50') },
+    { kind: 'look', head: 'The check sheet, further down', text: 'Then come the category (a round coloured icon and its name), who it was for, and the place visited. Under them a small map of where it was logged, and a Photo row with "Take photo" and "Choose photo".', target: 'en-cat', setup: () => withEntry('Taxi', 12.5, 'EUR', 'Taxi 12 euros 50') },
+    { kind: 'check', head: 'Quick check', text: 'You clear the Amount line. What happens to Save?', answers: ['It stays off until the amount is a number above 0', 'It saves an expense of 0', 'It asks for the time'], right: 0, ok: 'Right. Save is off until the amount is a number above 0.', setup: () => withEntry('Taxi', '', 'EUR', 'Taxi 12 euros') },
+    { kind: 'check', head: 'Saying a time', text: 'You say "Lunch 129 kr 3 hours ago". What time does the check sheet show?', answers: ['Three hours before now', 'Now', 'Yesterday'], right: 0, ok: 'Right. The time is now, unless you say one: "at 7 pm", "klockan 9.15", "um 13 Uhr", or how long ago ("half an hour ago", "för 3 timmar sedan"). "Yesterday", "igår" and "gestern" move it to yesterday.', setup: () => home() },
+    { kind: 'try', head: 'Save', text: 'Everything looks right. Tap "Save".', target: 'save', setup: () => withEntry('Taxi', 12.5, 'EUR', 'Taxi 12 euros 50'), wait: 'saved', ok: 'A short vibration, and "Saved" shows at the top for a moment. The expense joins Today and the total moves.' },
+    { kind: 'look', head: 'The new row', text: 'Each row has the category icon, the description, then the time and category with a coloured tag for who it was for, and the amount. A euro amount keeps its kronor under it. In the real app a photo shows as a small square beside the amount.', target: 'row-0', setup: () => { home(); S.added.unshift({ id: 'n0', d: 4, t: '13:42', n: 'Taxi', c: 'Transport', k: 138, w: 'Sam', p: '', x: null, y: null, cur: 'EUR', a: 12.5 }); S.sheet = null; S.saved = true; } },
+  ]},
+  { title: 'Category, who and place', icon: 'sliders', steps: [
+    { kind: 'try', head: 'The category', text: 'Tap the category line and choose "Transport".', target: 'en-cat', setup: () => withEntry('Taxi', 12.5, 'EUR', 'Taxi 12 euros 50', {}), wait: 'cat-pick', when: d => d === 'Transport', on: { 'cat-open': 'cat-Transport' }, ok: 'A tap chooses it and goes back. A new expense starts in the default category (Café). The next time you say the same description, its last category is filled in by itself. Every category has its own icon and colour.' },
+    { kind: 'try', head: 'For whom', text: 'Tap the line with the name tag and choose "Lena".', target: 'en-who', setup: () => withEntry('Groceries', 286, 'SEK', 'Groceries 286 kronor'), wait: 'who-pick', when: d => d === 'Lena', on: { 'who-open': 'who-Lena' }, ok: 'There are four tags: blue, yellow, green and grey. The same colour shows on every row of the lists. (The names here are invented; in your app they are your own.)' },
+    { kind: 'try', head: 'The place visited', text: 'Tap the place line and choose "Harbour Market".', target: 'en-place', setup: () => withEntry('Groceries', 286, 'SEK', 'Groceries 286 kronor', {}), wait: 'place-pick', when: d => d === 'Harbour Market', on: { 'place-open': 'place-Harbour' }, ok: 'The page lists the places you used within 1 km of where the expense was logged first (Nearby), then the others. Each shows how far away it is, in grey. Or type a new one on the "New place" line and tap Add.' },
+    { kind: 'try', head: 'Search the places', text: 'Type "har" into "Search places".', target: 'place-search', setup: () => withEntry('Groceries', 286, 'SEK', 'Groceries 286 kronor', { sub: 'place' }), wait: 'place-search', robot: { type: 'type', value: 'har' }, ok: 'Only the names that contain those letters are left, and on the small map at the bottom too. Capitals do not matter. "New place" and None always stay.' },
+    { kind: 'try', head: 'Nearest first', text: 'Tap "Nearest first" at the top right.', target: 'place-sort', setup: () => withEntry('Groceries', 286, 'SEK', 'Groceries 286 kronor', { sub: 'place' }), wait: 'sort', when: d => d === 'near', ok: 'All places are in one list, "By distance", the nearest first. The button now reads "Usual order". The app remembers your choice. Without a position for the expense the button is not shown.' },
+    { kind: 'try', head: 'A photo', text: 'In the Photo row tap "Choose photo".', target: 'photo-choose', setup: () => withEntry('Groceries', 286, 'SEK', 'Groceries 286 kronor', {}), wait: 'photo', when: d => d === true, ok: 'The photo shows 160 points high, with "Remove photo" under it in red. One photo per expense, kept on the iPhone. A photo taken with "Take photo" is also saved to Apple Photos (the iPhone asks first); one you choose is not.' },
+  ]},
+  { title: 'Again, change and undo', icon: 'again', steps: [
+    { kind: 'try', head: 'Change an expense', text: 'Tap the "Coffee" row.', target: 'row-2', setup: () => home(), wait: 'entry-open', ok: 'The same sheet opens, headed "Edit expense". Swipe a row to the left to delete it, and to the right for "Same again".' },
+    { kind: 'try', head: 'Same again, now', text: 'Tap "Same again, now".', target: 'entry-same', setup: () => { home(); openEdit(find('f2')); }, wait: 'same', ok: 'A new expense opens for checking with the same description, amount, currency, category, who for and place, and the time now. It has no "Heard" line, and nothing is saved until you tap Save.' },
+    { kind: 'try', head: 'Delete', text: 'Tap "Delete expense".', target: 'entry-delete', setup: () => { home(); openEdit(find('f2')); }, wait: 'deleted', ok: 'It goes at once, without a question. A dark bar appears at the bottom: "Deleted Coffee" and "Undo".' },
+    { kind: 'try', head: 'Undo', text: 'Tap "Undo" in the dark bar.', hint: 'The bar stays for 6 seconds, as in the real app. Here it comes back by itself if it runs out, so you can try.', target: 'undo-btn', setup: () => { home({ gone: ['f2'] }); startUndo('Deleted Coffee', 'f2'); }, wait: 'undo', ok: 'The expense is back exactly as it was, with its photo. After 6 seconds the delete is final.' },
+    { kind: 'try', head: 'The favourites', text: 'Under the typing line tap "Coffee".', target: 'fav-0', setup: () => home(), wait: 'entry-open', ok: 'Up to three small buttons hold the descriptions you log most often (a description needs to be logged at least 3 times). One tap opens the check sheet filled in for now, like "Same again". Nothing is logged without the check.' },
+  ]},
+  { title: 'Days, weeks and the map', icon: 'map', steps: [
+    { kind: 'look', head: 'Three small cards', text: 'Under today’s expenses are three small cards on one line: "Yesterday" in amber, "This week" in teal and "Last week" in indigo. Each shows its total in large whole kronor. Yesterday shows how many expenses; the two weeks show seven tiny bars, Monday to Sunday. A card with no expenses shows "0 kr" and does nothing.', target: 'tiles', setup: () => home({ budget: 1500 }) },
+    { kind: 'try', head: 'Open a week', text: 'Tap the teal "This week" card.', target: 'tile-week', setup: () => home({ budget: 1500 }), wait: 'tile', when: d => d === 'week', ok: 'The card turns full colour and the week’s expenses open under it: weekday and time, whole amounts. A line says how many expenses and, with a weekly budget, "· SEK 340 left". With more than five, the five highest are tinted and "= the 5 highest" explains it.' },
+    { kind: 'try', head: 'One at a time', text: 'Tap the indigo "Last week" card.', target: 'tile-last', setup: () => home({ budget: 1500, tile: 'week' }), wait: 'tile', when: d => d === 'last', ok: 'Only one card is open at a time: tapping another one switches, and tapping the open one closes it. Everything is closed again each time the app opens.' },
+    { kind: 'try', head: 'The map', text: 'Tap the map button at the top.', target: 'map-btn', setup: () => home(), wait: 'map-open', ok: '"On the map" opens on Today.' },
+    { kind: 'look', head: 'Pins, route and length', text: 'The pins are numbered in the order you paid, oldest first. A dotted line joins them (teal in Today) and a small arrowhead halfway along each stretch points the way you went. Under the map: "3 of 4 have a position" (the grey "–" row has none) and "Route: about 1.9 km", the length of the line as drawn, not a measured walk. The map no longer turns or tilts, so the arrows always point right.', target: 'route-len', setup: () => home({ page: 'map' }) },
+    { kind: 'try', head: 'This week on the map', text: 'Tap "This week" at the top of the map.', target: 'span-This-week', setup: () => home({ page: 'map' }), wait: 'span', when: d => d === 'This week', ok: 'Each pin takes the colour of its weekday (Monday blue, Tuesday green, Wednesday orange, Thursday purple, Friday pink). Under the map a row of day buttons appears, and each day with two or more pins has its own dotted line. Month has pins but no lines.' },
+    { kind: 'try', head: 'Only one day', text: 'Tap the "Fri" day button.', target: 'day-Fri', setup: () => home({ page: 'map', span: 'This week' }), wait: 'day', when: d => d === 'Fri', ok: 'Only Friday’s pins and route show, the map zooms to them, the list shows only Friday, and the route length counts only that day. The pin numbers stay the week’s numbers. Tap the day again for the whole week.' },
+    { kind: 'check', head: 'Quick check', text: 'Which of the four map choices draws no dotted route?', answers: ['Month', 'Today', 'This week'], right: 0, ok: 'Right. A month has too many days for one line. Today has one teal route; the weeks have one line per day.', setup: () => home({ page: 'map', span: 'Month' }) },
+  ]},
+  { title: 'Totals, search and signs', icon: 'chart', steps: [
+    { kind: 'try', head: 'Statistics', text: 'Tap the chart button at the top.', target: 'stats-btn', setup: () => home(), wait: 'stats-open', ok: 'Statistics shows: this week, this month and last month, each with its average a day; "By category" as a ring with Week / Month / Last month / All; the last 30 days as bars (today has a small bold "Today" above its bar); what you spend most on; and every earlier day. All totals are in kronor.' },
+    { kind: 'try', head: 'Search expenses', text: 'Tap "Search expenses".', target: 'stats-search', setup: () => home({ page: 'stats' }), wait: 'search-open', ok: 'A search page opens.' },
+    { kind: 'try', head: 'Words that must all match', text: 'Type "coffee" in the field.', target: 'search-field', setup: () => home({ page: 'search' }), wait: 'search-typed', robot: { type: 'type', value: 'coffee' }, ok: 'Every expense whose description, category, place, town, who it was for or sentence contains all your words is listed, newest first, with the count and total above ("4 expenses · SEK 180"). Capitals and accents do not matter. Tap one to change it.' },
+    { kind: 'try', head: 'Settings', text: 'Tap the gear at the top.', target: 'settings-btn', setup: () => home(), wait: 'settings-open', ok: 'Settings lists Categories, Places (each with its total), "Export all as CSV", the Weekly budget, "What’s new" (every version, newest first), "How it works" (the guide) and the version.' },
+    { kind: 'try', head: 'A weekly budget', text: 'Type "1500" in the "Weekly budget" field.', target: 'budget', setup: () => home({ page: 'settings' }), wait: 'budget', robot: { type: 'type', value: '1500' }, ok: 'Now the line under the opened This week card says how much is left ("· SEK 340 left"), or "over" in orange. Empty or 0 means no budget.' },
+    { kind: 'look', head: 'Signs in this app (1)', text: 'In How it works, the section "Signs in this app" lists every mark and colour that means something. These are the signs of the lists and the check sheet.', target: 'sign-1', setup: () => home({ page: 'signs', sig: 1 }) },
+    { kind: 'look', head: 'Signs in this app (2)', text: 'And the signs of the map, the microphone, the Undo bar and the two kinds of teal button.', target: 'sign-2', setup: () => home({ page: 'signs', sig: 2 }) },
+    { kind: 'check', head: 'Quick check', text: 'On the map one row has a grey "–" instead of a number. What does it mean?', answers: ['That expense has no position and is not on the map', 'That expense is from Monday', 'That expense was deleted'], right: 0, ok: 'Right. Location was off, or the expense is from before positions were kept.', setup: () => home({ page: 'map' }) },
+  ]},
+];
+
+/* ---------- Tour engine (reusable) ---------- */
+let ci = 0, si = 0, solved = false, targetOff = false;
+const store = { get(k) { try { return localStorage.getItem(k) } catch { return null } }, set(k, v) { try { localStorage.setItem(k, v) } catch {} } };
+let doneChapters = new Set(JSON.parse(store.get('expenses-done') || '[]'));
+
+function emit(name, data) {
+  const st = LESSONS[ci]?.steps[si]; if (!st || solved || st.kind !== 'try') return;
+  if (st.on && st.on[name]) { markTarget(st.on[name]); }
+  if ((st.wait === name || st.alt === name) && (!st.when || st.when(data))) succeed(st.ok);
+}
+function succeed(msg) {
+  solved = true; targetOff = true; const fb = document.getElementById('fb'); if (fb) { fb.textContent = '\u2713 ' + msg; fb.className = 'feedback'; }
+  const nx = document.getElementById('next'); if (nx) { nx.disabled = false; nx.focus({ preventScroll: true }); }
+  markTarget();
+}
+let curTarget = null;
+function markTarget(t) {
+  if (t !== undefined) curTarget = t;
+  document.querySelectorAll('.target').forEach(e => e.classList.remove('target'));
+  if (!curTarget || targetOff) return;
+  const q = n => document.querySelector(`#stage [data-t="${CSS.escape(n)}"]`);
+  // If the thing to tap is out of sight (a stray tap closed a page), point at the way back to it.
+  const first = LESSONS[ci] && LESSONS[ci].steps[si] && LESSONS[ci].steps[si].target;
+  const el = q(curTarget) || (first && first !== curTarget ? q(first) : null)
+    || (S.sub ? q('sub-back') : S.sheet ? q('sheet-cancel') : S.page ? q('page-back') : null);
+  if (el) {
+    el.classList.add('target');
+    const sc = el.closest('.scr');
+    if (sc) { const r = el.getBoundingClientRect(), s = sc.getBoundingClientRect(), k = document.getElementById('stagebox').clientWidth / 390;
+      if (r.top < s.top + 40 * k || r.bottom > s.bottom - 110 * k) sc.scrollTop += (r.top - s.top - 120 * k) / k; }
+  }
+}
+function renderRail() {
+  const total = LESSONS.reduce((n, l) => n + l.steps.length, 0);
+  const before = LESSONS.slice(0, ci).reduce((n, l) => n + l.steps.length, 0) + si;
+  document.getElementById('rail').innerHTML = `<div class="brand"><span class="logo">${icon('coin')}</span><div><h1>Expenses Tour</h1><small>Written for Expenses 1.30</small></div></div>
+    ${LESSONS.map((l, i) => `<button class="chap ${i === ci ? 'cur' : ''} ${doneChapters.has(i) ? 'done' : ''}" data-ch="${i}">${icon(l.icon)}<span>${l.title}</span><span class="n">${doneChapters.has(i) ? '\u2713' : l.steps.length + ' steps'}</span></button>`).join('')}
+    <button class="chap ${ci === LESSONS.length ? 'cur' : ''}" data-ch="${LESSONS.length}">${icon('phone')}<span>Now on your iPhone</span></button>
+    <div class="bar"><i style="width:${Math.round(100 * Math.min(before, total) / total)}%"></i></div>
+    <p class="railnote">Written for AMS Manual Expenses 1.30.</p>`;
+}
+document.getElementById('rail').addEventListener('click', e => { const b = e.target.closest('[data-ch]'); if (b) goChapter(+b.dataset.ch); });
+
+function goChapter(i) {
+  ci = i; si = 0; clearTimers(); S = START();
+  const L = LESSONS[i]; if (L && L.setup) L.setup();
+  renderStep();
+}
+function renderStep() {
+  renderRail();
+  const coach = document.getElementById('coach'), fin = document.getElementById('finish');
+  if (ci >= LESSONS.length) { renderFinish(); coach.hidden = true; return; }
+  coach.hidden = false; fin.hidden = true;
+  const L = LESSONS[ci], st = L.steps[si];
+  solved = st.kind === 'look'; targetOff = false;
+  clearTimers(); clearTimeout(toastH);
+  if (st.setup) st.setup();
+  S.toast = '';
+  const kindName = { look: 'Look', try: 'Try it', check: 'Check' }[st.kind];
+  coach.innerHTML = `<div class="eyebrow">${icon(L.icon)} ${esc(L.title)} <span class="kind">\u00B7 ${kindName} \u00B7 step ${si + 1} of ${L.steps.length}</span></div>
+    <div><h2>${esc(st.head)}</h2><p>${esc(st.text)}</p>${st.hint ? `<p style="color:var(--muted);font-size:13px">${esc(st.hint)}</p>` : ''}</div>
+    <div class="btns">${ci + si > 0 ? '<button class="btn ghost" id="back">Back</button>' : ''}<button class="btn main-b" id="next" ${solved ? '' : 'disabled'}>${si === L.steps.length - 1 ? 'Finish chapter' : 'Next'}</button></div>
+    ${st.kind === 'check' ? `<div class="answers">${st.answers.map((a, i) => `<button class="ans" data-a="${i}">${esc(a)}</button>`).join('')}</div>` : ''}
+    <p class="feedback" id="fb"></p>`;
+  curTarget = st.target || null;
+  renderStage();
+  if (st.kind === 'check') coach.querySelectorAll('.ans').forEach(b => b.onclick = () => {
+    const fb = document.getElementById('fb');
+    if (+b.dataset.a === st.right) { coach.querySelectorAll('.ans').forEach(x => x.disabled = true); b.classList.add('right'); succeed(st.ok); }
+    else { b.classList.add('wrong'); fb.textContent = 'Not quite. Try another answer.'; fb.className = 'feedback no'; }
+  });
+  document.getElementById('next').onclick = next;
+  const bk = document.getElementById('back'); if (bk) bk.onclick = back;
+}
+function next() {
+  const L = LESSONS[ci];
+  if (si < L.steps.length - 1) { si++; renderStep(); return; }
+  doneChapters.add(ci); store.set('expenses-done', JSON.stringify([...doneChapters]));
+  goChapter(ci + 1);
+}
+function back() { if (si > 0) { si--; renderStep(); } else if (ci > 0) { goChapter(ci - 1); } }
+
+function renderFinish() {
+  const fin = document.getElementById('finish'); fin.hidden = false;
+  clearTimers(); S = START(); curTarget = null; renderStage();
+  const items = ["Open Expenses. Tap the big microphone and say \"Coffee 45 kronor\". Check the sheet that opens (description, amount, category, for whom, place) and tap Save. Look for \"Saved\" at the top.", "Type a sentence in the field under the microphone and tap Go, for example \"Lunch 129 kr\". Cancel it.", "Open an expense from Today and tap \"Same again, now\". Cancel. Swipe an expense to the left to delete it and tap Undo in the dark bar within 6 seconds.", "On the check sheet open the category, \"for whom\" and place pages. On the place page try \"Search places\" and \"Nearest first\".", "Tap the three small cards under Today: Yesterday, This week, Last week. Look for the weekly budget note and the tinted five highest.", "Tap the map button. Switch between Today, This week, Last week and Month, tap a day button, and read \"Route: about …\" under the map.", "Tap the chart button and open \"Search expenses\". Then open Settings and read How it works, Signs in this app."];
+  let ticks = JSON.parse(store.get('expenses-real') || '[]');
+  fin.innerHTML = `<h3>Now on your iPhone</h3>${items.map((t, i) => `<label><input type="checkbox" id="real-${i}" ${ticks.includes(i) ? 'checked' : ''}><span>${esc(t)}</span></label>`).join('')}
+    <div style="display:flex;gap:8px;margin-top:12px"><button class="btn main-b" id="again">Start the tour again</button></div>`;
+  fin.querySelectorAll('input').forEach((c, i) => c.onchange = () => { ticks = ticks.filter(x => x !== i); if (c.checked) ticks.push(i); store.set('expenses-real', JSON.stringify(ticks)); });
+  document.getElementById('again').onclick = () => goChapter(0);
+}
+
+/* Fit the 390 x 760 pretend iPhone into its box */
+function fit() { const box = document.getElementById('stagebox'); document.getElementById('stage').style.transform = `scale(${box.clientWidth / 390})`; }
+new ResizeObserver(fit).observe(document.getElementById('stagebox'));
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (S.menu) { S.menu = null; renderStage(); return; }
+    if (S.sub) { act('sub-back'); return; }
+    if (S.sheet) { act('sheet-cancel'); return; }
+  }
+  if (e.key === 'Enter' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') { const n = document.getElementById('next'); if (n && !n.disabled && document.activeElement !== n) n.click(); }
+});
+goChapter(0); fit();
+</script>
